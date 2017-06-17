@@ -1,4 +1,13 @@
 from setuptools import setup, find_packages
+import sys
+
+version = sys.version_info
+if not (version.major == 3 and version.minor == 6):
+    sys.exit("""
+        =========================================================
+        Please install Python 3.6 before installing this package.
+        =========================================================
+    """)
 
 setup(
     name='atomickotlinbuilder',
