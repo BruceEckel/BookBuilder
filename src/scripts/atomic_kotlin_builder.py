@@ -19,6 +19,12 @@ def code():
     """Code extraction and testing."""
 
 
+@code.command('delete')
+def code_delete():
+    """Removes a code at a specific coordinate."""
+    click.echo("code directory removed")
+
+
 @code.command('set')
 @click.argument('x', type=float)
 @click.argument('y', type=float)
@@ -30,14 +36,6 @@ def code():
 def code_set(x, y, ty):
     """Sets a code at a specific coordinate."""
     click.echo('Set %s code at %s,%s' % (ty, x, y))
-
-
-@code.command('remove')
-@click.argument('x', type=float)
-@click.argument('y', type=float)
-def code_remove(x, y):
-    """Removes a code at a specific coordinate."""
-    click.echo('Removed code at %s,%s' % (x, y))
 
 
 ##########################################################
