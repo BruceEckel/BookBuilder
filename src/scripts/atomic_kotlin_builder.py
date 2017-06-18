@@ -1,5 +1,7 @@
 # The driver script for the main program
 import click
+import sys
+import config.py
 
 
 @click.group()
