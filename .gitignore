@@ -3,3 +3,4 @@ virtualenv
 __pycache__/
 *.pyc
 test.sh
+*.log

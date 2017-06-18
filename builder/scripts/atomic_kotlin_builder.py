@@ -1,6 +1,7 @@
 # The driver script for the main program
 import click
 from builder.config import *
+import builder.examples
 
 
 @click.group()
@@ -18,6 +19,12 @@ def cli():
 @cli.group()
 def code():
     """Code extraction and testing."""
+
+
+@code.command()
+def test():
+    """Testing use of another package in the script"""
+    builder.examples.test()
 
 
 @code.command('delete')
