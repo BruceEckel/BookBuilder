@@ -19,6 +19,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        akb=src.scripts.atomic_kotlin_builder:cli
+        akb=builder.scripts.atomic_kotlin_builder:cli
     ''',
 )
