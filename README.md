@@ -1,6 +1,6 @@
 # AtomicKotlinBuilder
 
-- Requires Python 3.6
+- Requires Python 3.4+
 - All functionality is collected under the single `akb` command which will be installed automatically
 
 ## To Install
