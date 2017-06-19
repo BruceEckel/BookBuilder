@@ -77,6 +77,17 @@ def extractExamples():
     return "Code extracted into {}".format(config.example_dir)
 
 
+def create_go_files():
+    "Create go.bat files for each package, to compile and run all files"
+    print("Creating go.bat files ...")
+    if not config.example_dir.exists():
+        return "Run 'extract' command first"
+    for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
+        os.chdir(package)
+        print(os.getcwd())
+    return "--- Implementation Incomplete ---"
+
+
 def copyGradleFiles():
     print("Copying Gradle Files ...")
     if not config.github_code_dir.exists():

@@ -33,6 +33,12 @@ def code_extract():
     click.echo(builder.examples.extractExamples())
 
 
+@code.command('go')
+def code_go_files():
+    "Create go.bat files for each package, to compile and run all files"
+    click.echo(builder.examples.create_go_files())
+
+
 # @code.command('set')
 # @click.argument('x', type=float)
 # @click.argument('y', type=float)
