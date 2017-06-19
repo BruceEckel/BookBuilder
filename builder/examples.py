@@ -1,13 +1,12 @@
 #! py -3
-# TODO: change to hunt for `package` and use that to place resulting file
-# Extract code config.example_dir from Atomic Kotlin Markdown files.
-# Configures for Gradle build by copying from AtomicKotlin-Examples.
+# Extract code into config.example_dir from Atomic Kotlin Markdown files.
+# TODO: Configures for Gradle build by copying from AtomicKotlin-Examples.
 import logging
+from logging import debug
 import os
 import re
 import shutil
 import sys
-from logging import debug
 from pathlib import Path
 
 import builder.config as config
@@ -25,8 +24,10 @@ def clean():
         else:
             return "Doesn't exist: {}".format(config.example_dir)
     except:
-        print("Old path removal failed")
-        raise RuntimeError()
+        return """Removal failed: {}
+        Are you inside that directory, or using a file inside it?
+        """.format(config.example_dir)
+        # raise RuntimeError()
 
 
 def extractExamples():
@@ -52,10 +53,17 @@ def extractExamples():
             for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
                 listing = group[1].splitlines()
                 title = listing[0]
+                package = None
+                for line in listing:
+                    if line.startswith("package "):
+                        package = line.split()[1].strip()
                 if slugline.match(title) or xmlslug.match(title):
                     debug(title)
                     fpath = title.split()[1].strip()
-                    target = config.example_dir / fpath
+                    if package:
+                        target = config.example_dir / package / fpath
+                    else:
+                        target = config.example_dir / fpath
                     debug("writing {}".format(target))
                     if not target.parent.exists():
                         target.parent.mkdir(parents=True)
@@ -95,10 +103,6 @@ def extractAndCopyBuildFiles():
     clean()
     extractExamples()
     copyGradleFiles()
-
-
-if __name__ == '__main__':
-    CmdLine.run()
 
 
 # For Development:
