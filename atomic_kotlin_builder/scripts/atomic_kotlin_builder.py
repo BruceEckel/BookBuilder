@@ -2,6 +2,7 @@
 import click
 import atomic_kotlin_builder.examples as examples
 import atomic_kotlin_builder.packages as _packages
+import atomic_kotlin_builder.validate as _validate
 
 
 @click.group()
@@ -58,18 +59,24 @@ def packages_add_packages():
     "Add package statements to all examples that don't have them"
     click.echo(_packages.add_packages())
 
+##########################################################
 
-# @code.command('set')
-# @click.argument('x', type=float)
-# @click.argument('y', type=float)
-# @click.option('ty', '--moored', flag_value='moored',
-#               default=True,
-#               help='Moored (anchored) code. Default.')
-# @click.option('ty', '--drifting', flag_value='drifting',
-#               help='Drifting code.')
-# def code_set(x, y, ty):
-#     """Sets a code at a specific coordinate."""
-#     click.echo('Set %s code at %s,%s' % (ty, x, y))
+
+@cli.group()
+def validate():
+    """Discover and fix package issues"""
+
+
+@validate.command('markdown_names')
+def validate_markdown_names():
+    "Check Markdown file names against chapter titles"
+    click.echo(_validate.markdown_names())
+
+
+# @validate.command('add')
+# def validate_add_packages():
+#     "Add package statements to all examples that don't have them"
+#     click.echo(_validate.add_packages())
 
 
 ##########################################################
