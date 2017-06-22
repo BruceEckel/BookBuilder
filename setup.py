@@ -10,7 +10,7 @@ if not (version.major == 3 and version.minor >= 4):
     """)
 
 setup(
-    name='atomickotlinbuilder',
+    name='atomic_kotlin_builder',
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
@@ -19,6 +19,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        akb=builder.scripts.atomic_kotlin_builder:cli
+        akb=atomic_kotlin_builder.scripts.atomic_kotlin_builder:cli
     ''',
 )

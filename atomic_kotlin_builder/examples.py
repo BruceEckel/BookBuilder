@@ -9,7 +9,7 @@ import shutil
 import sys
 from pathlib import Path
 
-import builder.config as config
+import atomic_kotlin_builder.config as config
 
 
 logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
@@ -77,9 +77,9 @@ def extractExamples():
     return "Code extracted into {}".format(config.example_dir)
 
 
-def create_go_files():
-    "Create go.bat files for each package, to compile and run all files"
-    print("Creating go.bat files ...")
+def create_test_files():
+    "Create test.bat files for each package, to compile and run all files"
+    print("Creating test.bat files ...")
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:

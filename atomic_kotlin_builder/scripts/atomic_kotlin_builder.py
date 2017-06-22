@@ -1,7 +1,7 @@
 # The driver script for the main program
 import click
-from builder.config import *
-import builder.examples
+import atomic_kotlin_builder.examples as examples
+import atomic_kotlin_builder.packages as _packages
 
 
 @click.group()
@@ -24,19 +24,39 @@ def code():
 @code.command('clean')
 def code_clean():
     "Remove directory containing extracted example code"
-    click.echo(builder.examples.clean())
+    click.echo(examples.clean())
 
 
 @code.command('extract')
 def code_extract():
     "Extract examples from book's Markdown files"
-    click.echo(builder.examples.extractExamples())
+    click.echo(examples.extractExamples())
 
 
-@code.command('go')
-def code_go_files():
-    "Create go.bat files for each package, to compile and run all files"
-    click.echo(builder.examples.create_go_files())
+@code.command('test')
+def code_test_files():
+    "Create test.bat files for each package, to compile and run all files"
+    click.echo(examples.create_test_files())
+
+
+##########################################################
+
+
+@cli.group()
+def packages():
+    """Discover and fix package issues"""
+
+
+@packages.command('unpackaged')
+def packages_unpackaged():
+    "Show all examples that aren't in packages"
+    click.echo(_packages.unpackaged())
+
+
+@packages.command('add')
+def packages_add_packages():
+    "Add package statements to all examples that don't have them"
+    click.echo(_packages.add_packages())
 
 
 # @code.command('set')
