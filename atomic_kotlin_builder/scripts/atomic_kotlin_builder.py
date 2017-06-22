@@ -3,6 +3,7 @@ import click
 import atomic_kotlin_builder.examples as examples
 import atomic_kotlin_builder.packages as _packages
 import atomic_kotlin_builder.validate as _validate
+from atomic_kotlin_builder.util import *
 
 
 @click.group()
@@ -90,6 +91,22 @@ def epub():
 def epub_clean():
     "Remove directory containing epub"
     click.echo("Not implemented yet")
+
+
+@epub.command('combine')
+def epub_combine():
+    "Combine Markdown files into a single file"
+    click.echo(combine_markdown_files())
+    os.system("subl {}".format(config.combined_markdown))
+
+
+@epub.command('disassemble')
+def epub_disassemble():
+    "Split combined Markdown file into atom-numbered markdown files"
+    # if config.test_dir.exists():
+    #     clean(config.test_dir)
+    # click.echo(disassemble_combined_markdown_file(config.test_dir))
+    click.echo(disassemble_combined_markdown_file())
 
 
 # @epub.command('new')

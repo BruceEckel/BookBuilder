@@ -28,6 +28,8 @@ build_dir = rootPath / "ebook_build"
 html_dir = build_dir / "html"
 build_dir_images = build_dir / "images"
 epub_dir = build_dir / "epub_files"
+test_dir = rootPath / "test"
+
 combined_markdown = build_dir / "atomickotlin-assembled.md"
 combined_markdown_html = build_dir / "atomickotlin-assembled-html.md"
 combined_markdown_pdf = build_dir / "atomickotlin-assembled-pdf.md"

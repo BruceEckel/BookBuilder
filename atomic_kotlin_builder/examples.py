@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import atomic_kotlin_builder.config as config
+import atomic_kotlin_builder.util
 
 
 logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
@@ -17,17 +18,7 @@ logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', leve
 
 def clean():
     "Remove directory containing extracted example code"
-    try:
-        if config.example_dir.exists():
-            shutil.rmtree(str(config.example_dir))
-            return "Removed: {}".format(config.example_dir)
-        else:
-            return "Doesn't exist: {}".format(config.example_dir)
-    except:
-        return """Removal failed: {}
-        Are you inside that directory, or using a file inside it?
-        """.format(config.example_dir)
-        # raise RuntimeError()
+    return util.clean(config.example_dir)
 
 
 def extractExamples():
