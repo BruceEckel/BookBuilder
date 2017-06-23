@@ -53,6 +53,8 @@ def missing_package(n, lines):
 def contains_missing_package(lines):
     for n, line in enumerate(lines):
         if line.startswith("```kotlin"):
+            if not lines[n+1].startswith("//"):
+                continue
             example_name = lines[n+1].split()[1]
             if missing_package(n, lines):
                 #print("{} missing package".format(example_name))
@@ -66,14 +68,17 @@ def add_next_package(lines, md_name):
         n += 1
     pckg = "package " + atom_package_names[md_name]
     lines.insert(n, pckg)
-    print("inserted " + pckg)
+    # print("inserted " + lines[n])
+    if not (lines[n+1].startswith("import") or lines[n+1].strip() == ""):
+        lines.insert(n+1, "")
     return lines
 
 def add_packages(target_dir=config.markdown_dir):
     print("Inserting package statements into examples that lack them")
     if not target_dir.exists():
         return "Cannot find {}".format(target_dir)
-    for md in target_dir.glob("[0-9][0-9]_*.md"):
+    # for md in target_dir.glob("[0-9][0-9]_*.md"):
+    for md in [target_dir / "23_Lists.md"]:
         print(md.name)
         lines = md.read_text().splitlines()
         while contains_missing_package(lines):
