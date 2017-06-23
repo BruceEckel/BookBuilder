@@ -19,13 +19,15 @@ slugline = re.compile("^// .+?\.kt$", re.MULTILINE)
 
 def examples_without_sluglines(text):
     for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
-        listing = group[1].splitlines()
-        title = listing[0]
-        package = None
-        for line in listing:
-            if line.startswith("package "):
-                package = line.split()[1].strip()
-        if slugline.match(title):
+        listing = group[1]
+        lines = listing.splitlines()
+        if slugline.match(lines[0]):
+            continue
+        for line in lines:
+            if line.strip().startswith("fun "):
+                return True
+    else:
+        return False
 
 
 def general():
@@ -47,6 +49,8 @@ def general():
             error("Contains spaces between ``` and kotlin")
 
         # Search for examples that don't contain slug headers:
+        if examples_without_sluglines(text):
+            error("Contains compileable example(s) without a slugline")
 
 
 def markdown_names():
