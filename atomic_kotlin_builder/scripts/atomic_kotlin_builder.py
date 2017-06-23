@@ -65,7 +65,13 @@ def packages_add_packages():
 
 @cli.group()
 def validate():
-    """Discover and fix package issues"""
+    """Various validation tools"""
+
+
+@validate.command('general')
+def validate_general():
+    "A collection of validation tests"
+    click.echo(_validate.general())
 
 
 @validate.command('markdown_names')
