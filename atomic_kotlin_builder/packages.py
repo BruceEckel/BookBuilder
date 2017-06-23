@@ -9,64 +9,78 @@ import sys
 from pathlib import Path
 
 import atomic_kotlin_builder.config as config
+from atomic_kotlin_builder.package_names import atom_package_names
 
 
 logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
 
+slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
 
-def unpackaged():
-    "Discover examples that don't have packages"
-    return "Not implemented yet"
-    print("Extracting examples ...")
-    if not config.example_dir.exists():
-        debug("creating {}".format(config.example_dir))
-        config.example_dir.mkdir()
-
-    if not config.markdown_dir.exists():
-        return "Cannot find {}".format(config.markdown_dir)
-
-    slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
-    xmlslug = re.compile("^<!-- .+?\.[a-z]+ +-->$", re.MULTILINE)
-
-    for sourceText in config.markdown_dir.glob("*.md"):
+def unpackaged(source_dir=config.markdown_dir):
+    print("Discovering examples that don't have packages ...")
+    if not source_dir.exists():
+        return "Cannot find {}".format(source_dir)
+    for sourceText in source_dir.glob("[0-9][0-9]_*.md"):
         debug("--- {} ---".format(sourceText.name))
-        with sourceText.open("rb") as chapter:
-            text = chapter.read().decode("utf-8", "ignore")
-            for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
-                listing = group[1].splitlines()
-                title = listing[0]
-                package = None
-                for line in listing:
-                    if line.startswith("package "):
-                        package = line.split()[1].strip()
-                if slugline.match(title) or xmlslug.match(title):
-                    debug(title)
-                    fpath = title.split()[1].strip()
-                    if package:
-                        target = config.example_dir / package / fpath
-                    else:
-                        target = config.example_dir / fpath
-                    debug("writing {}".format(target))
-                    if not target.parent.exists():
-                        target.parent.mkdir(parents=True)
-                    with target.open("w", newline='') as codeListing:
-                        debug(group[1])
-                        if slugline.match(title):
-                            codeListing.write(group[1].strip() + "\n")
-                        elif xmlslug.match(title):  # Drop the first line
-                            codeListing.write("\n".join(listing[1:]))
+        for group in re.findall("```(.*?)\n(.*?)\n```", sourceText.read_text(), re.DOTALL):
+            listing = group[1].splitlines()
+            title = listing[0]
+            package = None
+            for line in listing:
+                if line.startswith("package "):
+                    package = line.split()[1].strip()
+            if slugline.match(title):
+                debug(title)
+                fpath = title.split()[1].strip()
+                if package:
+                    print("{}: {} in package {}".format(sourceText.name, fpath, package))
+                else:
+                    print("{} : {} has no package".format(sourceText.name, fpath))
+                print("should be in package {}".format(atom_package_names[sourceText.name]))
 
-    return "Code extracted into {}".format(config.example_dir)
+    return "Package check complete"
 
 
-def add_packages():
-    "Insert package statements into examples that lack them"
-    return "--- Implementation Incomplete ---"
-    print("Creating test.bat files ...")
-    if not config.example_dir.exists():
-        return "Run 'extract' command first"
-    for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        os.chdir(package)
-        print(os.getcwd())
+def missing_package(n, lines):
+    n += 1
+    while lines[n].strip() != "```":
+        if lines[n].startswith("package "):
+            return False
+        n += 1
+    else:
+        return True
+
+def contains_missing_package(lines):
+    for n, line in enumerate(lines):
+        if line.startswith("```kotlin"):
+            example_name = lines[n+1].split()[1]
+            if missing_package(n, lines):
+                #print("{} missing package".format(example_name))
+                return n
+    else:
+        return False
+
+def add_next_package(lines, md_name):
+    n = contains_missing_package(lines) + 1
+    while lines[n].strip().startswith("//"):
+        n += 1
+    pckg = "package " + atom_package_names[md_name]
+    lines.insert(n, pckg)
+    print("inserted " + pckg)
+    return lines
+
+def add_packages(target_dir=config.markdown_dir):
+    print("Inserting package statements into examples that lack them")
+    if not target_dir.exists():
+        return "Cannot find {}".format(target_dir)
+    for md in target_dir.glob("[0-9][0-9]_*.md"):
+        print(md.name)
+        lines = md.read_text().splitlines()
+        while contains_missing_package(lines):
+            lines = add_next_package(lines, md.name)
+
+        md.with_suffix(".txt").write_text("\n".join(lines))
+
+    return "Package insertion complete"
 
 
