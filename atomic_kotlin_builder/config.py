@@ -18,17 +18,16 @@ except:
     print("Error: need to set ATOMIC_KOTLIN_BUILDER")
     sys.exit(1)
 
-rootPath = tools_dir.parent / "AtomicKotlin"
+root_path = tools_dir.parent / "AtomicKotlin"
+akb_code_dir = tools_dir / "atomic_kotlin_builder"
+markdown_dir = root_path / "Markdown"
+example_dir = root_path / "ExtractedExamples"
 
-markdown_dir = rootPath / "Markdown"
-
-example_dir = rootPath / "ExtractedExamples"
-
-build_dir = rootPath / "ebook_build"
+build_dir = root_path / "ebook_build"
 html_dir = build_dir / "html"
 build_dir_images = build_dir / "images"
 epub_dir = build_dir / "epub_files"
-test_dir = rootPath / "test"
+test_dir = root_path / "test"
 
 combined_markdown = build_dir / "atomickotlin-assembled.md"
 combined_markdown_html = build_dir / "atomickotlin-assembled-html.md"
@@ -38,19 +37,22 @@ stripped_for_spelling = build_dir / "atomickotlin-stripped-for-spelling.md"
 kotlin_code_only = build_dir / "atomickotlin-kotlin-code-only.md"
 kotlin_comments_only = build_dir / "atomickotlin-kotlin-comments-only.md"
 
-ebookResources = rootPath / "resources"
+recent_atom_names = akb_code_dir / "recent_atom_names.py"
+
+ebookResources = root_path / "resources"
 img_dir = ebookResources / "images"
 fonts = ebookResources / "fonts"
 cover = ebookResources / "cover.jpg"
 css = ebookResources / "atomickotlin.css"
 metadata = ebookResources / "metadata.yaml"
 
-reformat_dir = rootPath / "Reformatted"
+reformat_dir = root_path / "Reformatted"
 
-sample_book_dir = rootPath / "SampleBook"
-sample_book_original_dir = rootPath / "SampleBook" / "Original"
+sample_book_dir = root_path / "SampleBook"
+sample_book_original_dir = root_path / "SampleBook" / "Original"
 combined_markdown_sample = sample_book_dir / "atomickotlin-assembled.md"
 
+# Most of these should probably go into util.py
 
 def check_for_existence(extension):
     files_with_extension = list(example_dir.rglob(extension))
