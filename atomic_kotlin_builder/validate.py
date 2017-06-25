@@ -48,7 +48,6 @@ def general():
         if re.search("``` +kotlin", text):
             error("Contains spaces between ``` and kotlin")
 
-        # Search for examples that don't contain slug headers:
         if examples_without_sluglines(text):
             error("Contains compileable example(s) without a slugline")
 

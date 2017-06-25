@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 import atomic_kotlin_builder.config as config
-import atomic_kotlin_builder.util
+import atomic_kotlin_builder.util as util
 
 
 logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
@@ -52,6 +52,7 @@ def extractExamples():
                     debug(title)
                     fpath = title.split()[1].strip()
                     if package:
+                        package = package.replace(".", "/")
                         target = config.example_dir / package / fpath
                     else:
                         target = config.example_dir / fpath
