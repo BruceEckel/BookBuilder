@@ -35,7 +35,13 @@ def code_extract():
     click.echo(examples.extractExamples())
 
 
-@code.command('test')
+@code.command('testall')
+def code_test_all_examples():
+    "Compile and capture all results, to show percentage of rewritten examples"
+    click.echo(examples.compile_all_examples())
+
+
+@code.command('testfiles')
 def code_test_files():
     "Create test.bat files for each package, to compile and run all files"
     click.echo(examples.create_test_files())

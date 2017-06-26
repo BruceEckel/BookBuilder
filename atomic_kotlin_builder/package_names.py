@@ -13,7 +13,7 @@ atom_package_names = {
     '11_String_Templates.md': 'stringtemplates',
     '12_Number_Types.md': 'numbertypes',
     '13_Booleans.md': 'booleans',
-    '14_For_And_While_Loops.md': 'forandwhile',
+    '14_For_and_While_Loops.md': 'forandwhile',
     '15_Ranges.md': 'ranges',
     '16_Expressions_And_Statements.md': 'expressionsandstatements',
     '17_Summary_1.md': 'summary1',
