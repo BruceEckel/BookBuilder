@@ -8,6 +8,8 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from collections import defaultdict
+import subprocess
 
 import atomic_kotlin_builder.config as config
 import atomic_kotlin_builder.util as util
@@ -78,6 +80,49 @@ def create_test_files():
         os.chdir(package)
         print(os.getcwd())
     return "--- Implementation Incomplete ---"
+
+
+class ExampleTest:
+    def __init__(self, path):
+        assert path.suffix == ".kt"
+        self.path = path
+        self.success = None
+    def test(self):
+        os.chdir(self.path.parent)
+        # print("compiling {}/{}".format(self.path.parts[-2], self.path.name))
+        cmd = ["kotlinc", "{}".format(self.path.name)]
+        self.result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        self.stdout = self.result.stdout.decode('utf-8')
+        self.stderr = self.result.stderr.decode('utf-8')
+        self.success = len(self.stderr) == 0
+    def __str__(self):
+        result = ""
+        if self.success is not None:
+            result = "OK: " if self.success else "Failed: "
+        result += self.path.name
+        return result
+
+
+def compile_all_examples():
+    "Compile and capture all results, to show percentage of rewritten examples"
+    count = 0
+    examples = defaultdict(list)
+    for example in (config.example_dir/ "abstractclasses").rglob("*.kt"):
+        examples[example.parts[-2]].append(ExampleTest(example))
+        count += 1
+    for edir in examples:
+        print(edir)
+        for exmpl in examples[edir]:
+            print("    {}".format(exmpl))
+            exmpl.test()
+    print("example count = {}".format(count))
+    for edir in examples:
+        print("=== {} ===".format(edir))
+        for et in examples[edir]:
+            print("    {}".format(et))
+            if not et.success:
+                print("    {}".format(et.stderr))
+
 
 
 def copyGradleFiles():
