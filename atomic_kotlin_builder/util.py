@@ -3,6 +3,7 @@
 import os
 import re
 import pprint
+import shutil
 from pathlib import Path
 from collections import OrderedDict
 
@@ -17,11 +18,11 @@ def clean(dir_to_remove):
             return "Removed: {}".format(dir_to_remove)
         else:
             return "Doesn't exist: {}".format(dir_to_remove)
-    except:
-        return """Removal failed: {}
+    except Exception as e:
+        print("""Removal failed: {}
         Are you inside that directory, or using a file inside it?
-        """.format(dir_to_remove)
-        # raise RuntimeError()
+        """.format(dir_to_remove))
+        print(e)
 
 
 # These should go into epub.py
