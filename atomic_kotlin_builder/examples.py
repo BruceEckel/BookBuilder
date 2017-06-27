@@ -2,20 +2,18 @@
 # Extract code into config.example_dir from Atomic Kotlin Markdown files.
 # TODO: Configures for Gradle build by copying from AtomicKotlin-Examples.
 import logging
-from logging import debug
-import os
-import re
 import shutil
-import sys
-from pathlib import Path
-from collections import defaultdict
 import subprocess
+import sys
+from collections import defaultdict
+from logging import debug
+from pathlib import Path
 
 import atomic_kotlin_builder.config as config
 import atomic_kotlin_builder.util as util
 
-
-logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
+logging.basicConfig(filename=__file__.split(
+    '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 
 
 def clean():
@@ -87,14 +85,17 @@ class ExampleTest:
         assert path.suffix == ".kt"
         self.path = path
         self.success = None
+
     def test(self):
         os.chdir(self.path.parent)
         # print("compiling {}/{}".format(self.path.parts[-2], self.path.name))
         cmd = ["kotlinc", "{}".format(self.path.name)]
-        self.result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        self.result = subprocess.run(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         self.stdout = self.result.stdout.decode('utf-8')
         self.stderr = self.result.stderr.decode('utf-8')
         self.success = len(self.stderr) == 0
+
     def __str__(self):
         result = ""
         if self.success is not None:
@@ -107,7 +108,7 @@ def compile_all_examples():
     "Compile and capture all results, to show percentage of rewritten examples"
     count = 0
     examples = defaultdict(list)
-    for example in (config.example_dir/ "abstractclasses").rglob("*.kt"):
+    for example in (config.example_dir / "abstractclasses").rglob("*.kt"):
         examples[example.parts[-2]].append(ExampleTest(example))
         count += 1
     for edir in examples:
@@ -122,7 +123,6 @@ def compile_all_examples():
             print("    {}".format(et))
             if not et.success:
                 print("    {}".format(et.stderr))
-
 
 
 def copyGradleFiles():
@@ -178,5 +178,3 @@ def copyTestFiles():
             debug("copy " + str(test_path.relative_to(config.github_code_dir.parent)
                                 ) + " " + str(dest.relative_to(config.example_dir)))
             shutil.copy(str(test_path), str(dest))
-
-

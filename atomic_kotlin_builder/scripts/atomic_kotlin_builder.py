@@ -1,9 +1,12 @@
 # The driver script for the main program
+import os
 import click
+import atomic_kotlin_builder.config as config
+import atomic_kotlin_builder.util as util
 import atomic_kotlin_builder.examples as examples
 import atomic_kotlin_builder.packages as _packages
 import atomic_kotlin_builder.validate as _validate
-from atomic_kotlin_builder.util import *
+import atomic_kotlin_builder.epub as _epub
 
 
 @click.group()
@@ -26,7 +29,7 @@ def code():
 @code.command('clean')
 def code_clean():
     "Remove directory containing extracted example code"
-    click.echo(examples.clean())
+    click.echo(util.clean(config.example_dir))
 
 
 @code.command('extract')
@@ -102,13 +105,13 @@ def epub():
 @epub.command('clean')
 def epub_clean():
     "Remove directory containing epub"
-    click.echo("Not implemented yet")
+    click.echo(util.clean(config.ebook_build_dir))
 
 
 @epub.command('combine')
 def epub_combine():
     "Combine Markdown files into a single file"
-    click.echo(combine_markdown_files())
+    click.echo(_epub.combine_markdown_files())
     os.system("subl {}".format(config.combined_markdown))
 
 
@@ -118,7 +121,7 @@ def epub_disassemble():
     # if config.test_dir.exists():
     #     clean(config.test_dir)
     # click.echo(disassemble_combined_markdown_file(config.test_dir))
-    click.echo(disassemble_combined_markdown_file())
+    click.echo(_epub.disassemble_combined_markdown_file())
 
 
 # @epub.command('new')
