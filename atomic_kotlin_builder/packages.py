@@ -1,20 +1,17 @@
 #! py -3
 # Discover examples that don't have packages, add package statements
 import logging
-from logging import debug
-import os
 import re
-import shutil
-import sys
-from pathlib import Path
+from logging import debug
 
 import atomic_kotlin_builder.config as config
 from atomic_kotlin_builder.package_names import atom_package_names
 
-
-logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
+logging.basicConfig(filename=__file__.split(
+    '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 
 slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
+
 
 def unpackaged(source_dir=config.markdown_dir):
     print("Discovering examples that don't have packages ...")
@@ -33,10 +30,13 @@ def unpackaged(source_dir=config.markdown_dir):
                 debug(title)
                 fpath = title.split()[1].strip()
                 if package:
-                    print("{}: {} in package {}".format(sourceText.name, fpath, package))
+                    print("{}: {} in package {}".format(
+                        sourceText.name, fpath, package))
                 else:
-                    print("{} : {} has no package".format(sourceText.name, fpath))
-                print("should be in package {}".format(atom_package_names[sourceText.name]))
+                    print("{} : {} has no package".format(
+                        sourceText.name, fpath))
+                print("should be in package {}".format(
+                    atom_package_names[sourceText.name]))
 
     return "Package check complete"
 
@@ -50,17 +50,17 @@ def missing_package(n, lines):
     else:
         return True
 
+
 def contains_missing_package(lines):
     for n, line in enumerate(lines):
         if line.startswith("```kotlin"):
-            if not lines[n+1].startswith("//"):
+            if not lines[n + 1].startswith("//"):
                 continue
-            example_name = lines[n+1].split()[1]
             if missing_package(n, lines):
-                #print("{} missing package".format(example_name))
                 return n
     else:
         return False
+
 
 def add_next_package(lines, md_name):
     n = contains_missing_package(lines) + 1
@@ -69,9 +69,10 @@ def add_next_package(lines, md_name):
     pckg = "package " + atom_package_names[md_name]
     lines.insert(n, pckg)
     # print("inserted " + lines[n])
-    if not (lines[n+1].startswith("import") or lines[n+1].strip() == ""):
-        lines.insert(n+1, "")
+    if not (lines[n + 1].startswith("import") or lines[n + 1].strip() == ""):
+        lines.insert(n + 1, "")
     return lines
+
 
 def add_packages(target_dir=config.markdown_dir):
     print("Inserting package statements into examples that lack them")
@@ -87,5 +88,3 @@ def add_packages(target_dir=config.markdown_dir):
         # md.with_suffix(".txt").write_text("\n".join(lines))
 
     return "Package insertion complete"
-
-

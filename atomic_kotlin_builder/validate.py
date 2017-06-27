@@ -1,21 +1,13 @@
 #! py -3
 # Various validation checks
-import logging
-from logging import debug
-import os
 import re
-import shutil
 import sys
-from pathlib import Path
 
-from atomic_kotlin_builder.util import *
 import atomic_kotlin_builder.config as config
-import atomic_kotlin_builder.package_names as package_names
-
-
-logging.basicConfig(filename=__file__.split('.')[0] + ".log", filemode='w', level=logging.DEBUG)
+from atomic_kotlin_builder.util import create_markdown_filename
 
 slugline = re.compile("^// .+?\.kt$", re.MULTILINE)
+
 
 def examples_without_sluglines(text):
     for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
@@ -37,6 +29,7 @@ def general():
         return "Cannot find {}".format(config.markdown_dir)
     for md in config.markdown_dir.glob("[0-9][0-9]_*.md"):
         name_printed = False
+
         def error(msg):
             nonlocal name_printed
             if not name_printed:
@@ -67,6 +60,5 @@ def markdown_names():
         chap_name = md.name[3:-3]
         title = create_markdown_filename(lines[0].strip())[:-3]
         if chap_name != title:
-            print("{}: {} chapter title inconstent: {}".format(md.name, chap_name, title))
-
-
+            print("{}: {} chapter title inconstent: {}".format(
+                md.name, chap_name, title))

@@ -1,12 +1,13 @@
 #! py -3
 # epub tools
 import os
-import re
 import pprint
+import re
 from collections import OrderedDict
 from pathlib import Path
 
 import atomic_kotlin_builder.config as config
+
 
 def create_markdown_filename(h1):
     fn = h1.replace(": ", "_")
@@ -43,7 +44,8 @@ def combine_markdown_files():
             assembled += chapter.read() + "\n"
     with config.combined_markdown.open('w', encoding="utf8") as book:
         book.write(assembled)
-    config.recent_atom_names.write_text("anames = " + pprint.pformat(atom_names) + "\n")
+    config.recent_atom_names.write_text(
+        "anames = " + pprint.pformat(atom_names) + "\n")
     return "{} Created".format(config.combined_markdown.name)
 
 
@@ -80,7 +82,7 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
 
     # Ensure the number of names are the same
     len_old_names = len(atomic_kotlin_builder.recent_atom_names.anames)
-    len_new_names = len(names) + 1 # for Front
+    len_new_names = len(names) + 1  # for Front
     if len_old_names != len_new_names:
         print("Number of old names: {}".format(len_old_names))
         print("Number of new names: {}".format(len_new_names))

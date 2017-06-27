@@ -2,6 +2,8 @@
 # Extract code into config.example_dir from Atomic Kotlin Markdown files.
 # TODO: Configures for Gradle build by copying from AtomicKotlin-Examples.
 import logging
+import os
+import re
 import shutil
 import subprocess
 import sys
