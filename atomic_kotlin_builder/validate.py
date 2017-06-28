@@ -4,7 +4,7 @@ import re
 import sys
 
 import atomic_kotlin_builder.config as config
-from atomic_kotlin_builder.util import create_markdown_filename
+from atomic_kotlin_builder.epub import create_markdown_filename
 
 slugline = re.compile("^// .+?\.kt$", re.MULTILINE)
 

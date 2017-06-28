@@ -124,6 +124,13 @@ def epub_disassemble():
     click.echo(_epub.disassemble_combined_markdown_file())
 
 
+@epub.command('newStatus')
+def epub_create_new_status_file():
+    "Create fresh STATUS.md if one doesn't exist"
+    click.echo(util.create_new_status_file())
+
+
+
 # @epub.command('new')
 # @click.argument('name')
 # def epub_new(name):

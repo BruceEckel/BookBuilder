@@ -30,6 +30,26 @@ def check_for_existence(extension):
     return files_with_extension
 
 
+def create_new_status_file():
+    "Create STATUS.md"
+    status_file = config.root_path / "STATUS.md"
+    if status_file.exists():
+        return "STATUS.md already exists; new one not created"
+    md_files = sorted([md.name for md in config.markdown_dir.glob("[0-9][0-9]_*.md")])
+    status = ""
+    def checkbox(item):
+        nonlocal status
+        status += "+ [ ] {}\n".format(item)
+    for md in md_files:
+        status += "#### {}\n".format(md)
+        checkbox("Examples Replaced")
+        checkbox("Rewritten")
+        checkbox("Tech Checked")
+        status += "+ Notes:\n"
+    status_file.write_text(status)
+
+
+
 # Format output:
 # (0) Do first/last lines before formatting to width
 # (1) Combine output and error (if present) files
