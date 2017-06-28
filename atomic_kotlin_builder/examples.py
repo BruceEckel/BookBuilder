@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import io
 from collections import defaultdict
 from logging import debug
 from pathlib import Path
@@ -71,15 +72,25 @@ def extractExamples():
     return "Code extracted into {}".format(config.example_dir)
 
 
+def display_extracted_examples():
+    for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
+        print(package.relative_to(config.example_dir))
+        for kt in package.rglob("*.kt"):
+            print("    {}".format(kt.relative_to(package)))
+
+
 def create_test_files():
     "Create test.bat files for each package, to compile and run all files"
     print("Creating test.bat files ...")
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        os.chdir(package)
-        print(os.getcwd())
-    return "--- Implementation Incomplete ---"
+        with io.StringIO() as batch:
+            for kt in package.rglob("*.kt"):
+                print("cmd /c kotlinc {}".format(kt.relative_to(package)), file=batch)
+                print("cmd /c kotlin {}.{}".format(package.name, kt.stem + "Kt"), file=batch)
+            (package / "test.bat").write_text(batch.getvalue())
+    return "Test batch files created"
 
 
 class ExampleTest:
