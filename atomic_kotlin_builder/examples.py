@@ -90,6 +90,8 @@ def create_test_files():
                 print("cmd /c kotlinc {}".format(kt.relative_to(package)), file=batch)
                 print("cmd /c kotlin {}.{}".format(package.name, kt.stem + "Kt"), file=batch)
             (package / "test.bat").write_text(batch.getvalue())
+        (package / "regen.bat").write_text("python ..\\regen.py")
+    shutil.copy(config.akb_code_dir / "regen.py", config.example_dir)
     return "Test batch files created"
 
 

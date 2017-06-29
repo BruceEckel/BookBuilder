@@ -36,6 +36,7 @@ def code_clean():
 def code_extract():
     "Extract examples from book's Markdown files"
     click.echo(examples.extractExamples())
+    click.echo(examples.create_test_files())
 
 
 @code.command('testall')
