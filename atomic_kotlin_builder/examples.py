@@ -85,19 +85,18 @@ python ..\\gen.py %*
 """
 
 def create_test_files():
-    "Create test.bat files for each package, to compile and run all files"
-    print("Creating test.bat files ...")
+    "Create gen.bat files for each package, to compile and run files"
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        with io.StringIO() as batch:
-            for kt in package.rglob("*.kt"):
-                print("cmd /c kotlinc {}".format(kt.relative_to(package)), file=batch)
-                print("cmd /c kotlin {}.{}".format(package.name, kt.stem + "Kt"), file=batch)
-            (package / "test.bat").write_text(batch.getvalue())
+        # with io.StringIO() as batch:
+        #     for kt in package.rglob("*.kt"):
+        #         print("cmd /c kotlinc {}".format(kt.relative_to(package)), file=batch)
+        #         print("cmd /c kotlin {}.{}".format(package.name, kt.stem + "Kt"), file=batch)
+        #     (package / "test.bat").write_text(batch.getvalue())
         (package / "gen.bat").write_text(gen_bat)
     shutil.copy(config.akb_code_dir / "gen.py", config.example_dir)
-    return "Test batch files created"
+    return "gen files created"
 
 
 class ExampleTest:
