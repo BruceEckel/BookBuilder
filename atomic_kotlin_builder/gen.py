@@ -1,15 +1,17 @@
 #! py -3
-# For running from regen.bat (placed in each atom directory)
+# For running from gen.bat (placed in each atom directory)
 # Compiles and runs each example, attaches output to new version
-# of that example, placed in the 'regenerated' subdirectory
+# of that example, placed in the 'generated' subdirectory
+import os
 import subprocess
+import sys
 from pathlib import Path
 
-def regenerate_example(source_file):
+def generate_example(source_file):
     "Compile and capture results, create new source file with output appended"
-    regen = Path.cwd() / "regenerated"
-    if not regen.exists():
-        regen.mkdir()
+    gen = Path.cwd() / "generated"
+    if not gen.exists():
+        gen.mkdir()
     def execute(cmd, topic):
         # print(cmd)
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -36,11 +38,17 @@ def regenerate_example(source_file):
         source_code = chop_output(source_file)
         if len(run_out):
             source_code += "\n/* Output:\n{}\n*/".format(run_out.strip())
-        regenerated_example = regen / source_file.name
-        regenerated_example.write_text(source_code)
-        print("wrote {}".format(regenerated_example.relative_to(Path.cwd())))
+        generated_example = gen / source_file.name
+        generated_example.write_text(source_code)
+        print("wrote {}".format(generated_example.relative_to(Path.cwd())))
 
 
 if __name__ == '__main__':
-    for source_file in Path.cwd().glob("*.kt"):
-        regenerate_example(source_file)
+    if len(sys.argv) == 1: # No arguments
+        for source_file in Path.cwd().glob("*.kt"):
+            generate_example(source_file)
+            os.system("subl {}".format(source_file))
+    for arg in sys.argv[1:]:
+        source_file = Path.cwd() / arg
+        generate_example(source_file)
+        os.system("subl {}".format(source_file))
