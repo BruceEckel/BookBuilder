@@ -7,6 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 import click
+import atomic_kotlin_builder.config as config
+import atomic_kotlin_builder.util as util
+
 
 def generate_example(source_file):
     "Compile and capture results, create new source file with output appended"
@@ -44,25 +47,46 @@ def generate_example(source_file):
     return generated_example
 
 
-def process_file(source_file):
+def reinsert_file(generated_file):
+    generated = generated_file.read_text()
+    lines = generated.splitlines()
+    slug = lines[0]
+    for md in config.markdown_dir.glob("[0-9][0-9]_*.md"):
+        text = md.read_text()
+        if slug in text:
+            updated_text, index = util.replace_code_in_text(generated, text)
+            # Write markdown file, open in sublime at index
+            md.write_text(updated_text + "\n")
+            os.system("subl {}:{}".format(md, index))
+            # test_file = md.with_suffix(".test")
+            # test_file.write_text(updated_text + "\n")
+            # os.system("subl {}:{}".format(test_file, index))
+            return
+    assert False, "No code found in any Markdown files for {}".format(generated_file)
+
+
+def process_file(source_file, reinsert):
     generated_file = generate_example(source_file)
     if generated_file:
         os.system("subl {}".format(generated_file))
+    if reinsert:
+        reinsert_file(generated_file)
 
 
 @click.command()
 @click.option('--reinsert', is_flag=True, help='Insert result back into md file.')
-def generate(reinsert):
-    if reinsert:
-        print("Reinserting result into md file")
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if not len(args): # No arguments
+@click.argument('kotlin_files', nargs=-1)
+def generate(kotlin_files, reinsert):
+    """
+    Takes kotlin files compiles them, runs them, and creates a new files with the output
+    appended. With no arguments, does all files in this directory.
+    """
+    if len(kotlin_files):
+        for kf in kotlin_files:
+            process_file(Path.cwd() / kf, reinsert)
+    else: # No arguments, do them all
         for source_file in Path.cwd().glob("*.kt"):
-            process_file(source_file)
-    else:
-        for arg in args:
-            source_file = Path.cwd() / arg
-            process_file(source_file)
+            process_file(source_file, reinsert)
 
 
 if __name__ == '__main__':

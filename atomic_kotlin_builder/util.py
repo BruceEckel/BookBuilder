@@ -3,6 +3,7 @@
 import shutil
 import sys
 import textwrap
+import pprint
 
 import atomic_kotlin_builder.config as config
 
@@ -28,6 +29,46 @@ def check_for_existence(extension):
         print("Error: no " + extension + " files found")
         sys.exit(1)
     return files_with_extension
+
+
+def find_end(text_lines, n):
+    """
+    n is the index of the code listing title line,
+    searches for closing ``` and returns that index
+    """
+    for i, line in enumerate(text_lines[n:]):
+        if line.rstrip() == "```":
+            return n + i
+        if line.rstrip() == "```kotlin":
+            assert False, "```kotlin before closing ```"
+    else:
+        assert False, "closing ``` not found"
+
+
+def replace_code_in_text(generated, text):
+    """
+    Returns 'text' after replacing code listing matching 'generated'
+    Both generated and text are NOT lists, but normal chunks of text
+    returns new_text, starting_index so an editor can be opened at that line
+    """
+    code_lines = generated.splitlines()
+    title = code_lines[0].strip()
+    assert title in text, "{} not in text".format(title)
+    text_lines = text.splitlines()
+    for n, line in enumerate(text_lines):
+        if line.strip() == title:
+            end = find_end(text_lines, n)
+            # print("n: {}, end: {}".format(n, end))
+            # pprint.pprint(text_lines[n:end])
+            # print("=" * 60)
+            # pprint.pprint(code_lines)
+            # print("-" * 60)
+            text_lines[n:end] = code_lines
+            new_text = ("\n".join(text_lines)).strip()
+            return new_text, n
+    assert False, "{} not found in text".format(title)
+
+
 
 
 def create_new_status_file():
