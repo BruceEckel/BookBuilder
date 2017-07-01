@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+import click
 
 def generate_example(source_file):
     "Compile and capture results, create new source file with output appended"
@@ -49,10 +50,20 @@ def process_file(source_file):
         os.system("subl {}".format(generated_file))
 
 
-if __name__ == '__main__':
-    if len(sys.argv) == 1: # No arguments
+@click.command()
+@click.option('--reinsert', is_flag=True, help='Insert result back into md file.')
+def generate(reinsert):
+    if reinsert:
+        print("Reinserting result into md file")
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if not len(args): # No arguments
         for source_file in Path.cwd().glob("*.kt"):
             process_file(source_file)
-    for arg in sys.argv[1:]:
-        source_file = Path.cwd() / arg
-        process_file(source_file)
+    else:
+        for arg in args:
+            source_file = Path.cwd() / arg
+            process_file(source_file)
+
+
+if __name__ == '__main__':
+    generate()
