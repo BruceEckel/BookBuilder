@@ -84,6 +84,11 @@ gen_bat = """\
 python ..\\gen.py %*
 """
 
+redo_bat = """\
+@echo off
+python ..\\gen.py --reinsert %*
+"""
+
 def create_test_files():
     "Create gen.bat files for each package, to compile and run files"
     if not config.example_dir.exists():
@@ -95,6 +100,7 @@ def create_test_files():
         #         print("cmd /c kotlin {}.{}".format(package.name, kt.stem + "Kt"), file=batch)
         #     (package / "test.bat").write_text(batch.getvalue())
         (package / "gen.bat").write_text(gen_bat)
+        (package / "redo.bat").write_text(redo_bat)
     shutil.copy(config.akb_code_dir / "gen.py", config.example_dir)
     return "gen files created"
 
