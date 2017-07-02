@@ -51,9 +51,14 @@ def reinsert_file(generated_file):
     generated = generated_file.read_text()
     lines = generated.splitlines()
     slug = lines[0]
+    def find_package(lines):
+        for line in lines:
+            if line.startswith("package "):
+                return line.strip()
+    package = find_package(lines)
     for md in config.markdown_dir.glob("[0-9][0-9]_*.md"):
         text = md.read_text()
-        if slug in text:
+        if slug in text and package in text:
             updated_text, index = util.replace_code_in_text(generated, text)
             # Write markdown file, open in sublime at index
             md.write_text(updated_text + "\n")
