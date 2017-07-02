@@ -16,7 +16,7 @@ def generate_example(source_file):
     gen = Path.cwd() / "generated"
     if not gen.exists():
         gen.mkdir()
-    def execute(cmd, topic):
+    def execute(cmd):
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         out = result.stdout.decode('utf-8')
         err = result.stderr.decode('utf-8')
@@ -24,10 +24,12 @@ def generate_example(source_file):
             print("{}".format(err))
         return out, err
 
-    compiler_out, compiler_err = execute(["kotlinc", "{}".format(source_file.name)], "compile")
-    run_out, run_err = execute(["kotlin", "{}.{}".format(source_file.parent.stem, source_file.stem + "Kt")], "run")
-
-    if "error" in compiler_err or "error" in run_err:
+    compiler_out, compiler_err = execute(["kotlinc", "{}".format(source_file.name)])
+    if "error" in compiler_err:
+        return None
+    run_out, run_err = execute(
+        ["kotlin", "{}.{}".format(source_file.parent.stem, source_file.stem + "Kt")])
+    if "error" in run_err:
         return None
 
     def chop_output(source_path):
@@ -63,35 +65,37 @@ def reinsert_file(generated_file):
             # Write markdown file, open in sublime at index
             md.write_text(updated_text + "\n")
             os.system("subl {}:{}".format(md, index))
-            # test_file = md.with_suffix(".test")
-            # test_file.write_text(updated_text + "\n")
-            # os.system("subl {}:{}".format(test_file, index))
             return
     assert False, "No code found in any Markdown files for {}".format(generated_file)
 
 
 def process_file(source_file, reinsert):
     generated_file = generate_example(source_file)
-    if generated_file:
-        os.system("subl {}".format(generated_file))
+    if not generated_file:
+        return None
     if reinsert:
         reinsert_file(generated_file)
+    return generated_file
 
 
 @click.command()
-@click.option('--reinsert', is_flag=True, help='Insert result back into md file.')
 @click.argument('kotlin_files', nargs=-1)
-def generate(kotlin_files, reinsert):
+@click.option('--reinsert', is_flag=True, help='Insert result back into md file.')
+@click.option('--edit', is_flag=True, help='Open file(s) in editor after processing.')
+def generate(kotlin_files, reinsert, edit):
     """
-    Takes kotlin files compiles them, runs them, and creates a new files with the output
-    appended. With no arguments, does all files in this directory.
+    Takes kotlin files, compiles and runs them, then creates new files with
+    the output appended. With no arguments, does all files in this directory.
     """
-    if len(kotlin_files):
-        for kf in kotlin_files:
-            process_file(Path.cwd() / kf, reinsert)
-    else: # No arguments, do them all
-        for source_file in Path.cwd().glob("*.kt"):
-            process_file(source_file, reinsert)
+    source_files = (
+        [Path.cwd() / kf for kf in kotlin_files] if kotlin_files
+        else Path.cwd().glob("*.kt") # No arguments, do them all
+    )
+    generated_files = list(filter(None,
+        [process_file(gf, reinsert) for gf in source_files]))
+    if edit:
+        for gf in generated_files:
+            os.system("subl {}".format(gf))
 
 
 if __name__ == '__main__':

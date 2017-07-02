@@ -81,7 +81,7 @@ def display_extracted_examples():
 
 gen_bat = """\
 @echo off
-python ..\\gen.py %*
+python ..\gen.py --edit %*
 """
 
 redo_bat = """\
