@@ -86,6 +86,7 @@ python ..\\gen.py %*
 
 redo_bat = """\
 @echo off
+akb code extract
 python ..\\gen.py --reinsert %*
 """
 

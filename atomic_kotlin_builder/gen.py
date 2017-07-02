@@ -21,13 +21,13 @@ def generate_example(source_file):
         out = result.stdout.decode('utf-8')
         err = result.stderr.decode('utf-8')
         if len(err):
-            print("{} failed: {}\n{}".format(topic, source_file.name, err))
+            print("{}".format(err))
         return out, err
 
     compiler_out, compiler_err = execute(["kotlinc", "{}".format(source_file.name)], "compile")
     run_out, run_err = execute(["kotlin", "{}.{}".format(source_file.parent.stem, source_file.stem + "Kt")], "run")
 
-    if len(compiler_err) or len(run_err):
+    if "error" in compiler_err or "error" in run_err:
         return None
 
     def chop_output(source_path):
