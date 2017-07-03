@@ -91,8 +91,7 @@ def generate(kotlin_files, reinsert, edit):
         [Path.cwd() / kf for kf in kotlin_files] if kotlin_files
         else Path.cwd().glob("*.kt") # No arguments, do them all
     )
-    generated_files = list(filter(None,
-        [process_file(gf, reinsert) for gf in source_files]))
+    generated_files = filter(None, [process_file(gf, reinsert) for gf in source_files])
     if edit:
         for gf in generated_files:
             os.system("subl {}".format(gf))
