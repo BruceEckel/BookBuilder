@@ -81,13 +81,13 @@ def display_extracted_examples():
 
 gen_bat = """\
 @echo off
-python ..\gen.py --edit %*
+generate --edit %*
 """
 
 redo_bat = """\
 @echo off
 akb code extract
-python ..\\gen.py --reinsert %*
+generate --reinsert %*
 """
 
 def create_test_files():
@@ -102,8 +102,8 @@ def create_test_files():
         #     (package / "test.bat").write_text(batch.getvalue())
         (package / "gen.bat").write_text(gen_bat)
         (package / "redo.bat").write_text(redo_bat)
-    shutil.copy(config.akb_code_dir / "gen.py", config.example_dir)
-    return "gen files created"
+    # shutil.copy(config.akb_code_dir / "gen.py", config.example_dir)
+    return "bat files created"
 
 
 class ExampleTest:

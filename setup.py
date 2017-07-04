@@ -20,5 +20,6 @@ setup(
     entry_points='''
         [console_scripts]
         akb=atomic_kotlin_builder.scripts.atomic_kotlin_builder:cli
+        generate=atomic_kotlin_builder.scripts.generate_output:generate
     ''',
 )

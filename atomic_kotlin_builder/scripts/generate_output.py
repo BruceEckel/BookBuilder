@@ -97,5 +97,5 @@ def generate(kotlin_files, reinsert, edit):
             os.system("subl {}".format(gf))
 
 
-if __name__ == '__main__':
-    generate()
+# if __name__ == '__main__':
+#     generate()
