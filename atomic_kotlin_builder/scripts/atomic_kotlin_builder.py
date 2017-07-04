@@ -117,15 +117,18 @@ def epub_combine():
 
 
 @epub.command('disassemble')
-def epub_disassemble():
+@click.option('--test', is_flag=True, help='Unpack to "test" directory instead of overwriting Markdown.')
+def epub_disassemble(test):
     "Split combined Markdown file into atom-numbered markdown files"
-    # if config.test_dir.exists():
-    #     clean(config.test_dir)
-    # click.echo(disassemble_combined_markdown_file(config.test_dir))
-    click.echo(_epub.disassemble_combined_markdown_file())
+    if test:
+        if config.test_dir.exists():
+            click.echo(util.clean(config.test_dir))
+        click.echo(_epub.disassemble_combined_markdown_file(config.test_dir))
+    else:
+        click.echo(_epub.disassemble_combined_markdown_file())
 
 
-@epub.command('newStatus')
+# @epub.command('newStatus')
 def epub_create_new_status_file():
     "Create fresh STATUS.md if one doesn't exist"
     click.echo(util.create_new_status_file())

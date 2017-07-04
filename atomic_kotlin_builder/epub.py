@@ -3,6 +3,7 @@
 import os
 import pprint
 import re
+import difflib
 from collections import OrderedDict
 from pathlib import Path
 
@@ -72,12 +73,9 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
         print("Old names not in new names:")
         for d in diff:
             print("   {}".format(d))
-        print("=== New Names ===")
-        for nm in new_names:
-            print(nm)
-        print("=== Old Names ===")
-        for nm in old_names:
-            print(nm)
+        print("---- Near matches: ----")
+        for d in diff:
+            print("{}: {}".format(d, difflib.get_close_matches(d, new_names)))
         return "Disassembly failed"
 
     # Ensure the number of names are the same
