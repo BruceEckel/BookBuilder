@@ -97,4 +97,6 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
                 chp.write(p + "\n")
                 chp.write("=" * len(p) + "\n\n")
             chp.write(chaps[p].strip() + "\n")
+    if target_dir != config.markdown_dir:
+        print("now run 'diff -r Markdown test'")
     return "Successfully disassembled combined Markdown"
