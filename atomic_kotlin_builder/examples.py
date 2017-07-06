@@ -29,10 +29,6 @@ def extractExamples():
     if not config.example_dir.exists():
         debug("creating {}".format(config.example_dir))
         config.example_dir.mkdir()
-    # copyTestFiles()
-
-    # for f in tools_to_copy:
-    #     shutil.copy(str(f), str(config.example_dir))
 
     if not config.markdown_dir.exists():
         return "Cannot find {}".format(config.markdown_dir)
@@ -102,7 +98,6 @@ def create_test_files():
         #     (package / "test.bat").write_text(batch.getvalue())
         (package / "gen.bat").write_text(gen_bat)
         (package / "redo.bat").write_text(redo_bat)
-    # shutil.copy(config.akb_code_dir / "gen.py", config.example_dir)
     return "bat files created"
 
 
@@ -114,7 +109,6 @@ class ExampleTest:
 
     def test(self):
         os.chdir(self.path.parent)
-        # print("compiling {}/{}".format(self.path.parts[-2], self.path.name))
         cmd = ["kotlinc", "{}".format(self.path.name)]
         self.result = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)

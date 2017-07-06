@@ -90,12 +90,6 @@ def validate_markdown_names():
     click.echo(_validate.markdown_names())
 
 
-# @validate.command('add')
-# def validate_add_packages():
-#     "Add package statements to all examples that don't have them"
-#     click.echo(_validate.add_packages())
-
-
 ##########################################################
 
 @cli.group()
@@ -132,31 +126,3 @@ def epub_disassemble(test):
 def epub_create_new_status_file():
     "Create fresh STATUS.md if one doesn't exist"
     click.echo(util.create_new_status_file())
-
-
-
-# @epub.command('new')
-# @click.argument('name')
-# def epub_new(name):
-#     """Creates a new epub."""
-#     click.echo('Created epub %s' % name)
-
-
-# @epub.command('move')
-# @click.argument('epub')
-# @click.argument('x', type=float)
-# @click.argument('y', type=float)
-# @click.option('--speed', metavar='KN', default=10,
-#               help='Speed in knots.')
-# def epub_move(epub, x, y, speed):
-#     """Moves epub to the new location X,Y."""
-#     click.echo('Moving epub %s to %s,%s with speed %s' % (epub, x, y, speed))
-
-
-# @epub.command('shoot')
-# @click.argument('epub')
-# @click.argument('x', type=float)
-# @click.argument('y', type=float)
-# def epub_shoot(epub, x, y):
-#     """Makes epub fire to X,Y."""
-#     click.echo('epub %s fires to %s,%s' % (epub, x, y))

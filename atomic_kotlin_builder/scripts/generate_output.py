@@ -1,5 +1,4 @@
 #! py -3
-# For running from gen.bat (placed in each atom directory)
 # Compiles and runs each example, attaches output to new version
 # of that example, placed in the 'generated' subdirectory
 import os
@@ -95,7 +94,3 @@ def generate(kotlin_files, reinsert, edit):
     if edit:
         for gf in generated_files:
             os.system("subl {}".format(gf))
-
-
-# if __name__ == '__main__':
-#     generate()
