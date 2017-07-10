@@ -40,7 +40,8 @@ def general():
                 print("{}".format(md.name))
                 name_printed = True
             print("    {}".format(msg))
-        text = md.read_text()
+        with md.open() as f:
+            text = f.read()
 
         if re.search("``` +kotlin", text):
             error("Contains spaces between ``` and kotlin")
@@ -53,7 +54,7 @@ def general():
             title = text.splitlines()[0]
             if create_markdown_filename(title) != md.name[3:]:
                 error("Atom Title: {}".format(title))
-            if "and" in title:
+            if " and " in title:
                 error("'and' in title should be '&': {}".format(title))
 
 
@@ -65,7 +66,8 @@ def markdown_names():
     for md in [f for f in config.markdown_dir.iterdir() if f.name[0].isdigit()]:
         if md.name == "00_Front.md":
             continue
-        lines = md.read_text().splitlines()
+        with md.open() as f:
+            lines = f.read().splitlines()
         if not lines[1].startswith("==="):
             print("{} Missing Chapter Name".format(md))
             sys.exit(1)
