@@ -5,6 +5,8 @@ import sys
 
 import atomic_kotlin_builder.config as config
 from atomic_kotlin_builder.epub import create_markdown_filename
+from atomic_kotlin_builder.util import *
+
 
 slugline = re.compile("^// .+?\.kt$", re.MULTILINE)
 
@@ -15,9 +17,11 @@ def examples_without_sluglines(text):
         lines = listing.splitlines()
         if slugline.match(lines[0]):
             continue
+        if "Type1" in listing or "ReturnType" in listing:
+            continue
         for line in lines:
             if line.strip().startswith("fun "):
-                return True
+                return listing
     else:
         return False
 
@@ -41,8 +45,16 @@ def general():
         if re.search("``` +kotlin", text):
             error("Contains spaces between ``` and kotlin")
 
-        if examples_without_sluglines(text):
-            error("Contains compileable example(s) without a slugline")
+        noslug = examples_without_sluglines(text)
+        if noslug:
+            error("Contains compileable example(s) without a slugline: {}".format(noslug))
+
+        if md.name != "00_Front.md":
+            title = text.splitlines()[0]
+            if create_markdown_filename(title) != md.name[3:]:
+                error("Atom Title: {}".format(title))
+            if "and" in title:
+                error("'and' in title should be '&': {}".format(title))
 
 
 def markdown_names():

@@ -5,10 +5,30 @@
 
 ## To Install
 - Download and unzip (or git clone)
-- run `venv.bat` (Windows) or `venv.sh` (Mac/Linux)
+- Move to the base directory where you unzipped or cloned it
 
-## To run
-- You must run `venv` to enter the virtual environment before you can run the tool.
-  Running `venv` a second time will exit the virtual environment.
+You must enter the virtual environment before you can use `akb`.
+
+## To Enter the Virtual Environment (Windows)
+- Run `venv.bat`. The first time, this will set up the virtual environment and enter it.
+- From now on, running `venv` will enter the virtual environment.
+
+
+## To Enter the Virtual Environment (Mac/Linux)
+
+
+## Running `akb`
 - Run `akb`. This will indicate the basic commands
 - To find out more about a command, run `akb` *the_command* `--help`
+
+
+## To Quit the Virtual Environment
+
+You'll know that you're inside the virtual environment because of the
+`(virtualenv)` at the beginning of your command prompt.
+
+### Windows: type `venv`
+
+### Mac/Linux: type `deactivate`
+
+In either case, the `(virtualenv)` will disappear from your command prompt.
