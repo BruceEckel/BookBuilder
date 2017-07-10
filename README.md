@@ -21,6 +21,7 @@ export set ATOMIC_KOTLIN_BUILDER=/mnt/c/Users/bruce/Documents/Git/AtomicKotlinBu
 Start a new bash shell or move to your home directory and `source .bashrc`.
 
 2. Move to the base directory. Run `python3 -m venv virtualenv` at the bash prompt.
+   (You might have to first execute `sudo apt-get install python3.4-venv` to get this to work).
 
 3. Then run `source ./virtualenv/bin/activate` at the bash prompt.
 
