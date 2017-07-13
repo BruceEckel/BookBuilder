@@ -26,6 +26,41 @@ def examples_without_sluglines(text):
         return False
 
 
+def extract_listings(text):
+    return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL)]
+
+
+def parse_comment_block(n, lines):
+    block = ""
+    while n < len(lines) and "//" in lines[n]:
+        block += lines[n].split("//")[1].lstrip()
+        n += 1
+    return n, block
+
+
+def parse_blocks_of_comments(listing):
+    result = []
+    lines = listing.splitlines()
+    n = 0
+    while n < len(lines):
+        if "//" in lines[n]:
+            n, block = parse_comment_block(n, lines)
+            result.append(block)
+        else:
+            n += 1
+    return result
+
+
+def find_uncapitalized_comment(text):
+    "Need to add checks for '.' and following cap"
+    for listing in extract_listings(text):
+        for comment_block in parse_blocks_of_comments(listing):
+            first_char = comment_block.strip()[0]
+            if first_char.isalpha() and not first_char.isupper():
+                return comment_block
+    return False
+
+
 def general():
     "Multiple tests to find problems in the book"
     print("Running general validation tests ...")
@@ -42,6 +77,7 @@ def general():
             print("    {}".format(msg))
         with md.open() as f:
             text = f.read()
+            lines = text.splitlines()
 
         if re.search("``` +kotlin", text):
             error("Contains spaces between ``` and kotlin")
@@ -51,8 +87,12 @@ def general():
             error("Contains compileable example(s) without a slugline: {}".format(noslug))
 
         if md.name != "00_Front.md":
-            title = text.splitlines()[0]
+            title = lines[0]
             if create_markdown_filename(title) != md.name[3:]:
                 error("Atom Title: {}".format(title))
             if " and " in title:
                 error("'and' in title should be '&': {}".format(title))
+
+        uncapped = find_uncapitalized_comment(text)
+        if uncapped:
+            error("Uncapitalized comment: {}".format(uncapped))
