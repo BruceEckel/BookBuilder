@@ -56,23 +56,3 @@ def general():
                 error("Atom Title: {}".format(title))
             if " and " in title:
                 error("'and' in title should be '&': {}".format(title))
-
-
-def markdown_names():
-    "Ensure markdown file names match chapter titles"
-    print("Validating Markdown File Names ...")
-    if not config.markdown_dir.exists():
-        return "Cannot find {}".format(config.markdown_dir)
-    for md in [f for f in config.markdown_dir.iterdir() if f.name[0].isdigit()]:
-        if md.name == "00_Front.md":
-            continue
-        with md.open() as f:
-            lines = f.read().splitlines()
-        if not lines[1].startswith("==="):
-            print("{} Missing Chapter Name".format(md))
-            sys.exit(1)
-        chap_name = md.name[3:-3]
-        title = create_markdown_filename(lines[0].strip())[:-3]
-        if chap_name != title:
-            print("{}: {} chapter title inconstent: {}".format(
-                md.name, chap_name, title))

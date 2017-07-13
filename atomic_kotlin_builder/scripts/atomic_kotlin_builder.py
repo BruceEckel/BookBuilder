@@ -73,21 +73,10 @@ def packages_add_packages():
 ##########################################################
 
 
-@cli.group()
+@cli.command()
 def validate():
-    """Various validation tools"""
-
-
-@validate.command('general')
-def validate_general():
-    "A collection of validation tests"
+    "Validation tests"
     click.echo(_validate.general())
-
-
-@validate.command('markdown_names')
-def validate_markdown_names():
-    "Check Markdown file names against chapter titles"
-    click.echo(_validate.markdown_names())
 
 
 ##########################################################
