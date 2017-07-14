@@ -8,6 +8,15 @@ from atomic_kotlin_builder.epub import create_markdown_filename
 from atomic_kotlin_builder.util import *
 
 
+class ErrorReporter:
+    def __init__(self, id):
+        self.id = "{}".format(id)
+    def __call__(self, msg):
+        if self.id:
+            self.id = print(self.id)
+        print("    {}".format(msg))
+
+
 def all_checks():
     "Multiple tests to find problems in the book"
     print("Running all validation tests ...")
@@ -17,18 +26,12 @@ def all_checks():
         with md.open() as f:
             text = f.read()
 
-        name_printed = False
-        def error(msg):
-            nonlocal name_printed
-            if not name_printed:
-                print("{}".format(md.name))
-                name_printed = True
-            print("    {}".format(msg))
+        reporter = ErrorReporter(md.name)
 
-        validate_tag_no_gap(text, error)
-        validate_complete_examples(text, error)
-        validate_filenames_and_titles(md, text, error)
-        validate_capitalized_comments(text, error)
+        validate_tag_no_gap(text, reporter)
+        validate_complete_examples(text, reporter)
+        validate_filenames_and_titles(md, text, reporter)
+        validate_capitalized_comments(text, reporter)
 
 
 #################################################################
@@ -39,9 +42,9 @@ def all_checks():
 ### Ensure there's no gap between ``` and kotlin:
 
 
-def validate_tag_no_gap(text, err_func):
+def validate_tag_no_gap(text, error_reporter):
     if re.search("``` +kotlin", text):
-        err_func("Contains spaces between ``` and kotlin")
+        error_reporter("Contains spaces between ``` and kotlin")
 
 
 ### Check for code fragments that should be turned into examples:
@@ -63,23 +66,23 @@ def examples_without_sluglines(text):
         return False
 
 
-def validate_complete_examples(text, err_func):
+def validate_complete_examples(text, error_reporter):
     noslug = examples_without_sluglines(text)
     if noslug:
-        err_func("Contains compileable example(s) without a slugline: {}".format(noslug))
+        error_reporter("Contains compileable example(s) without a slugline: {}".format(noslug))
 
 
 ### Ensure atom titles conform to standard and agree with file names:
 
 
-def validate_filenames_and_titles(md, text, err_func):
+def validate_filenames_and_titles(md, text, error_reporter):
     if md.name == "00_Front.md":
         return
     title = text.splitlines()[0]
     if create_markdown_filename(title) != md.name[3:]:
-        err_func("Atom Title: {}".format(title))
+        error_reporter("Atom Title: {}".format(title))
     if " and " in title:
-        err_func("'and' in title should be '&': {}".format(title))
+        error_reporter("'and' in title should be '&': {}".format(title))
 
 
 ### Check for un-capitalized comments:
@@ -120,7 +123,7 @@ def find_uncapitalized_comment(text):
     return False
 
 
-def validate_capitalized_comments(text, err_func):
+def validate_capitalized_comments(text, error_reporter):
     uncapped = find_uncapitalized_comment(text)
     if uncapped:
-        err_func("Uncapitalized comment: {}".format(uncapped))
+        error_reporter("Uncapitalized comment: {}".format(uncapped))
