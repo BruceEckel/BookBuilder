@@ -76,7 +76,7 @@ def packages_add_packages():
 @cli.command()
 def validate():
     "Validation tests"
-    click.echo(_validate.general())
+    click.echo(_validate.all_checks())
 
 
 ##########################################################
