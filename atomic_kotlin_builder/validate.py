@@ -9,12 +9,15 @@ from atomic_kotlin_builder.util import *
 
 
 class ErrorReporter:
+
     def __init__(self, id):
         self.id = "{}".format(id)
+
     def __call__(self, msg):
         if self.id:
             self.id = print(self.id)
         print("    {}".format(msg))
+
 
 
 def all_checks():
@@ -23,11 +26,9 @@ def all_checks():
     if not config.markdown_dir.exists():
         return "Cannot find {}".format(config.markdown_dir)
     for md in config.markdown_dir.glob("[0-9][0-9]_*.md"):
+        reporter = ErrorReporter(md.name)
         with md.open() as f:
             text = f.read()
-
-        reporter = ErrorReporter(md.name)
-
         validate_tag_no_gap(text, reporter)
         validate_complete_examples(text, reporter)
         validate_filenames_and_titles(md, text, reporter)
@@ -119,11 +120,13 @@ def find_uncapitalized_comment(text):
         for comment_block in parse_blocks_of_comments(listing):
             first_char = comment_block.strip()[0]
             if first_char.isalpha() and not first_char.isupper():
-                return comment_block
+                return comment_block.strip()
     return False
 
 
 def validate_capitalized_comments(text, error_reporter):
+    with (config.root_path / "data" / "comment_capitalization_exclusions.txt").open() as f:
+        exclusions = f.read()
     uncapped = find_uncapitalized_comment(text)
-    if uncapped:
+    if uncapped and uncapped not in exclusions:
         error_reporter("Uncapitalized comment: {}".format(uncapped))
