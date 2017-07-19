@@ -59,3 +59,4 @@ In either case, the `(virtualenv)` will disappear from your command prompt.
 ### Upcoming change:
 
 - To support multiple targets, will be changing to [Confetti](https://github.com/aviaviavi/confetti)
+- To make it more generic, will be changing the name to BookBuilder, **bb**
