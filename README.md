@@ -3,6 +3,11 @@
 - Requires Python 3.4+
 - All functionality is collected under the single `akb` command which will be installed automatically
 
+## Upcoming change:
+
+- To support multiple targets, will be changing to [Confetti](https://github.com/aviaviavi/confetti)
+- To make it more generic, will be changing the name to BookBuilder, **bb**
+
 ## To Install
 - Download and unzip this package (or `git clone` it)
 - Move to the base directory where you unzipped or cloned it
@@ -55,8 +60,3 @@ Start a new bash shell or move to your home directory and `source .bashrc`.
 ### Mac/Linux: type `deactivate`
 
 In either case, the `(virtualenv)` will disappear from your command prompt.
-
-### Upcoming change:
-
-- To support multiple targets, will be changing to [Confetti](https://github.com/aviaviavi/confetti)
-- To make it more generic, will be changing the name to BookBuilder, **bb**
