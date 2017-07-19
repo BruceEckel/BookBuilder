@@ -55,3 +55,7 @@ Start a new bash shell or move to your home directory and `source .bashrc`.
 ### Mac/Linux: type `deactivate`
 
 In either case, the `(virtualenv)` will disappear from your command prompt.
+
+### Upcoming change:
+
+- To support multiple targets, will be changing to [Confetti](https://github.com/aviaviavi/confetti)
