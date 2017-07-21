@@ -6,8 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 import click
-import atomic_kotlin_builder.config as config
-import atomic_kotlin_builder.util as util
+import book_builder.config as config
+import book_builder.util as util
 
 
 def generate_example(source_file):

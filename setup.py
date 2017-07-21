@@ -10,7 +10,7 @@ if not (version.major == 3 and version.minor >= 4):
     """)
 
 setup(
-    name='atomic_kotlin_builder',
+    name='book_builder',
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
@@ -19,7 +19,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        akb=atomic_kotlin_builder.scripts.atomic_kotlin_builder:cli
-        generate=atomic_kotlin_builder.scripts.generate_output:generate
+        akb=book_builder.scripts.book_builder:cli
+        generate=book_builder.scripts.generate_output:generate
     ''',
 )

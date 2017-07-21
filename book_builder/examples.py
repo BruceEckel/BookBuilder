@@ -1,6 +1,5 @@
 #! py -3
-# Extract code into config.example_dir from Atomic Kotlin Markdown files.
-# TODO: Configures for Gradle build by copying from AtomicKotlin-Examples.
+# Extract code into config.example_dir from Markdown files.
 import logging
 import os
 import re
@@ -12,8 +11,8 @@ from collections import defaultdict
 from logging import debug
 from pathlib import Path
 
-import atomic_kotlin_builder.config as config
-import atomic_kotlin_builder.util as util
+import book_builder.config as config
+import book_builder.util as util
 
 logging.basicConfig(filename=__file__.split(
     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
@@ -167,7 +166,7 @@ def copyGradleFiles():
 
 
 def extractAndCopyBuildFiles():
-    "Clean, then extract examples from Markdown, copy gradle files from AtomicKotlin-Examples"
+    "Clean, then extract examples from Markdown, copy gradle files"
     clean()
     extractExamples()
     copyGradleFiles()

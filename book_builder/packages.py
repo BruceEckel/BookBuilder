@@ -4,8 +4,8 @@ import logging
 import re
 from logging import debug
 
-import atomic_kotlin_builder.config as config
-from atomic_kotlin_builder.package_names import atom_package_names
+import book_builder.config as config
+from book_builder.package_names import atom_package_names
 
 logging.basicConfig(filename=__file__.split(
     '.')[0] + ".log", filemode='w', level=logging.DEBUG)

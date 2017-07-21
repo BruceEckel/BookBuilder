@@ -1,5 +1,10 @@
 """
-Common program configuration variables for Atomic Kotlin Builder
+Common program configuration variables for Book Builder,
+to target the Atomic Kotlin book. Each different book
+will only differ by this configuration file, so you create
+a different one for each book.
+
+This file lives in the home directory of the book project.
 """
 import os
 import sys

@@ -1,18 +1,18 @@
 # The driver script for the main program
 import os
 import click
-import atomic_kotlin_builder.config as config
-import atomic_kotlin_builder.util as util
-import atomic_kotlin_builder.examples as examples
-import atomic_kotlin_builder.packages as _packages
-import atomic_kotlin_builder.validate as _validate
-import atomic_kotlin_builder.epub as _epub
+import book_builder.config as config
+import book_builder.util as util
+import book_builder.examples as examples
+import book_builder.packages as _packages
+import book_builder.validate as _validate
+import book_builder.epub as _epub
 
 
 @click.group()
 @click.version_option()
 def cli():
-    """Atomic Kotlin Builder
+    """Book Builder
 
     Provides all book building and testing utilities under a single central command.
     """
@@ -83,7 +83,7 @@ def validate():
 
 @cli.group()
 def epub():
-    "Creates Atomic Kotlin epub"
+    "Creates epub"
 
 
 @epub.command('clean')

@@ -7,8 +7,8 @@ import difflib
 from collections import OrderedDict
 from pathlib import Path
 
-import atomic_kotlin_builder.config as config
-from atomic_kotlin_builder.util import *
+import book_builder.config as config
+from book_builder.util import *
 
 
 def combine_markdown_files():
@@ -45,8 +45,8 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
         chaps[nm] = bodies[i + 1].strip() + "\n"
 
     # Ensure new names match old names:
-    import atomic_kotlin_builder.recent_atom_names
-    old_names = set(atomic_kotlin_builder.recent_atom_names.anames)
+    import book_builder.recent_atom_names
+    old_names = set(book_builder.recent_atom_names.anames)
     new_names = {create_markdown_filename(nm)[:-3] for nm in names}
     new_names.add("Front")
     diff = old_names.difference(new_names)
@@ -60,7 +60,7 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
         return "Disassembly failed"
 
     # Ensure the number of names are the same
-    len_old_names = len(atomic_kotlin_builder.recent_atom_names.anames)
+    len_old_names = len(book_builder.recent_atom_names.anames)
     len_new_names = len(names) + 1  # for Front
     if len_old_names != len_new_names:
         print("Number of old names: {}".format(len_old_names))

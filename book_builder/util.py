@@ -5,7 +5,7 @@ import sys
 import textwrap
 import pprint
 
-import atomic_kotlin_builder.config as config
+import book_builder.config as config
 
 
 def create_markdown_filename(h1):
