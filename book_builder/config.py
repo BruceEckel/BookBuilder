@@ -23,7 +23,7 @@ except:
     sys.exit(1)
 
 root_path = tools_dir.parent / "AtomicKotlin"
-akb_code_dir = tools_dir / "atomic_kotlin_builder"
+bb_code_dir = tools_dir / "atomic_kotlin_builder"
 markdown_dir = root_path / "Markdown"
 example_dir = root_path / "ExtractedExamples"
 
@@ -41,7 +41,7 @@ stripped_for_spelling = ebook_build_dir / \
 kotlin_code_only = ebook_build_dir / "atomickotlin-kotlin-code-only.md"
 kotlin_comments_only = ebook_build_dir / "atomickotlin-kotlin-comments-only.md"
 
-recent_atom_names = akb_code_dir / "recent_atom_names.py"
+recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
 ebookResources = root_path / "resources"
 images = ebookResources / "images"

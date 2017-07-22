@@ -19,7 +19,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        akb=book_builder.scripts.book_builder:cli
+        bb=book_builder.scripts.book_builder:cli
         generate=book_builder.scripts.generate_output:generate
     ''',
 )

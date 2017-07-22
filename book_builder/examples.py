@@ -81,7 +81,7 @@ generate --edit %*
 
 redo_bat = """\
 @echo off
-akb code extract
+bb code extract
 generate --reinsert %*
 """
 
