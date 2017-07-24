@@ -1,16 +1,30 @@
 """
-Common program configuration variables for Book Builder,
-to target the Atomic Kotlin book. Each different book
-will only differ by this configuration file, so you create
-a different one for each book.
+Common program configuration variables for Book Builder. Each different book
+differs only by this configuration file, so you create a different one for
+each book.
 """
 import os
 import sys
 from pathlib import Path
 
-base_name = "AtomicKotlin"
-root_name = "atomickotlin"
-language_name = "kotlin"
+
+def settings_path():
+    """
+    Starts wherever bb is invoked and climbs up the directory path
+    looking for settings.config
+    """
+    this = Path.cwd()
+    root = this.root
+    while True:
+        config = this / "settings.config"
+        if config.exists():
+            return config
+        this = this.parent
+        if this.samefile(root):
+            print("ERROR: You must put a 'settings.config' in your book repo base directory")
+            sys.exit(1)
+
+exec(settings_path().read_text())
 
 epub_file_name = base_name + ".epub"
 epub_sample_file_name = base_name + "Sample.epub"
@@ -34,8 +48,6 @@ combined_markdown_pdf = ebook_build_dir / (root_name +"-assembled-pdf.md")
 stripped_for_style = ebook_build_dir / (root_name +"-stripped-for-style.md")
 stripped_for_spelling = ebook_build_dir / \
     (root_name +"-stripped-for-spelling.md")
-kotlin_code_only = ebook_build_dir / (root_name +"-" + language_name + "-code-only.md")
-kotlin_comments_only = ebook_build_dir / (root_name +"-" + language_name + "-comments-only.md")
 
 recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
