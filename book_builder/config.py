@@ -25,6 +25,8 @@ def settings_path():
             sys.exit(1)
 
 exec(settings_path().read_text())
+root_name = base_name.lower()
+print(root_name)
 
 epub_file_name = base_name + ".epub"
 epub_sample_file_name = base_name + "Sample.epub"

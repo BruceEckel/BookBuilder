@@ -1,11 +1,33 @@
 # Book Builder
 
+- Supporting tools for computer programming books written in Pandoc-Flavored
+  Markdown.
+
 - Requires Python 3.4+
-- All functionality is collected under the single `bb` command which will be installed automatically
 
-## Upcoming change:
+- All functionality is collected under the single `bb` command which will be
+  installed automatically.
 
-- To support multiple targets, will be adding [Confetti](https://github.com/aviaviavi/confetti)
+## Creating `settings.config`
+
+To use BookBuilder you must place a `settings.config` file in the
+base directory of your book's repository. For example, the `settings.config` for
+*Atomic Kotlin* contains:
+
+```
+base_name = "AtomicKotlin"
+language_name = "kotlin"
+```
+
+For *Thinking in Python*, it is:
+
+```
+base_name = "ThinkingInPython"
+language_name = "python"
+```
+
+Once you've invoked the virtual environment for BookBuilder, you can then run
+the `bb` command from within any directory in your book's repo.
 
 ## To Install
 - Download and unzip this package (or `git clone` it)
