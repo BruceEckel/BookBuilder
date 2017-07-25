@@ -89,10 +89,10 @@ In either case, the `(virtualenv)` will disappear from your command prompt.
 <a name="footnote1">1</a>: If you are using Ubuntu Bash on Windows 10 or the
 Ubuntu Windows 10 App, do the following to get Python 3.6:
 
-#. `sudo add-apt-repository ppa:fkrull/deadsnakes`
+1. `sudo add-apt-repository ppa:fkrull/deadsnakes`
 
-#. `sudo apt-get update`
+2. `sudo apt-get update`
 
-#. `sudo apt-get install python3.6`
+3. `sudo apt-get install python3.6`
 
-Now `python3.6` should produce the desired version.
+Running `python3.6` should now produce the desired version.
