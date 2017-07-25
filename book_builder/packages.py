@@ -53,7 +53,7 @@ def missing_package(n, lines):
 
 def contains_missing_package(lines):
     for n, line in enumerate(lines):
-        if line.startswith("```kotlin"):
+        if line.startswith(f"```{config.language_name}"):
             if not lines[n + 1].startswith("//"):
                 continue
             if missing_package(n, lines):

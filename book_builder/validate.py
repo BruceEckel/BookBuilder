@@ -40,17 +40,17 @@ def all_checks():
 #################################################################
 
 
-### Ensure there's no gap between ``` and kotlin:
+### Ensure there's no gap between ``` and language_name:
 
 
 def validate_tag_no_gap(text, error_reporter):
-    if re.search("``` +kotlin", text):
-        error_reporter("Contains spaces between ``` and kotlin")
+    if re.search(f"``` +{config.language_name}", text):
+        error_reporter(f"Contains spaces between ``` and {config.language_name}")
 
 
 ### Check for code fragments that should be turned into examples:
 
-slugline = re.compile("^// .+?\.kt$", re.MULTILINE)
+slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
 
 def examples_without_sluglines(text):
     for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):

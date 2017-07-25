@@ -3,7 +3,7 @@
 - Supporting tools for computer programming books written in Pandoc-Flavored
   Markdown.
 
-- Requires Python 3.4+
+- Requires Python 3.6+<sup>[1](#footnote1)</sup>
 
 - All functionality is collected under the single `bb` command which will be
   installed automatically.
@@ -84,3 +84,11 @@ Start a new bash shell or move to your home directory and `source .bashrc`.
 ### Mac/Linux: type `deactivate`
 
 In either case, the `(virtualenv)` will disappear from your command prompt.
+
+
+<a name="footnote1">1</a>: If you are using Ubuntu Bash on Windows 10 or the
+Ubuntu Windows 10 App, do the following to get Python 3.6:
+#. `sudo add-apt-repository ppa:fkrull/deadsnakes`
+#. `sudo apt-get update`
+#. `sudo apt-get install python3.6`
+Now `python3.6` should produce the desired version.

@@ -1,6 +1,6 @@
 #! py -3
 # Extract code into config.example_dir from Markdown files.
-import logging
+# import logging
 import os
 import re
 import shutil
@@ -8,14 +8,15 @@ import subprocess
 import sys
 import io
 from collections import defaultdict
-from logging import debug
+# from logging import debug
 from pathlib import Path
 
 import book_builder.config as config
 import book_builder.util as util
 
-logging.basicConfig(filename=__file__.split(
-    '.')[0] + ".log", filemode='w', level=logging.DEBUG)
+# logging.basicConfig(filename=__file__.split(
+#     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
+def debug(msg) : pass
 
 
 def clean():
@@ -70,8 +71,8 @@ def extractExamples():
 def display_extracted_examples():
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
         print(package.relative_to(config.example_dir))
-        for kt in package.rglob("*.kt"):
-            print("    {}".format(kt.relative_to(package)))
+        for example in package.rglob(f"*.{config.code_ext}"):
+            print("    {}".format(example.relative_to(package)))
 
 
 gen_bat = """\
@@ -90,11 +91,6 @@ def create_test_files():
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        # with io.StringIO() as batch:
-        #     for kt in package.rglob("*.kt"):
-        #         print("cmd /c kotlinc {}".format(kt.relative_to(package)), file=batch)
-        #         print("cmd /c kotlin {}.{}".format(package.name, kt.stem + "Kt"), file=batch)
-        #     (package / "test.bat").write_text(batch.getvalue())
         (package / "gen.bat").write_text(gen_bat)
         (package / "redo.bat").write_text(redo_bat)
     return "bat files created"
@@ -102,7 +98,7 @@ def create_test_files():
 
 class ExampleTest:
     def __init__(self, path):
-        assert path.suffix == ".kt"
+        assert path.suffix == f".{config.code_ext}"
         self.path = path
         self.success = None
 
@@ -127,7 +123,7 @@ def compile_all_examples():
     "Compile and capture all results, to show percentage of rewritten examples"
     count = 0
     examples = defaultdict(list)
-    for example in (config.example_dir / "abstractclasses").rglob("*.kt"):
+    for example in (config.example_dir / "abstractclasses").rglob(f"*.{config.code_ext}"):
         examples[example.parts[-2]].append(ExampleTest(example))
         count += 1
     for edir in examples:

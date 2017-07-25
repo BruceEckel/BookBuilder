@@ -1,7 +1,7 @@
 """
-Common program configuration variables for Book Builder. Each different book
-differs only by this configuration file, so you create a different one for
-each book.
+Common program configuration variables for Book Builder. You must create
+a 'settings.config' file in the base directory of each different book; see
+README.md.
 """
 import os
 import sys
@@ -21,12 +21,13 @@ def settings_path():
             return config
         this = this.parent
         if this.samefile(root):
-            print("ERROR: You must put a 'settings.config' in your book repo base directory")
+            print(
+                "ERROR: You must put a 'settings.config' in your book repo base directory")
             sys.exit(1)
+
 
 exec(settings_path().read_text())
 root_name = base_name.lower()
-print(root_name)
 
 epub_file_name = base_name + ".epub"
 epub_sample_file_name = base_name + "Sample.epub"
@@ -44,12 +45,13 @@ html_dir = ebook_build_dir / "html"
 images_dir = ebook_build_dir / "images"
 test_dir = root_path / "test"
 
-combined_markdown = ebook_build_dir / (root_name +"-assembled.md")
-combined_markdown_html = ebook_build_dir / (root_name +"-assembled-html.md")
-combined_markdown_pdf = ebook_build_dir / (root_name +"-assembled-pdf.md")
-stripped_for_style = ebook_build_dir / (root_name +"-stripped-for-style.md")
-stripped_for_spelling = ebook_build_dir / \
-    (root_name +"-stripped-for-spelling.md")
+def ebook_file(fileid): return ebook_build_dir / f"{root_name}-{fileid}.md"
+
+combined_markdown = ebook_file("assembled")
+combined_markdown_html = ebook_file("assembled-html")
+combined_markdown_pdf = ebook_file("assembled-pdf")
+stripped_for_style = ebook_file("stripped-for-style")
+stripped_for_spelling = ebook_file("stripped-for-spelling")
 
 recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
@@ -57,11 +59,11 @@ ebookResources = root_path / "resources"
 images = ebookResources / "images"
 fonts = ebookResources / "fonts"
 cover = ebookResources / "cover.jpg"
-css = ebookResources / (root_name +".css")
+css = ebookResources / (root_name + ".css")
 metadata = ebookResources / "metadata.yaml"
 
 reformat_dir = root_path / "Reformatted"
 
 sample_book_dir = root_path / "SampleBook"
 sample_book_original_dir = root_path / "SampleBook" / "Original"
-combined_markdown_sample = sample_book_dir / (root_name +"-assembled.md")
+combined_markdown_sample = sample_book_dir / (root_name + "-assembled.md")

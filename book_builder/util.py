@@ -33,13 +33,13 @@ def clean(dir_to_remove):
     try:
         if dir_to_remove.exists():
             shutil.rmtree(str(dir_to_remove))
-            return "Removed: {}".format(dir_to_remove)
+            return f"Removed: {dir_to_remove}"
         else:
-            return "Doesn't exist: {}".format(dir_to_remove)
+            return f"Doesn't exist: {dir_to_remove}"
     except Exception as e:
-        print("""Removal failed: {}
+        print(f"""Removal failed: {dir_to_remove}
         Are you inside that directory, or using a file inside it?
-        """.format(dir_to_remove))
+        """)
         print(e)
 
 
@@ -59,8 +59,8 @@ def find_end(text_lines, n):
     for i, line in enumerate(text_lines[n:]):
         if line.rstrip() == "```":
             return n + i
-        if line.rstrip() == "```kotlin":
-            assert False, "```kotlin before closing ```"
+        if line.rstrip() == f"```{config.language_name}":
+            assert False, f"```{config.language_name} before closing ```"
     else:
         assert False, "closing ``` not found"
 
@@ -73,12 +73,12 @@ def replace_code_in_text(generated, text):
     """
     code_lines = generated.splitlines()
     title = code_lines[0].strip()
-    assert title in text, "{} not in text".format(title)
+    assert title in text, f"{title} not in text"
     text_lines = text.splitlines()
     for n, line in enumerate(text_lines):
         if line.strip() == title:
             end = find_end(text_lines, n)
-            # print("n: {}, end: {}".format(n, end))
+            # print(f"n: {n}, end: {end}")
             # pprint.pprint(text_lines[n:end])
             # print("=" * 60)
             # pprint.pprint(code_lines)
@@ -86,7 +86,7 @@ def replace_code_in_text(generated, text):
             text_lines[n:end] = code_lines
             new_text = ("\n".join(text_lines)).strip()
             return new_text, n
-    assert False, "{} not found in text".format(title)
+    assert False, f"{title} not found in text"
 
 
 
@@ -100,9 +100,9 @@ def create_new_status_file():
     status = ""
     def checkbox(item):
         nonlocal status
-        status += "+ [ ] {}\n".format(item)
+        status += f"+ [ ] {item}\n"
     for md in md_files:
-        status += "#### {}\n".format(md)
+        status += f"#### {md}\n"
         checkbox("Examples Replaced")
         checkbox("Rewritten")
         checkbox("Tech Checked")
@@ -146,10 +146,10 @@ def fill_to_width(text):
 
 def reformat_runoutput_files():
     for outfile in check_for_existence("*.out"):
-        kotlin = outfile.with_suffix(".kt")
-        if kotlin.exists():
-            if "{VisuallyInspectOutput}" in kotlin.read_text():  # Don't create p1 file
-                print("{} Excluded".format(kotlin.name))
+        output_file = outfile.with_suffix(f".{config.code_ext}")
+        if output_file.exists():
+            if "{VisuallyInspectOutput}" in output_file.read_text():  # Don't create p1 file
+                print(f"{output_file.name} Excluded")
                 continue
         out_text = adjust_lines(outfile.read_text())
         phase_1 = outfile.with_suffix(".p1")
