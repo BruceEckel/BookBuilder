@@ -4,8 +4,18 @@ import shutil
 import sys
 import textwrap
 import pprint
-
 import book_builder.config as config
+
+
+class ErrorReporter:
+
+    def __init__(self, id):
+        self.id = f"{id}"
+
+    def __call__(self, msg):
+        if self.id:
+            self.id = print(self.id)
+        print(f"    {msg}")
 
 
 def create_markdown_filename(h1):

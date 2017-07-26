@@ -16,7 +16,8 @@ import book_builder.util as util
 
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
-def debug(msg) : pass
+def debug(msg): pass
+def debug(msg): print(msg)
 
 
 def clean():
@@ -27,17 +28,17 @@ def clean():
 def extractExamples():
     print("Extracting examples ...")
     if not config.example_dir.exists():
-        debug("creating {}".format(config.example_dir))
+        debug(f"creating {config.example_dir}")
         config.example_dir.mkdir()
 
     if not config.markdown_dir.exists():
-        return "Cannot find {}".format(config.markdown_dir)
+        return f"Cannot find {config.markdown_dir}"
 
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
     xmlslug = re.compile("^<!-- .+?\.[a-z]+ +-->$", re.MULTILINE)
 
     for sourceText in config.markdown_dir.glob("*.md"):
-        debug("--- {} ---".format(sourceText.name))
+        debug(f"--- {sourceText.name} ---")
         with sourceText.open("rb") as chapter:
             text = chapter.read().decode("utf-8", "ignore")
             for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
@@ -55,7 +56,7 @@ def extractExamples():
                         target = config.example_dir / package / fpath
                     else:
                         target = config.example_dir / fpath
-                    debug("writing {}".format(target))
+                    debug(f"writing {target}")
                     if not target.parent.exists():
                         target.parent.mkdir(parents=True)
                     with target.open("w", newline='') as codeListing:
@@ -65,14 +66,14 @@ def extractExamples():
                         elif xmlslug.match(title):  # Drop the first line
                             codeListing.write("\n".join(listing[1:]))
 
-    return "Code extracted into {}".format(config.example_dir)
+    return f"Code extracted into {config.example_dir}"
 
 
 def display_extracted_examples():
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
         print(package.relative_to(config.example_dir))
         for example in package.rglob(f"*.{config.code_ext}"):
-            print("    {}".format(example.relative_to(package)))
+            print(f"    {example.relative_to(package)}")
 
 
 gen_bat = """\
@@ -104,7 +105,7 @@ class ExampleTest:
 
     def test(self):
         os.chdir(self.path.parent)
-        cmd = ["kotlinc", "{}".format(self.path.name)]
+        cmd = ["kotlinc", f"{self.path.name}"]
         self.result = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         self.stdout = self.result.stdout.decode('utf-8')
@@ -129,15 +130,15 @@ def compile_all_examples():
     for edir in examples:
         print(edir)
         for exmpl in examples[edir]:
-            print("    {}".format(exmpl))
+            print(f"    {exmpl}")
             exmpl.test()
-    print("example count = {}".format(count))
+    print(f"example count = {count}")
     for edir in examples:
-        print("=== {} ===".format(edir))
+        print(f"=== {edir} ===")
         for et in examples[edir]:
-            print("    {}".format(et))
+            print(f"    {et}")
             if not et.success:
-                print("    {}".format(et.stderr))
+                print(f"    {et.stderr}")
 
 
 def copyGradleFiles():

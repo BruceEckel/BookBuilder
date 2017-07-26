@@ -6,6 +6,7 @@ import book_builder.util as util
 import book_builder.examples as examples
 import book_builder.packages as _packages
 import book_builder.validate as _validate
+import book_builder.fix as _fix
 import book_builder.epub as _epub
 
 
@@ -77,6 +78,15 @@ def packages_add_packages():
 def validate():
     "Validation tests"
     click.echo(_validate.all_checks())
+
+
+##########################################################
+
+
+@cli.command()
+def fix():
+    "Batch fixes"
+    click.echo(_fix.all_fixes())
 
 
 ##########################################################
