@@ -122,46 +122,47 @@ def validate_capitalized_comments(text, error_reporter):
         error_reporter(f"Uncapitalized comment: {uncapped}")
 
 
-### Check for four-space indentation:
+### Check for inconsistent indentation:
 
-def bad_indentation(lines, error_reporter):
+def inconsistent_indentation(lines):
+    listing_name = lines[0]
+    if listing_name.startswith('//'):
+        listing_name = listing_name[3:]
     indents = [(len(line) - len(line.lstrip(' ')), line) for line in lines]
-    if indents[0][0]: return True # First line can't be indented
+    if indents[0][0]: return "First line can't be indented"
     for indent, line in indents:
         if indent % 2 != 0:
-            error_reporter(f"Non-even indent in line: {line}")
-            return True
-    indent_counts = [ind//2 for ind, ln in indents]
-    ok = all(y == x + 1
-            or y == x
-            or y == x - 1
-            or y == 0
-            for x, y in zip(indent_counts, indent_counts[1:]))
-    if not ok:
-        print(indent_counts)
-        return True
+            return f"{listing_name}: Non-even indent in line: {line}"
+    indent_counts = [ind//2 for ind, ln in indents] # For a desired indent of 2
+    indent_pairs = list(zip(indent_counts, indent_counts[1:]))
+    def test(x, y): return (
+        y == x + 1
+        or y == x
+        or y < x # No apparent consistency with dedenting
+    )
+    ok = [test(x, y) for x, y in indent_pairs]
+    if not all(ok):
+        return f"{listing_name} lines {[n + 2 for n, x in enumerate(ok) if not x]}"
     return False
 
 
-def find_bad_indentation(text, error_reporter):
+def find_inconsistent_indentation(text):
     for listing in extract_listings(text):
         lines = listing.splitlines()
-        if bad_indentation(lines, error_reporter):
-            return lines[0]
+        inconsistent = inconsistent_indentation(lines)
+        if inconsistent:
+            return inconsistent
     return False
 
 
 def validate_listing_indentation(text, error_reporter):
-    bad_indent = find_bad_indentation(text, error_reporter)
+    bad_indent = find_inconsistent_indentation(text)
     if bad_indent:
-        error_reporter(f"Bad indentation: {bad_indent}")
+        error_reporter(f"Inconsistent indentation: {bad_indent}")
 
 
 ### Check for tabs:
 
 def validate_no_tabs(text, error_reporter):
-    "\t"
     if "\t" in text:
         error_reporter("Tab found!")
-
-
