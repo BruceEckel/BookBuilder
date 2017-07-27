@@ -17,7 +17,7 @@ import book_builder.util as util
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 def debug(msg): pass
-def debug(msg): print(msg)
+# def debug(msg): print(msg)
 
 
 def clean():
@@ -87,6 +87,11 @@ bb code extract
 generate --reinsert %*
 """
 
+reinsert_bat = """\
+@echo off
+generate --reinsert %1
+"""
+
 def create_test_files():
     "Create gen.bat files for each package, to compile and run files"
     if not config.example_dir.exists():
@@ -94,6 +99,7 @@ def create_test_files():
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
         (package / "gen.bat").write_text(gen_bat)
         (package / "redo.bat").write_text(redo_bat)
+        (package / "reinsert.bat").write_text(reinsert_bat)
     return "bat files created"
 
 
