@@ -17,7 +17,7 @@ import book_builder.util as util
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 def debug(msg): pass
-# def debug(msg): print(msg)
+def debug(msg): print(msg)
 
 
 def clean():
@@ -35,7 +35,6 @@ def extractExamples():
         return f"Cannot find {config.markdown_dir}"
 
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
-    xmlslug = re.compile("^<!-- .+?\.[a-z]+ +-->$", re.MULTILINE)
 
     for sourceText in config.markdown_dir.glob("*.md"):
         debug(f"--- {sourceText.name} ---")
@@ -44,27 +43,16 @@ def extractExamples():
             for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
                 listing = group[1].splitlines()
                 title = listing[0]
-                package = None
-                for line in listing:
-                    if line.startswith("package "):
-                        package = line.split()[1].strip()
-                if slugline.match(title) or xmlslug.match(title):
+                if slugline.match(title):
                     debug(title)
                     fpath = title.split()[1].strip()
-                    if package:
-                        package = package.replace(".", "/")
-                        target = config.example_dir / package / fpath
-                    else:
-                        target = config.example_dir / fpath
+                    target = config.example_dir / fpath
                     debug(f"writing {target}")
                     if not target.parent.exists():
                         target.parent.mkdir(parents=True)
                     with target.open("w", newline='') as codeListing:
                         debug(group[1])
-                        if slugline.match(title):
-                            codeListing.write(group[1].strip() + "\n")
-                        elif xmlslug.match(title):  # Drop the first line
-                            codeListing.write("\n".join(listing[1:]))
+                        codeListing.write(group[1].strip() + "\n")
 
     return f"Code extracted into {config.example_dir}"
 
@@ -200,3 +188,47 @@ def copyTestFiles():
             debug("copy " + str(test_path.relative_to(config.github_code_dir.parent)
                                 ) + " " + str(dest.relative_to(config.example_dir)))
             shutil.copy(str(test_path), str(dest))
+
+
+# def extractExamples():
+#     print("Extracting examples ...")
+#     if not config.example_dir.exists():
+#         debug(f"creating {config.example_dir}")
+#         config.example_dir.mkdir()
+
+#     if not config.markdown_dir.exists():
+#         return f"Cannot find {config.markdown_dir}"
+
+#     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
+#     xmlslug = re.compile("^<!-- .+?\.[a-z]+ +-->$", re.MULTILINE)
+
+#     for sourceText in config.markdown_dir.glob("*.md"):
+#         debug(f"--- {sourceText.name} ---")
+#         with sourceText.open("rb") as chapter:
+#             text = chapter.read().decode("utf-8", "ignore")
+#             for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
+#                 listing = group[1].splitlines()
+#                 title = listing[0]
+#                 package = None
+#                 for line in listing:
+#                     if line.startswith("package "):
+#                         package = line.split()[1].strip()
+#                 if slugline.match(title) or xmlslug.match(title):
+#                     debug(title)
+#                     fpath = title.split()[1].strip()
+#                     if package:
+#                         package = package.replace(".", "/")
+#                         target = config.example_dir / package / fpath
+#                     else:
+#                         target = config.example_dir / fpath
+#                     debug(f"writing {target}")
+#                     if not target.parent.exists():
+#                         target.parent.mkdir(parents=True)
+#                     with target.open("w", newline='') as codeListing:
+#                         debug(group[1])
+#                         if slugline.match(title):
+#                             codeListing.write(group[1].strip() + "\n")
+#                         elif xmlslug.match(title):  # Drop the first line
+#                             codeListing.write("\n".join(listing[1:]))
+
+#     return f"Code extracted into {config.example_dir}"

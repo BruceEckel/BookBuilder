@@ -23,6 +23,7 @@ def all_checks():
         validate_capitalized_comments(text, reporter)
         validate_no_tabs(text, reporter)
         validate_listing_indentation(text, reporter)
+        validate_example_sluglines(text, reporter)
 
 
 #################################################################
@@ -166,3 +167,19 @@ def validate_listing_indentation(text, error_reporter):
 def validate_no_tabs(text, error_reporter):
     if "\t" in text:
         error_reporter("Tab found!")
+
+
+### Check for sluglines that don't match the format
+
+def  validate_example_sluglines(text, error_reporter):
+    for listing in extract_listings(text):
+        lines = listing.splitlines()
+        slug = lines[0]
+        if not slug.startswith(config.start_comment):
+            continue # Improper code fragments caught elsewhere
+        if not slug.startswith(config.start_comment + " "):
+            error_reporter(f"Bad first line (no space after beginning of comment):\n\t{slug}")
+            continue
+        slug = slug.split(None, 1)[1]
+        if "/" not in slug:
+            error_reporter(f"Missing directory in {slug}")

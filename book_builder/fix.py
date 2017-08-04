@@ -45,5 +45,3 @@ def fix_gap_between_package_and_import(lines, error_reporter):
         lines, degapped = degap(lines)
         if not degapped:
             return lines
-
-
