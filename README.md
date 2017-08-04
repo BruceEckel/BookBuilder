@@ -42,7 +42,7 @@ the `bb` command from within any directory in your book's repo.
 - You only need to do this the first time, after installation.
 
 1. Move to the base directory. Run `python3 -m venv virtualenv` at the bash prompt.
-   (You might have to first execute `sudo apt-get install python3.4-venv` to get this to work).
+   (You might have to first execute `sudo apt-get install python3.6-venv` to get this to work).
 
 2. Then run `source ./virtualenv/bin/activate` at the bash prompt.
 
