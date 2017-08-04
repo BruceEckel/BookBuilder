@@ -18,6 +18,7 @@ base directory of your book's repository. For example, the `settings.config` for
 base_name = "AtomicKotlin"
 language_name = "kotlin"
 code_ext = "kt"
+start_comment = "//"
 ```
 
 For *Thinking in Python*, it is:
@@ -26,6 +27,7 @@ For *Thinking in Python*, it is:
 base_name = "ThinkingInPython"
 language_name = "python"
 code_ext = "py"
+start_comment = "#"
 ```
 
 Once you've invoked the virtual environment for BookBuilder, you can then run
