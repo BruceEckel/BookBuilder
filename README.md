@@ -76,6 +76,7 @@ the `bb` command from within any directory in your book's repo.
 
 In either case, the `(virtualenv)` will disappear from your command prompt.
 
+<hr style="height:10px">
 
 <a name="footnote1">1</a>: If you are using Ubuntu Bash on Windows 10 or the
 Ubuntu Windows 10 App, do the following to get Python 3.6:
