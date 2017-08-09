@@ -94,7 +94,7 @@ def parse_comment_block(n, lines):
 
 def parse_blocks_of_comments(listing):
     result = []
-    lines = listing.splitlines()
+    lines = listing.splitlines()[1:] # Ignore slugline
     n = 0
     while n < len(lines):
         if "//" in lines[n]:
@@ -129,6 +129,8 @@ def inconsistent_indentation(lines):
     listing_name = lines[0]
     if listing_name.startswith('//'):
         listing_name = listing_name[3:]
+    else: # Skip listings without sluglines
+        return False
     indents = [(len(line) - len(line.lstrip(' ')), line) for line in lines]
     if indents[0][0]: return "First line can't be indented"
     for indent, line in indents:
