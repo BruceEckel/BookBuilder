@@ -31,6 +31,14 @@ def combine_markdown_files():
     return "{} Created".format(config.combined_markdown.name)
 
 
+def strip_chapter(chapter_text):
+    "Remove blank newlines at beginning and end, right-hand spaces on lines"
+    chapter_text = chapter_text.strip()
+    lines = [line.rstrip() for line in chapter_text.splitlines()]
+    stripped = "\n".join(lines)
+    return stripped.strip() # In case the previous line adds another newline
+
+
 def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     "Turn markdown file into a collection of chapter-based files"
     with Path(config.combined_markdown).open(encoding="utf8") as akmd:
@@ -77,7 +85,7 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
             if "Front" not in p:
                 chp.write(p + "\n")
                 chp.write("=" * len(p) + "\n\n")
-            chp.write(chaps[p].strip() + "\n")
+            chp.write(strip_chapter(chaps[p]) + "\n")
     if target_dir != config.markdown_dir:
         print("now run 'diff -r Markdown test'")
     return "Successfully disassembled combined Markdown"
