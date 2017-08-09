@@ -27,11 +27,11 @@ def clean():
 
 def extractExamples():
     print("Extracting examples ...")
-    if not config.example_dir.exists():
+    if not config.extracted_examples.exists():
         gradle_base = config.root_path / "tools" / "gradle_base"
         if gradle_base.exists():
             debug(f"Using {gradle_base}")
-            shutil.copytree(gradle_base, config.example_dir)
+            shutil.copytree(gradle_base, config.extracted_examples)
         else:
             debug(f"Creating {config.example_dir}")
             config.example_dir.mkdir()
@@ -48,6 +48,8 @@ def extractExamples():
             for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
                 listing = group[1].splitlines()
                 title = listing[0]
+                if '!!!' in title:
+                    continue # Don't save files that are marked bad
                 if slugline.match(title):
                     debug(title)
                     fpath = title.split()[1].strip()
