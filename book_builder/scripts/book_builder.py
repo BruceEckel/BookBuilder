@@ -30,7 +30,7 @@ def code():
 @code.command('clean')
 def code_clean():
     "Remove directory containing extracted example code"
-    click.echo(util.clean(config.extracted_examples))
+    click.echo(examples.clean())
 
 
 @code.command('extract')

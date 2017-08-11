@@ -28,16 +28,20 @@ def clean():
 def extractExamples():
     print("Extracting examples ...")
     if not config.extracted_examples.exists():
-        gradle_base = config.root_path / "tools" / "gradle_base"
-        if gradle_base.exists():
-            debug(f"Using {gradle_base}")
-            shutil.copytree(gradle_base, config.extracted_examples)
-        else:
-            debug(f"Creating {config.example_dir}")
-            config.example_dir.mkdir()
+        return f"Cannot find {config.extracted_examples}"
+        # gradle_base = config.root_path / "tools" / "gradle_base"
+        # if gradle_base.exists():
+        #     debug(f"Using {gradle_base}")
+        #     shutil.copytree(gradle_base, config.extracted_examples)
+        # else:
+        #     debug(f"Creating {config.example_dir}")
+        #     config.example_dir.mkdir()
 
     if not config.markdown_dir.exists():
         return f"Cannot find {config.markdown_dir}"
+
+    if config.example_dir.exists():
+        clean()
 
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
 
