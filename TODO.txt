@@ -1,1 +1,1 @@
-- Tool to hunt for potential code fragments (can just exclude fragments you know are OK)
+- Validate all links work in generated epub (might have to generate HTML for this test)
