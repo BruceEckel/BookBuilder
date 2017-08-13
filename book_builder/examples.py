@@ -91,6 +91,20 @@ reinsert_bat = """\
 generate --reinsert %1
 """
 
+prep_bat = r"kotlinc  ..\com\atomickotlin\test\AtomicTest.kt -d ."
+
+run_bat ="""\
+@echo off& python -x %0".bat" %* &goto :eof
+from subprocess import call
+from pathlib import Path
+call(r"kotlinc  ..\\com\\atomickotlin\\test\\AtomicTest.kt -d .", shell=True)
+call("kotlinc *.kt -cp .", shell=True)
+for kt in Path.cwd().glob("*.kt"):
+    if "fun main(args: Array<String>)" in kt.read_text():
+        print(f"{'-'*8} {kt.name} {'-'*8}")
+        call(f"kotlin {kt.stem + 'Kt'}", shell=True)
+"""
+
 def create_test_files():
     "Create gen.bat files for each package, to compile and run files"
     if not config.example_dir.exists():
@@ -99,6 +113,8 @@ def create_test_files():
         (package / "gen.bat").write_text(gen_bat)
         (package / "redo.bat").write_text(redo_bat)
         (package / "reinsert.bat").write_text(reinsert_bat)
+        (package / "prep.bat").write_text(prep_bat)
+        (package / "run.bat").write_text(run_bat)
     return "bat files created"
 
 
