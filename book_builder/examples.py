@@ -100,9 +100,16 @@ from pathlib import Path
 call(r"kotlinc  ..\\com\\atomickotlin\\test\\AtomicTest.kt -d .", shell=True)
 call("kotlinc *.kt -cp .", shell=True)
 for kt in Path.cwd().glob("*.kt"):
-    if "fun main(args: Array<String>)" in kt.read_text():
-        print(f"{'-'*8} {kt.name} {'-'*8}")
-        call(f"kotlin {kt.stem + 'Kt'}", shell=True)
+    code = kt.read_text()
+    package = [line.split()[1].strip() for line in code.splitlines() if line.startswith("package ")]
+    filename = kt.name
+    classfile = f"{kt.stem + 'Kt'}"
+    if package:
+        filename = f"{package[0]}.{filename}"
+        classfile = f"{package[0]}.{classfile}"
+    if "fun main(args: Array<String>)" in code:
+        print(f"{'-'*8} {filename} {'-'*8}")
+        call(f"kotlin {classfile}", shell=True)
 """
 
 def create_test_files():
