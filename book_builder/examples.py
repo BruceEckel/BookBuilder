@@ -8,6 +8,7 @@ import subprocess
 import sys
 import io
 from collections import defaultdict
+import string
 # from logging import debug
 from pathlib import Path
 
@@ -29,17 +30,8 @@ def extractExamples():
     print("Extracting examples ...")
     if not config.extracted_examples.exists():
         return f"Cannot find {config.extracted_examples}"
-        # gradle_base = config.root_path / "tools" / "gradle_base"
-        # if gradle_base.exists():
-        #     debug(f"Using {gradle_base}")
-        #     shutil.copytree(gradle_base, config.extracted_examples)
-        # else:
-        #     debug(f"Creating {config.example_dir}")
-        #     config.example_dir.mkdir()
-
     if not config.markdown_dir.exists():
         return f"Cannot find {config.markdown_dir}"
-
     if config.example_dir.exists():
         clean()
 
@@ -68,12 +60,54 @@ def extractExamples():
     return f"Code extracted into {config.example_dir}"
 
 
-def display_extracted_examples():
-    for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        print(package.relative_to(config.example_dir))
-        for example in package.rglob(f"*.{config.code_ext}"):
-            print(f"    {example.relative_to(package)}")
+########################### tasks.gradle generation ##########################
 
+
+tasks_base = """\
+configurations {
+    kotlinRuntime
+}
+
+dependencies {
+    kotlinRuntime "org.jetbrains.kotlin:kotlin-runtime:$kotlin_version"
+}
+
+def kotlinClassPath = configurations.kotlinRuntime + sourceSets.main.runtimeClasspath
+
+"""
+
+def create_tasks_gradle():
+    "Regenerate gradle/tasks.gradle file based on actual extracted examples"
+    task_list = tasks_base
+    for ktfile in config.example_dir.rglob("*.kt"):
+        gradle_task = task(ktfile)
+        if gradle_task:
+            task_list += gradle_task + "\n"
+    tasks_file = config.extracted_examples / "gradle" / "tasks.gradle"
+    tasks_file.write_text(task_list)
+    return f"Wrote {tasks_file}"
+
+
+task_template = string.Template("""\
+task $task_name(type: JavaExec) {
+    classpath kotlinClassPath
+    main = '$class_file'
+}
+""")
+
+
+def task(ktfile):
+    code = ktfile.read_text()
+    package = [line.split()[1].strip() for line in code.splitlines() if line.startswith("package ")]
+    classfile = f"{ktfile.stem + 'Kt'}"
+    if package:
+        classfile = f"{package[0]}.{classfile}"
+    if "fun main(args: Array<String>)" in code:
+        return task_template.substitute(task_name = ktfile.stem, class_file = classfile)
+    return None
+
+
+###################### Batch files ##########################
 
 gen_bat = """\
 @echo off
@@ -125,6 +159,13 @@ def create_test_files():
     return "bat files created"
 
 
+def display_extracted_examples():
+    for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
+        print(package.relative_to(config.example_dir))
+        for example in package.rglob(f"*.{config.code_ext}"):
+            print(f"    {example.relative_to(package)}")
+
+
 class ExampleTest:
     def __init__(self, path):
         assert path.suffix == f".{config.code_ext}"
@@ -167,102 +208,3 @@ def compile_all_examples():
             print(f"    {et}")
             if not et.success:
                 print(f"    {et.stderr}")
-
-
-def copyGradleFiles():
-    print("Copying Gradle Files ...")
-    if not config.github_code_dir.exists():
-        print("Doesn't exist: %s" % config.github_code_dir)
-        sys.exit(1)
-    for gradle_path in list(config.github_code_dir.rglob("*gradle*")) + \
-            list(config.github_code_dir.rglob("*.xml")) + \
-            list(config.github_code_dir.rglob("*.yml")) + \
-            list(config.github_code_dir.rglob("*.md")) + \
-            list((config.github_code_dir / "buildSrc").rglob("*")):
-        dest = config.example_dir / \
-            gradle_path.relative_to(config.github_code_dir)
-        if gradle_path.is_file():
-            if(not dest.parent.exists()):
-                debug("creating " + str(dest.parent))
-                os.makedirs(str(dest.parent))
-            debug("copy " + str(gradle_path.relative_to(config.github_code_dir.parent)
-                                ) + " " + str(dest.relative_to(config.example_dir)))
-            shutil.copy(str(gradle_path), str(dest))
-
-
-def extractAndCopyBuildFiles():
-    "Clean, then extract examples from Markdown, copy gradle files"
-    clean()
-    extractExamples()
-    copyGradleFiles()
-
-
-# For Development:
-tools_to_copy = [Path(sys.path[0]) / f for f in [
-    # "__tests.bat",
-    # "_check_markdown.bat",
-    # "_output_file_check.bat",
-    # "_verify_output.bat",
-    # "_update_extracted_example_output.bat",
-    # "_capture_gradle.bat",
-    # "chkstyle.bat",  # Run checkstyle, capturing output
-    # "gg.bat", # Short for gradlew
-]]
-
-
-def copyTestFiles():
-    print("Copying Test Files ...")
-    for test_path in list(config.github_code_dir.rglob("tests/*")):
-        dest = config.example_dir / \
-            test_path.relative_to(config.github_code_dir)
-        if(test_path.is_file()):
-            if(not dest.parent.exists()):
-                debug("creating " + str(dest.parent))
-                os.makedirs(str(dest.parent))
-            debug("copy " + str(test_path.relative_to(config.github_code_dir.parent)
-                                ) + " " + str(dest.relative_to(config.example_dir)))
-            shutil.copy(str(test_path), str(dest))
-
-
-# def extractExamples():
-#     print("Extracting examples ...")
-#     if not config.example_dir.exists():
-#         debug(f"creating {config.example_dir}")
-#         config.example_dir.mkdir()
-
-#     if not config.markdown_dir.exists():
-#         return f"Cannot find {config.markdown_dir}"
-
-#     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
-#     xmlslug = re.compile("^<!-- .+?\.[a-z]+ +-->$", re.MULTILINE)
-
-#     for sourceText in config.markdown_dir.glob("*.md"):
-#         debug(f"--- {sourceText.name} ---")
-#         with sourceText.open("rb") as chapter:
-#             text = chapter.read().decode("utf-8", "ignore")
-#             for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
-#                 listing = group[1].splitlines()
-#                 title = listing[0]
-#                 package = None
-#                 for line in listing:
-#                     if line.startswith("package "):
-#                         package = line.split()[1].strip()
-#                 if slugline.match(title) or xmlslug.match(title):
-#                     debug(title)
-#                     fpath = title.split()[1].strip()
-#                     if package:
-#                         package = package.replace(".", "/")
-#                         target = config.example_dir / package / fpath
-#                     else:
-#                         target = config.example_dir / fpath
-#                     debug(f"writing {target}")
-#                     if not target.parent.exists():
-#                         target.parent.mkdir(parents=True)
-#                     with target.open("w", newline='') as codeListing:
-#                         debug(group[1])
-#                         if slugline.match(title):
-#                             codeListing.write(group[1].strip() + "\n")
-#                         elif xmlslug.match(title):  # Drop the first line
-#                             codeListing.write("\n".join(listing[1:]))
-
-#     return f"Code extracted into {config.example_dir}"
