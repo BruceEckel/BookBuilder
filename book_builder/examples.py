@@ -76,13 +76,22 @@ def kotlinClassPath = configurations.kotlinRuntime + sourceSets.main.runtimeClas
 
 """
 
+run_task = string.Template("""\
+task run {
+    dependsOn $runtasks
+}
+""")
+
 def create_tasks_gradle():
     "Regenerate gradle/tasks.gradle file based on actual extracted examples"
     task_list = tasks_base
+    runnable_list = []
     for ktfile in config.example_dir.rglob("*.kt"):
         gradle_task = task(ktfile)
         if gradle_task:
             task_list += gradle_task + "\n"
+            runnable_list.append(ktfile.stem)
+    task_list += run_task.substitute(runtasks = ",\n        ".join(sorted(runnable_list)))
     tasks_file = config.extracted_examples / "gradle" / "tasks.gradle"
     tasks_file.write_text(task_list)
     return f"Wrote {tasks_file}"
@@ -125,13 +134,13 @@ reinsert_bat = """\
 generate --reinsert %1
 """
 
-prep_bat = r"kotlinc  ..\com\atomickotlin\test\AtomicTest.kt -d ."
+prep_bat = r"kotlinc  ..\atomicTest\AtomicTest.kt -d ."
 
 run_bat ="""\
 @echo off& python -x %0".bat" %* &goto :eof
 from subprocess import call
 from pathlib import Path
-call(r"kotlinc  ..\\com\\atomickotlin\\test\\AtomicTest.kt -d .", shell=True)
+call(r"kotlinc  ..\\atomicTest\\AtomicTest.kt -d .", shell=True)
 call("kotlinc *.kt -cp .", shell=True)
 for kt in Path.cwd().glob("*.kt"):
     code = kt.read_text()
