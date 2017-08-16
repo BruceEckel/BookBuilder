@@ -77,21 +77,35 @@ def kotlinClassPath = configurations.kotlinRuntime + sourceSets.main.runtimeClas
 """
 
 run_task = string.Template("""\
-task run {
-    dependsOn $runtasks
+task run (dependsOn: [
+    $runtasks
+    ]) {
+    doLast {
+        println '*** run complete ***'
+    }
 }
 """)
 
+
 def create_tasks_gradle():
     "Regenerate gradle/tasks.gradle file based on actual extracted examples"
+    # Check for duplicate names:
+    all_names = [kt.stem for kt in config.example_dir.rglob("*.kt")]
+    duplicates = [x for x in all_names if all_names.count(x) >= 2]
+    if duplicates:
+        return "ERROR: Duplicate names: \n{'\n\t'.join(duplicates)}"
+
+    # Produces sorted tasks by name:
     task_list = tasks_base
     runnable_list = []
-    for ktfile in config.example_dir.rglob("*.kt"):
+    ktfiles = {kt.stem : kt for kt in config.example_dir.rglob("*.kt")}
+    for key in sorted(ktfiles):
+        ktfile = ktfiles[key]
         gradle_task = task(ktfile)
         if gradle_task:
             task_list += gradle_task + "\n"
-            runnable_list.append(ktfile.stem)
-    task_list += run_task.substitute(runtasks = ",\n        ".join(sorted(runnable_list)))
+            runnable_list.append("'" + ktfile.stem + "'")
+    task_list += run_task.substitute(runtasks = ",\n    ".join(sorted(runnable_list)))
     tasks_file = config.extracted_examples / "gradle" / "tasks.gradle"
     tasks_file.write_text(task_list)
     return f"Wrote {tasks_file}"
