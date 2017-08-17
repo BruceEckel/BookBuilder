@@ -78,7 +78,6 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     if not target_dir.exists():
         target_dir.mkdir()
     for i, p in enumerate(chaps):
-        print(p)
         disassembled_file_name = create_numbered_markdown_filename(p, i)
         print(disassembled_file_name)
         dest = target_dir / disassembled_file_name
