@@ -38,7 +38,6 @@ tools_dir = Path(__file__).parent.parent.resolve()
 root_path = tools_dir.parent / base_name
 bb_code_dir = tools_dir / "book_builder"
 markdown_dir = root_path / "Markdown"
-extracted_examples = tools_dir.parent / "ExtractedExamples"
 example_dir = extracted_examples / "Examples"
 
 ebook_build_dir = root_path / "ebook_build"
