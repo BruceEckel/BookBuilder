@@ -67,13 +67,12 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
             print("{}: {}".format(d, difflib.get_close_matches(d, new_names)))
         return "Disassembly failed"
 
-    # Ensure the number of names are the same
+    # Notify if the number of chapters are different
     len_old_names = len(book_builder.recent_atom_names.anames)
     len_new_names = len(names) + 1  # for Front
     if len_old_names != len_new_names:
         print("Number of old names: {}".format(len_old_names))
         print("Number of new names: {}".format(len_new_names))
-        return "Disassembly failed"
 
     if not target_dir.exists():
         target_dir.mkdir()
