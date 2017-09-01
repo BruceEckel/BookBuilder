@@ -54,18 +54,18 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
 
     # Ensure new names match old names:
     import book_builder.recent_atom_names
-    old_names = set(book_builder.recent_atom_names.anames)
-    new_names = {create_markdown_filename(nm)[:-3] for nm in names}
-    new_names.add("Front")
-    diff = old_names.difference(new_names)
-    if diff:
-        print("Old names not in new names:")
-        for d in diff:
-            print("   {}".format(d))
-        print("---- Near matches: ----")
-        for d in diff:
-            print("{}: {}".format(d, difflib.get_close_matches(d, new_names)))
-        return "Disassembly failed"
+    # old_names = set(book_builder.recent_atom_names.anames)
+    # new_names = {create_markdown_filename(nm)[:-3] for nm in names}
+    # new_names.add("Front")
+    # diff = old_names.difference(new_names)
+    # if diff:
+    #     print("Old names not in new names:")
+    #     for d in diff:
+    #         print("   {}".format(d))
+    #     print("---- Near matches: ----")
+    #     for d in diff:
+    #         print("{}: {}".format(d, difflib.get_close_matches(d, new_names)))
+    #     return "Disassembly failed"
 
     # Notify if the number of chapters are different
     len_old_names = len(book_builder.recent_atom_names.anames)

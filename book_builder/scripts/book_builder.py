@@ -68,10 +68,10 @@ def packages_unpackaged():
     click.echo(_packages.unpackaged())
 
 
-@packages.command('add')
-def packages_add_packages():
-    "Add package statements to all examples that don't have them"
-    click.echo(_packages.add_packages())
+# @packages.command('add')
+# def packages_add_packages():
+#     "Add package statements to all examples that don't have them"
+#     click.echo(_packages.add_packages())
 
 ##########################################################
 
