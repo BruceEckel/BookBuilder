@@ -156,7 +156,7 @@ from subprocess import call
 from pathlib import Path
 call(r"kotlinc  ..\\atomicTest\\AtomicTest.kt -d .", shell=True)
 call("kotlinc *.kt -cp .", shell=True)
-for kt in Path.cwd().glob("*.kt"):
+def runkt(kt):
     code = kt.read_text()
     package = [line.split()[1].strip() for line in code.splitlines() if line.startswith("package ")]
     filename = kt.name
@@ -167,6 +167,8 @@ for kt in Path.cwd().glob("*.kt"):
     if "fun main(args: Array<String>)" in code:
         print(f"{'-'*8} {filename} {'-'*8}")
         call(f"kotlin {classfile}", shell=True)
+for kt in Path.cwd().glob("*.kt"):
+    runkt(kt)
 """
 
 def create_test_files():
