@@ -91,9 +91,10 @@ def create_tasks_gradle():
     "Regenerate gradle/tasks.gradle file based on actual extracted examples"
     # Check for duplicate names:
     all_names = [kt.stem for kt in config.example_dir.rglob("*.kt")]
-    duplicates = [x for x in all_names if all_names.count(x) >= 2]
+    duplicates = [x.strip() for x in all_names if all_names.count(x) >= 2]
     if duplicates:
-        return "ERROR: Duplicate names: \n{'\n\t'.join(duplicates)}"
+        dupstring = '\n\t'.join(duplicates)
+        return f"ERROR: Duplicate names: \n{dupstring}"
 
     # Produces sorted tasks by name:
     task_list = tasks_base
