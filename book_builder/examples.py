@@ -155,7 +155,7 @@ run_bat ="""\
 from subprocess import call
 from pathlib import Path
 call(r"kotlinc  ..\\atomicTest\\AtomicTest.kt -d .", shell=True)
-call("kotlinc *.kt -cp .", shell=True)
+call("kotlinc *.kt -nowarn -cp .", shell=True)
 def runkt(kt):
     code = kt.read_text()
     package = [line.split()[1].strip() for line in code.splitlines() if line.startswith("package ")]
