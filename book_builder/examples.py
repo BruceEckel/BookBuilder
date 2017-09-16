@@ -160,11 +160,23 @@ def ensure(test, msg):
     if not test:
         print(msg)
         sys.exit(1)
-ensure(len(sys.argv) > 1, "run.bat requires kotlin file name for execution")
-full = Path.cwd() / sys.argv[1]
-ensure(full.exists(), f"{full.name} doesn't exist")
-os.chdir("..\\..")
-call(f"gradlew {full.stem}", shell=True)
+def gradle(kname):
+    home = Path.cwd()
+    kpath = home / kname
+    ensure(kpath.exists(), f"{kpath.name} doesn't exist")
+    os.chdir(home.parent.parent)
+    call(f"gradlew {kpath.stem}", shell=True)
+    os.chdir(home)
+def multiple(kname_list):
+    knames = " ".join(kname_list)
+    home = Path.cwd()
+    os.chdir(home.parent.parent)
+    call(f"gradlew {knames}", shell=True)
+    os.chdir(home)
+if len(sys.argv) > 1:
+    gradle(sys.argv[1])
+else:
+    multiple([kpath.stem for kpath in Path.cwd().glob("*.kt") if "fun main(" in kpath.read_text()])
 """
 
 run2_bat ="""\
