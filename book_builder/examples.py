@@ -156,10 +156,12 @@ run_bat ="""\
 from subprocess import call
 from pathlib import Path
 import sys, os
+
 def ensure(test, msg):
     if not test:
         print(msg)
         sys.exit(1)
+
 def gradle(kname):
     home = Path.cwd()
     kpath = home / kname
@@ -167,12 +169,14 @@ def gradle(kname):
     os.chdir(home.parent.parent)
     call(f"gradlew {kpath.stem}", shell=True)
     os.chdir(home)
+
 def multiple(kname_list):
     knames = " ".join(kname_list)
     home = Path.cwd()
     os.chdir(home.parent.parent)
     call(f"gradlew {knames}", shell=True)
     os.chdir(home)
+
 if len(sys.argv) > 1:
     gradle(sys.argv[1])
 else:
@@ -205,12 +209,12 @@ def create_test_files():
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        (package / "gen.bat").write_text(gen_bat)
-        (package / "redo.bat").write_text(redo_bat)
-        (package / "reinsert.bat").write_text(reinsert_bat)
-        (package / "prep.bat").write_text(prep_bat)
+        # (package / "gen.bat").write_text(gen_bat)
+        # (package / "redo.bat").write_text(redo_bat)
+        # (package / "reinsert.bat").write_text(reinsert_bat)
+        # (package / "prep.bat").write_text(prep_bat)
         (package / "run.bat").write_text(run_bat)
-        #(package / "run2.bat").write_text(run2_bat)
+        # (package / "run2.bat").write_text(run2_bat)
     return "bat files created"
 
 
