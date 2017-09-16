@@ -155,6 +155,22 @@ run_bat ="""\
 @echo off& python -x %0".bat" %* &goto :eof
 from subprocess import call
 from pathlib import Path
+import sys, os
+def ensure(test, msg):
+    if not test:
+        print(msg)
+        sys.exit(1)
+ensure(len(sys.argv) > 1, "run.bat requires kotlin file name for execution")
+full = Path.cwd() / sys.argv[1]
+ensure(full.exists(), f"{full.name} doesn't exist")
+os.chdir("..\\..")
+call(f"gradlew {full.stem}", shell=True)
+"""
+
+run2_bat ="""\
+@echo off& python -x %0".bat" %* &goto :eof
+from subprocess import call
+from pathlib import Path
 call(r"kotlinc  ..\\atomicTest\\AtomicTest.kt -d .", shell=True)
 call("kotlinc *.kt -nowarn -cp .", shell=True)
 def runkt(kt):
@@ -182,6 +198,7 @@ def create_test_files():
         (package / "reinsert.bat").write_text(reinsert_bat)
         (package / "prep.bat").write_text(prep_bat)
         (package / "run.bat").write_text(run_bat)
+        #(package / "run2.bat").write_text(run2_bat)
     return "bat files created"
 
 
