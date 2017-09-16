@@ -180,7 +180,8 @@ def multiple(kname_list):
 if len(sys.argv) > 1:
     gradle(sys.argv[1])
 else:
-    multiple([kpath.stem for kpath in Path.cwd().glob("*.kt") if "fun main(" in kpath.read_text()])
+    multiple([kpath.stem for kpath in Path.cwd().glob("*.kt")
+              if "fun main(" in kpath.read_text()])
 """
 
 run2_bat ="""\
