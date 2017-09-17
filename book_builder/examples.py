@@ -166,6 +166,7 @@ def gradle(kname):
     home = Path.cwd()
     kpath = home / kname
     ensure(kpath.exists(), f"{kpath.name} doesn't exist")
+    ensure("fun main(" in kpath.read_text(), f"No main() in {kpath.name}")
     os.chdir(home.parent.parent)
     call(f"gradlew {kpath.stem}", shell=True)
     os.chdir(home)
