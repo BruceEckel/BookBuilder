@@ -19,6 +19,7 @@ base_name = "AtomicKotlin"
 language_name = "kotlin"
 code_ext = "kt"
 start_comment = "//"
+extracted_examples = Path(os.environ['GIT_HOME']) / "AtomicKotlinExtractedExamples"
 ```
 
 For *Thinking in Python*, it is:
@@ -28,6 +29,7 @@ base_name = "ThinkingInPython"
 language_name = "python"
 code_ext = "py"
 start_comment = "#"
+extracted_examples = Path(os.environ['GIT_HOME']) / base_name
 ```
 
 Once you've invoked the virtual environment for BookBuilder, you can then run
