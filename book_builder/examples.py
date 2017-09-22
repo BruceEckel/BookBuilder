@@ -133,26 +133,15 @@ def task(ktfile):
 
 ###################### Batch files ##########################
 
-gen_bat = """\
-@echo off
-generate --edit %*
-"""
-
-redo_bat = """\
-@echo off
-bb code extract
-generate --reinsert %*
-"""
-
-reinsert_bat = """\
-@echo off
-generate --reinsert %1
-"""
-
-prep_bat = r"kotlinc  ..\atomicTest\AtomicTest.kt -d ."
-
-run_bat ="""\
+python_bat = """\
 @echo off& python -x %0".bat" %* &goto :eof
+"""
+
+python_shell = """\
+#!/usr/bin/env python3.6
+"""
+
+run_py ="""\
 from subprocess import call
 from pathlib import Path
 import sys, os
@@ -185,39 +174,15 @@ else:
               if "fun main(" in kpath.read_text()])
 """
 
-run2_bat ="""\
-@echo off& python -x %0".bat" %* &goto :eof
-from subprocess import call
-from pathlib import Path
-call(r"kotlinc  ..\\atomicTest\\AtomicTest.kt -d .", shell=True)
-call("kotlinc *.kt -nowarn -cp .", shell=True)
-def runkt(kt):
-    code = kt.read_text()
-    package = [line.split()[1].strip() for line in code.splitlines() if line.startswith("package ")]
-    filename = kt.name
-    classfile = f"{kt.stem + 'Kt'}"
-    if package:
-        filename = f"{package[0]}.{filename}"
-        classfile = f"{package[0]}.{classfile}"
-    if "fun main(args: Array<String>)" in code:
-        print(f"{'-'*8} {filename} {'-'*8}")
-        call(f"kotlin {classfile}", shell=True)
-for kt in Path.cwd().glob("*.kt"):
-    runkt(kt)
-"""
 
 def create_test_files():
-    "Create gen.bat files for each package, to compile and run files"
+    "Create run.bat and run.sh files for each package, to compile and run files"
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        # (package / "gen.bat").write_text(gen_bat)
-        # (package / "redo.bat").write_text(redo_bat)
-        # (package / "reinsert.bat").write_text(reinsert_bat)
-        # (package / "prep.bat").write_text(prep_bat)
-        (package / "run.bat").write_text(run_bat)
-        # (package / "run2.bat").write_text(run2_bat)
-    return "bat files created"
+        (package / "run.bat").write_text(python_bat + run_py)
+        (package / "run.sh").write_text(python_shell + run_py)
+    return "run.bat and run.sh files created"
 
 
 def display_extracted_examples():
