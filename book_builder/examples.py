@@ -26,6 +26,15 @@ def clean():
     return util.clean(config.example_dir)
 
 
+def write_listing(file_path, listing):
+    debug(f"writing {file_path}")
+    if not file_path.parent.exists():
+        file_path.parent.mkdir(parents=True)
+    with file_path.open("w", newline='') as listing_file:
+        debug(listing)
+        listing_file.write(listing.strip() + "\n")
+
+
 def extractExamples():
     print("Extracting examples ...")
     if not config.extracted_examples.exists():
@@ -49,13 +58,12 @@ def extractExamples():
                 if slugline.match(title):
                     debug(title)
                     fpath = title.split()[1].strip()
-                    target = config.example_dir / fpath
-                    debug(f"writing {target}")
-                    if not target.parent.exists():
-                        target.parent.mkdir(parents=True)
-                    with target.open("w", newline='') as codeListing:
-                        debug(group[1])
-                        codeListing.write(group[1].strip() + "\n")
+                    atom_directory = fpath.split('/')[0]
+                    if atom_directory in config.exclude_atoms:
+                        # Put it in the separate exclude tree:
+                        write_listing(config.exclude_dir / fpath, group[1])
+                    else:
+                        write_listing(config.example_dir / fpath, group[1])
 
     return f"Code extracted into {config.example_dir}"
 

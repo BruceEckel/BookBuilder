@@ -39,6 +39,7 @@ root_path = tools_dir.parent / base_name
 bb_code_dir = tools_dir / "book_builder"
 markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
+exclude_dir = extracted_examples / "ExcludedExamples"
 
 ebook_build_dir = root_path / "ebook_build"
 html_dir = ebook_build_dir / "html"
