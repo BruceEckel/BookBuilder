@@ -54,7 +54,7 @@ combined_markdown_pdf = ebook_file("assembled-pdf")
 stripped_for_style = ebook_file("stripped-for-style")
 stripped_for_spelling = ebook_file("stripped-for-spelling")
 
-recent_atom_names = bb_code_dir / "recent_atom_names.py"
+# recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
 ebookResources = root_path / "resources"
 images = ebookResources / "images"

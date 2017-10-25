@@ -26,8 +26,8 @@ def combine_markdown_files():
             assembled += chapter.read() + "\n"
     with config.combined_markdown.open('w', encoding="utf8") as book:
         book.write(assembled)
-    config.recent_atom_names.write_text(
-        "anames = " + pprint.pformat(atom_names) + "\n")
+    # config.recent_atom_names.write_text(
+    #     "anames = " + pprint.pformat(atom_names) + "\n")
     return "{} Created".format(config.combined_markdown.name)
 
 
@@ -53,7 +53,7 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
         chaps[nm] = bodies[i + 1].strip() + "\n"
 
     # Ensure new names match old names:
-    import book_builder.recent_atom_names
+    # import book_builder.recent_atom_names
     # old_names = set(book_builder.recent_atom_names.anames)
     # new_names = {create_markdown_filename(nm)[:-3] for nm in names}
     # new_names.add("Front")
@@ -68,11 +68,11 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     #     return "Disassembly failed"
 
     # Notify if the number of chapters are different
-    len_old_names = len(book_builder.recent_atom_names.anames)
-    len_new_names = len(names) + 1  # for Front
-    if len_old_names != len_new_names:
-        print("Number of old names: {}".format(len_old_names))
-        print("Number of new names: {}".format(len_new_names))
+    # len_old_names = len(book_builder.recent_atom_names.anames)
+    # len_new_names = len(names) + 1  # for Front
+    # if len_old_names != len_new_names:
+    #     print("Number of old names: {}".format(len_old_names))
+    #     print("Number of new names: {}".format(len_new_names))
 
     if not target_dir.exists():
         target_dir.mkdir()
