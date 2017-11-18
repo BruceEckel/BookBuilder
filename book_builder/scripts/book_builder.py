@@ -39,7 +39,7 @@ def code_extract():
     click.echo(examples.extractExamples())
     if config.language_name == "kotlin":
         click.echo(examples.create_test_files())
-        click.echo(examples.create_tasks_gradle())
+        click.echo(examples.create_tasks_for_gradle())
 
 
 @code.command('testall')

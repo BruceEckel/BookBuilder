@@ -95,25 +95,34 @@ task run (dependsOn: [
 """)
 
 
-def create_tasks_gradle():
-    "Regenerate gradle/tasks.gradle file based on actual extracted examples"
-    # Check for duplicate names:
-    all_names = [kt.stem for kt in config.example_dir.rglob("*.kt")]
-    duplicates = [x.strip() for x in all_names if all_names.count(x) >= 2]
+def report_duplicate_file_names(*patterns):
+    stems = []
+    for pattern in patterns:
+        stems += [kt.stem for kt in config.example_dir.rglob(pattern)]
+    # from pprint import pprint
+    # pprint(stems)
+    duplicates = [x.strip() for x in stems if stems.count(x) >= 2]
     if duplicates:
         dupstring = '\n\t'.join(duplicates)
-        return f"ERROR: Duplicate names: \n{dupstring}"
+        print(f"ERROR: Duplicate names: \n{dupstring}")
+        sys.exit(1)
 
+
+def create_tasks_for_gradle():
+    "Regenerate gradle/tasks.gradle file based on actual extracted examples"
+    report_duplicate_file_names("*.kt", "*.java")
     # Produces sorted tasks by name:
     task_list = tasks_base
     runnable_list = []
     ktfiles = {kt.stem : kt for kt in config.example_dir.rglob("*.kt")}
-    for key in sorted(ktfiles):
-        ktfile = ktfiles[key]
-        gradle_task = task(ktfile)
+    javafiles = {java.stem : java for java in config.example_dir.rglob("*.java")}
+    codefiles = {**ktfiles, **javafiles} # Combine the dictionaries
+    for key in sorted(codefiles):
+        codefile = codefiles[key]
+        gradle_task = task(codefile)
         if gradle_task:
             task_list += gradle_task + "\n"
-            runnable_list.append("'" + ktfile.stem + "'")
+            runnable_list.append("'" + codefile.stem + "'")
     task_list += run_task.substitute(runtasks = ",\n    ".join(sorted(runnable_list)))
     tasks_file = config.extracted_examples / "gradle" / "tasks.gradle"
     tasks_file.write_text(task_list)
@@ -128,14 +137,24 @@ task $task_name(type: JavaExec) {
 """)
 
 
-def task(ktfile):
-    code = ktfile.read_text()
-    package = [line.split()[1].strip() for line in code.splitlines() if line.startswith("package ")]
-    classfile = f"{ktfile.stem + 'Kt'}"
+def task(codefile):
+    package = ""
+    code = codefile.read_text()
+    packages = [line.split()[1].strip()
+                for line in code.splitlines()
+                if line.startswith("package ")]
+    if packages:
+        package = packages[0]
+        if package.endswith(";"):
+            package = package[:-1]
+    if codefile.suffix == ".kt":
+        classfile = f"{codefile.stem + 'Kt'}"
+    if codefile.suffix == ".java":
+        classfile = f"{codefile.stem}"
     if package:
-        classfile = f"{package[0]}.{classfile}"
-    if "fun main(args: Array<String>)" in code:
-        return task_template.substitute(task_name = ktfile.stem, class_file = classfile)
+        classfile = f"{package}.{classfile}"
+    if "main(" in code:
+        return task_template.substitute(task_name = codefile.stem, class_file = classfile)
     return None
 
 
@@ -159,27 +178,30 @@ def ensure(test, msg):
         print(msg)
         sys.exit(1)
 
-def gradle(kname):
+def gradle(name):
     home = Path.cwd()
-    kpath = home / kname
-    ensure(kpath.exists(), f"{kpath.name} doesn't exist")
-    ensure("fun main(" in kpath.read_text(), f"No main() in {kpath.name}")
+    fpath = home / name
+    ensure(fpath.exists(), f"{fpath.name} doesn't exist")
+    ensure("main(" in fpath.read_text(), f"No main() in {fpath.name}")
     os.chdir(home.parent.parent)
-    call(f"gradlew {kpath.stem}", shell=True)
+    call(f"gradlew {fpath.stem}", shell=True)
     os.chdir(home)
 
-def multiple(kname_list):
-    knames = " ".join(kname_list)
+def multiple(name_list):
+    names = " ".join(name_list)
     home = Path.cwd()
     os.chdir(home.parent.parent)
-    call(f"gradlew {knames}", shell=True)
+    call(f"gradlew {names}", shell=True)
     os.chdir(home)
+
+def glob(ext):
+    return list(Path.cwd().glob("*." + ext))
 
 if len(sys.argv) > 1:
     gradle(sys.argv[1])
 else:
-    multiple([kpath.stem for kpath in Path.cwd().glob("*.kt")
-              if "fun main(" in kpath.read_text()])
+    multiple([fpath.stem for fpath in glob("kt") + glob("java")
+              if "main(" in fpath.read_text()])
 """
 
 
