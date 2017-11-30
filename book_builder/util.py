@@ -35,7 +35,7 @@ def create_markdown_filename(h1):
 
 
 def create_numbered_markdown_filename(h1, n):
-    return "%02d_" % n + create_markdown_filename(h1)
+    return "%03d_" % n + create_markdown_filename(h1)
 
 
 def clean(dir_to_remove):

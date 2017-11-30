@@ -19,7 +19,7 @@ def combine_markdown_files():
         os.makedirs(config.ebook_build_dir)
     assembled = ""
     atom_names = []
-    for md in config.markdown_dir.glob("[0-9][0-9]_*.md"):
+    for md in config.markdown_dir.glob("*.md"):
         atom_names.append(md.name[3:-3])
         print(str(md.name), end=", ")
         with md.open(encoding="utf8") as chapter:
