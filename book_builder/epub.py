@@ -11,6 +11,25 @@ import book_builder.config as config
 from book_builder.util import *
 
 
+def regenerate_epub_build_dir():
+    clean(config.ebook_build_dir)
+    os.makedirs(config.ebook_build_dir)
+    # This is for Atomic Kotlin; hasn't
+    # yet been made generic:
+    # shutil.copytree(
+    #     str(config.img_dir),
+    #     str(config.ebook_build_dir / "images"))
+    def copy(src):
+        source = Path(src)
+        assert source.exists()
+        shutil.copy(src, config.ebook_build_dir)
+        assert (Path(config.ebook_build_dir) / source.name).exists()
+    [copy(font) for font in config.fonts.glob("*")]
+    [copy(bullet) for bullet in config.bullets.glob("*")]
+    copy(config.cover)
+    copy(config.css)
+    # copy(config.metadata)
+
 def combine_markdown_files():
     """
     Put markdown files together
@@ -20,12 +39,14 @@ def combine_markdown_files():
     assembled = ""
     atom_names = []
     for md in config.markdown_dir.glob("*.md"):
-        atom_names.append(md.name[3:-3])
-        print(str(md.name), end=", ")
+        aname = md.name[:-3]
+        atom_names.append(aname.split('_', 1)[1])
+        #print(str(md.name), end=", ")
         with md.open(encoding="utf8") as chapter:
             assembled += chapter.read() + "\n"
     with config.combined_markdown.open('w', encoding="utf8") as book:
         book.write(assembled)
+    pprint.pprint(atom_names)
     # config.recent_atom_names.write_text(
     #     "anames = " + pprint.pformat(atom_names) + "\n")
     return "{} Created".format(config.combined_markdown.name)
@@ -88,3 +109,45 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     if target_dir != config.markdown_dir:
         print("now run 'diff -r Markdown test'")
     return "Successfully disassembled combined Markdown"
+
+
+def pandoc_epub_command(output_name):
+    if not config.combined_markdown.exists():
+        return "Error: missing " + config.combined_markdown
+
+    return (
+        "pandoc " + str(config.combined_markdown.name) +
+        " -t epub3 -o " + output_name +
+        " -f markdown-native_divs "
+        " --smart "
+        " --epub-cover-image=cover.jpg "
+        " --epub-embed-font=chapter.png "
+        " --epub-embed-font=subhead.png "
+        " --epub-embed-font=level-2.png "
+        " --epub-embed-font=UbuntuMono-R.ttf "
+        " --epub-embed-font=UbuntuMono-RI.ttf "
+        " --epub-embed-font=UbuntuMono-B.ttf "
+        " --epub-embed-font=UbuntuMono-BI.ttf "
+        " --epub-embed-font=georgia.ttf "
+        " --epub-embed-font=georgiab.ttf "
+        " --epub-embed-font=georgiai.ttf "
+        " --epub-embed-font=georgiaz.ttf "
+        " --epub-embed-font=verdana.ttf "
+        " --epub-embed-font=verdanab.ttf "
+        " --epub-embed-font=verdanai.ttf "
+        " --epub-embed-font=verdanaz.ttf "
+        " --toc-depth=2 "
+        " --css=" + config.base_name + ".css ")
+
+
+def convert_to_epub():
+    """
+    Pandoc markdown to epub
+    """
+    regenerate_epub_build_dir()
+    combine_markdown_files()
+    os.chdir(str(config.ebook_build_dir))
+    cmd = pandoc_epub_command(config.epub_file_name)
+    print(cmd)
+    print(os.getcwd())
+    os.system(cmd)

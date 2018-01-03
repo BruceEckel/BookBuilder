@@ -104,6 +104,12 @@ def epub_clean():
     click.echo(util.clean(config.ebook_build_dir))
 
 
+@epub.command('regen')
+def epub_clean():
+    "Create and populate epub build dir"
+    click.echo(_epub.regenerate_epub_build_dir())
+
+
 @epub.command('combine')
 def epub_combine():
     "Combine Markdown files into a single file"
@@ -114,13 +120,19 @@ def epub_combine():
 @epub.command('disassemble')
 @click.option('--test', is_flag=True, help='Unpack to "test" directory instead of overwriting Markdown.')
 def epub_disassemble(test):
-    "Split combined Markdown file into atom-numbered markdown files"
+    "Split combined into atom-numbered files"
     if test:
         if config.test_dir.exists():
             click.echo(util.clean(config.test_dir))
         click.echo(_epub.disassemble_combined_markdown_file(config.test_dir))
     else:
         click.echo(_epub.disassemble_combined_markdown_file())
+
+
+@epub.command('make')
+def epub_make():
+    "Create epub from Markdown files"
+    _epub.convert_to_epub()
 
 
 # @epub.command('newStatus')

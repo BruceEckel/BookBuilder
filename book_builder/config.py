@@ -59,7 +59,8 @@ stripped_for_spelling = ebook_file("stripped-for-spelling")
 ebookResources = root_path / "resources"
 images = ebookResources / "images"
 fonts = ebookResources / "fonts"
-cover = ebookResources / "cover.jpg"
+bullets = ebookResources / "bullets"
+cover = ebookResources / "cover" / "Cover.png"
 css = ebookResources / (root_name + ".css")
 metadata = ebookResources / "metadata.yaml"
 
