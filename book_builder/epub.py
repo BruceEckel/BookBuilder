@@ -3,9 +3,10 @@
 import os
 import pprint
 import re
-import difflib
-from collections import OrderedDict
 from pathlib import Path
+from collections import OrderedDict
+from itertools import chain
+# import difflib
 
 import book_builder.config as config
 from book_builder.util import *
@@ -14,11 +15,6 @@ from book_builder.util import *
 def regenerate_epub_build_dir():
     clean(config.ebook_build_dir)
     os.makedirs(config.ebook_build_dir)
-    # This is for Atomic Kotlin; hasn't
-    # yet been made generic:
-    # shutil.copytree(
-    #     str(config.img_dir),
-    #     str(config.ebook_build_dir / "images"))
     def copy(src):
         source = Path(src)
         assert source.exists()
@@ -29,6 +25,7 @@ def regenerate_epub_build_dir():
     copy(config.cover)
     copy(config.css)
     # copy(config.metadata)
+
 
 def combine_markdown_files():
     """
@@ -43,7 +40,7 @@ def combine_markdown_files():
         atom_names.append(aname.split('_', 1)[1])
         #print(str(md.name), end=", ")
         with md.open(encoding="utf8") as chapter:
-            assembled += chapter.read() + "\n"
+            assembled += chapter.read() + "\n\n"
     with config.combined_markdown.open('w', encoding="utf8") as book:
         book.write(assembled)
     pprint.pprint(atom_names)
@@ -114,29 +111,16 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
 def pandoc_epub_command(output_name):
     if not config.combined_markdown.exists():
         return "Error: missing " + config.combined_markdown
-
     return (
         "pandoc " + str(config.combined_markdown.name) +
         " -t epub3 -o " + output_name +
         " -f markdown-native_divs "
-        " --smart "
-        " --epub-cover-image=cover.jpg "
-        " --epub-embed-font=chapter.png "
-        " --epub-embed-font=subhead.png "
-        " --epub-embed-font=level-2.png "
-        " --epub-embed-font=UbuntuMono-R.ttf "
-        " --epub-embed-font=UbuntuMono-RI.ttf "
-        " --epub-embed-font=UbuntuMono-B.ttf "
-        " --epub-embed-font=UbuntuMono-BI.ttf "
-        " --epub-embed-font=georgia.ttf "
-        " --epub-embed-font=georgiab.ttf "
-        " --epub-embed-font=georgiai.ttf "
-        " --epub-embed-font=georgiaz.ttf "
-        " --epub-embed-font=verdana.ttf "
-        " --epub-embed-font=verdanab.ttf "
-        " --epub-embed-font=verdanai.ttf "
-        " --epub-embed-font=verdanaz.ttf "
-        " --toc-depth=2 "
+        " -f markdown+smart "
+        " --epub-cover-image=Cover.png " +
+        " ".join([f"--epub-embed-font={font.name}" for font in
+          chain(config.bullets.glob("*"), config.fonts.glob("*")) ])
+        + " --toc-depth=2 "
+        f'--metadata title="{config.title}"'
         " --css=" + config.base_name + ".css ")
 
 

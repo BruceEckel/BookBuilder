@@ -99,8 +99,6 @@ def replace_code_in_text(generated, text):
     assert False, f"{title} not found in text"
 
 
-
-
 def create_new_status_file():
     "Create STATUS.md"
     status_file = config.root_path / "STATUS.md"
@@ -118,7 +116,6 @@ def create_new_status_file():
         checkbox("Tech Checked")
         status += "+ Notes:\n"
     status_file.write_text(status)
-
 
 
 # Format output:
