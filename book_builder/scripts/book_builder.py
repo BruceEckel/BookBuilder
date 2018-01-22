@@ -129,6 +129,13 @@ def epub_disassemble(test):
         click.echo(_epub.disassemble_combined_markdown_file())
 
 
+@epub.command('sample_markdown')
+def epub_sample_markdown():
+    "Combine sample Markdown files into a single Markdown file"
+    click.echo(_epub.combine_sample_markdown())
+    os.system("subl {}".format(config.sample_markdown))
+
+
 @epub.command('make')
 def epub_make():
     "Create epub from Markdown files"

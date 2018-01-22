@@ -51,6 +51,11 @@ def ebook_file(fileid): return ebook_build_dir / f"{root_name}-{fileid}.md"
 combined_markdown = ebook_file("assembled")
 combined_markdown_html = ebook_file("assembled-html")
 combined_markdown_pdf = ebook_file("assembled-pdf")
+
+sample_markdown = ebook_file("sample")
+sample_markdown_html = ebook_file("sample-html")
+sample_markdown_pdf = ebook_file("sample-pdf")
+
 stripped_for_style = ebook_file("stripped-for-style")
 stripped_for_spelling = ebook_file("stripped-for-spelling")
 

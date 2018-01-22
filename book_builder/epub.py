@@ -49,6 +49,30 @@ def combine_markdown_files():
     return "{} Created".format(config.combined_markdown.name)
 
 
+def combine_sample_markdown():
+    """
+    Build markdown file for free sample
+    """
+    def extract(md, title_only=False):
+        with md.open(encoding="utf8") as chapter:
+            content = chapter.read().strip()
+            if title_only:
+                return ("\n".join(content.splitlines()[:3])).strip() + "\n\n"
+            return content + "\n\n"
+
+    if not config.ebook_build_dir.exists():
+        os.makedirs(config.ebook_build_dir)
+    assembled = ""
+    atoms = [md for md in config.markdown_dir.glob("*.md")]
+    for content in atoms[:config.sample_size + 1]:
+        assembled += extract(content)
+    for title_only in atoms[config.sample_size + 1:]:
+        assembled += extract(title_only, True)
+    with config.sample_markdown.open('w', encoding="utf8") as book:
+        book.write(assembled)
+    return "{} Created".format(config.sample_markdown.name)
+
+
 def strip_chapter(chapter_text):
     "Remove blank newlines at beginning and end, right-hand spaces on lines"
     chapter_text = chapter_text.strip()
