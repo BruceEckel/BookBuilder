@@ -23,7 +23,8 @@ def debug(msg): pass
 
 def clean():
     "Remove directory containing extracted example code"
-    return util.clean(config.example_dir)
+    util.clean(config.example_dir)
+    return f"{config.example_dir} removed"
 
 
 def write_listing(file_path, listing):
