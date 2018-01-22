@@ -42,7 +42,7 @@ def combine_markdown_files():
         with md.open(encoding="utf8") as chapter:
             assembled += chapter.read() + "\n\n"
     with config.combined_markdown.open('w', encoding="utf8") as book:
-        book.write(assembled)
+        book.write(strip_review_notes(assembled))
     pprint.pprint(atom_names)
     # config.recent_atom_names.write_text(
     #     "anames = " + pprint.pformat(atom_names) + "\n")
@@ -69,7 +69,7 @@ def combine_sample_markdown():
     for title_only in atoms[config.sample_size + 1:]:
         assembled += extract(title_only, True)
     with config.sample_markdown.open('w', encoding="utf8") as book:
-        book.write(assembled)
+        book.write(strip_review_notes(assembled))
     return "{} Created".format(config.sample_markdown.name)
 
 
@@ -79,6 +79,25 @@ def strip_chapter(chapter_text):
     lines = [line.rstrip() for line in chapter_text.splitlines()]
     stripped = "\n".join(lines)
     return stripped.strip() # In case the previous line adds another newline
+
+
+def strip_review_notes(text):
+    lines = text.strip().splitlines()
+    review = [x for x in lines if x.startswith("+ [")]
+    mistakes = [x for x in review if not "Ready for Review" in x and not "Tech Checked" in x]
+    assert not mistakes, mistakes
+    result = [x.strip() for x in lines if not x.startswith("+ [")]
+    result2 = ""
+    in_notes = False
+    for line in result:
+        if line.startswith("+ Notes:"):
+            in_notes = True
+        if in_notes and len(line) == 0:
+            in_notes = False
+        if not in_notes:
+            result2 += line + "\n"
+    return result2 + "\n"
+
 
 
 def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
