@@ -68,6 +68,7 @@ def combine_sample_markdown():
         assembled += extract(content)
     for title_only in atoms[config.sample_size + 1:]:
         assembled += extract(title_only, True)
+        assembled += "(Not included in sample)\n\n"
     with config.sample_markdown.open('w', encoding="utf8") as book:
         book.write(strip_review_notes(assembled))
     return "{} Created".format(config.sample_markdown.name)
@@ -86,7 +87,7 @@ def strip_review_notes(text):
     review = [x for x in lines if x.startswith("+ [")]
     mistakes = [x for x in review if not "Ready for Review" in x and not "Tech Checked" in x]
     assert not mistakes, mistakes
-    result = [x.strip() for x in lines if not x.startswith("+ [")]
+    result = [x.rstrip() for x in lines if not x.startswith("+ [")]
     result2 = ""
     in_notes = False
     for line in result:
@@ -151,11 +152,11 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     return "Successfully disassembled combined Markdown"
 
 
-def pandoc_epub_command(output_name):
+def pandoc_epub_command(input_file, output_name, title):
     if not config.combined_markdown.exists():
-        return "Error: missing " + config.combined_markdown
+        return "Error: missing " + input_file
     return (
-        "pandoc " + str(config.combined_markdown.name) +
+        "pandoc " + str(input_file) +
         " -t epub3 -o " + output_name +
         " -f markdown-native_divs "
         " -f markdown+smart "
@@ -163,7 +164,7 @@ def pandoc_epub_command(output_name):
         " ".join([f"--epub-embed-font={font.name}" for font in
           chain(config.bullets.glob("*"), config.fonts.glob("*")) ])
         + " --toc-depth=2 "
-        f'--metadata title="{config.title}"'
+        f'--metadata title="{title}"'
         " --css=" + config.base_name + ".css ")
 
 
@@ -173,8 +174,15 @@ def convert_to_epub():
     """
     regenerate_epub_build_dir()
     combine_markdown_files()
+    combine_sample_markdown()
     os.chdir(str(config.ebook_build_dir))
-    cmd = pandoc_epub_command(config.epub_file_name)
+    cmd = pandoc_epub_command(
+        config.combined_markdown, config.epub_file_name, config.title)
     print(cmd)
-    print(os.getcwd())
     os.system(cmd)
+    cmd = pandoc_epub_command(
+        config.sample_markdown, config.epub_sample_file_name, config.title + " Sample")
+    print(cmd)
+    os.system(cmd)
+    os.system(f"copy {config.epub_file_name} ..")
+    os.system(f"copy {config.epub_sample_file_name} ..")
