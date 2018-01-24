@@ -27,7 +27,7 @@ def regenerate_epub_build_dir():
     # copy(config.metadata)
 
 
-def combine_markdown_files():
+def combine_markdown_files(strip_notes = False):
     """
     Put markdown files together
     """
@@ -41,8 +41,10 @@ def combine_markdown_files():
         #print(str(md.name), end=", ")
         with md.open(encoding="utf8") as chapter:
             assembled += chapter.read() + "\n\n"
+    if strip_notes:
+        assembled = strip_review_notes(assembled)
     with config.combined_markdown.open('w', encoding="utf8") as book:
-        book.write(strip_review_notes(assembled))
+        book.write(assembled)
     pprint.pprint(atom_names)
     # config.recent_atom_names.write_text(
     #     "anames = " + pprint.pformat(atom_names) + "\n")
@@ -173,7 +175,7 @@ def convert_to_epub():
     Pandoc markdown to epub
     """
     regenerate_epub_build_dir()
-    combine_markdown_files()
+    combine_markdown_files(strip_notes = True)
     combine_sample_markdown()
     os.chdir(str(config.ebook_build_dir))
     cmd = pandoc_epub_command(
