@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from collections import OrderedDict
 from itertools import chain
+import zipfile
 # import difflib
 
 import book_builder.config as config
@@ -99,7 +100,8 @@ def strip_review_notes(text):
             in_notes = False
         if not in_notes:
             result2 += line + "\n"
-    return result2 + "\n"
+    result3 = re.sub("{{.*?}}", "", result2, flags=re.DOTALL)
+    return result3 + "\n"
 
 
 
@@ -162,12 +164,19 @@ def pandoc_epub_command(input_file, output_name, title):
         " -t epub3 -o " + output_name +
         " -f markdown-native_divs "
         " -f markdown+smart "
+        """ --epub-subdirectory="" """
         " --epub-cover-image=Cover.png " +
         " ".join([f"--epub-embed-font={font.name}" for font in
           chain(config.bullets.glob("*"), config.fonts.glob("*")) ])
         + " --toc-depth=2 "
         f'--metadata title="{title}"'
         " --css=" + config.base_name + ".css ")
+
+
+def fix_for_apple(epub_name):
+    epub = zipfile.ZipFile(epub_name, "a")
+    epub.write(config.meta_inf, "META-INF")
+    epub.close()
 
 
 def convert_to_epub():
@@ -186,5 +195,7 @@ def convert_to_epub():
         config.sample_markdown, config.epub_sample_file_name, config.title + " Sample")
     print(cmd)
     os.system(cmd)
+    fix_for_apple(config.epub_file_name)
+    fix_for_apple(config.epub_sample_file_name)
     os.system(f"copy {config.epub_file_name} ..")
     os.system(f"copy {config.epub_sample_file_name} ..")

@@ -68,6 +68,7 @@ bullets = ebookResources / "bullets"
 cover = ebookResources / "cover" / "Cover.png"
 css = ebookResources / (root_name + ".css")
 metadata = ebookResources / "metadata.yaml"
+meta_inf = ebookResources / "META-INF"
 
 reformat_dir = root_path / "Reformatted"
 
