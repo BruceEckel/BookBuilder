@@ -26,6 +26,7 @@ def all_checks():
         validate_listing_indentation(text, reporter)
         validate_example_sluglines(text, reporter)
         validate_package_names(text, reporter)
+        validate_code_listing_line_widths(text, reporter)
 
 
 #################################################################
@@ -199,3 +200,14 @@ def  validate_package_names(text, error_reporter):
         # print(package_decl)
         if bool(re.search('([A-Z])', package_decl[0])):
             error_reporter(f"Capital letter in package name:\n\t{package_decl}")
+
+### Check code listing line widths
+
+def  validate_code_listing_line_widths(text, error_reporter):
+    for listing in extract_listings(text):
+        lines = listing.splitlines()
+        if not lines[0].startswith("// "):
+            continue
+        for n, line in enumerate(lines):
+            if len(line.rstrip()) > config.code_width:
+                error_reporter(f"Line {n} too wide in {lines[0]}")
