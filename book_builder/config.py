@@ -27,12 +27,14 @@ def settings_path():
 
 
 exec(settings_path().read_text())
+# if 'comment_capitalization_OK' in globals():
+#     comment_capitalization_OK = comment_capitalization_OK.strip().splitlines()
+#     print(comment_capitalization_OK)
+
 root_name = base_name.lower()
 
 epub_file_name = base_name + ".epub"
 epub_sample_file_name = base_name + "Sample.epub"
-
-code_width = 56
 
 tools_dir = Path(__file__).parent.parent.resolve()
 root_path = tools_dir.parent / base_name
