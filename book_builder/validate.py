@@ -136,7 +136,7 @@ def inconsistent_indentation(lines):
     indents = [(len(line) - len(line.lstrip(' ')), line) for line in lines]
     if indents[0][0]: return "First line can't be indented"
     for indent, line in indents:
-        if indent % 2 != 0:
+        if indent % 2 != 0 and not line.startswith(" *"):
             return f"{listing_name}: Non-even indent in line: {line}"
     indent_counts = [ind//2 for ind, ln in indents] # For a desired indent of 2
     indent_pairs = list(zip(indent_counts, indent_counts[1:]))
