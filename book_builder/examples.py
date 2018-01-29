@@ -43,7 +43,7 @@ def extractExamples():
     if not config.markdown_dir.exists():
         return f"Cannot find {config.markdown_dir}"
     if config.example_dir.exists():
-        clean()
+        print(clean())
 
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
 

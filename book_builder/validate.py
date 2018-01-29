@@ -10,10 +10,11 @@ from book_builder.util import *
 
 def all_checks():
     "Multiple tests to find problems in the book"
-    print("Running all validation tests ...")
+    print(f"Validating {config.markdown_dir}")
     if not config.markdown_dir.exists():
         return f"Cannot find {config.markdown_dir}"
-    for md in config.markdown_dir.glob("[0-9][0-9]_*.md"):
+    for md in config.markdown_dir.glob("[0-9]*_*.md"):
+        # print(md)
         reporter = ErrorReporter(md.name)
         with md.open() as f:
             text = f.read()
@@ -24,6 +25,7 @@ def all_checks():
         validate_no_tabs(text, reporter)
         validate_listing_indentation(text, reporter)
         validate_example_sluglines(text, reporter)
+        validate_package_names(text, reporter)
 
 
 #################################################################
@@ -68,10 +70,10 @@ def validate_complete_examples(text, error_reporter):
 
 
 def validate_filenames_and_titles(md, text, error_reporter):
-    if md.name == "00_Front.md":
+    if "Front.md" in md.name:
         return
     title = text.splitlines()[0]
-    if create_markdown_filename(title) != md.name[3:]:
+    if create_markdown_filename(title) != md.name[4:]:
         error_reporter(f"Atom Title: {title}")
     if " and " in title:
         error_reporter(f"'and' in title should be '&': {title}")
@@ -185,3 +187,15 @@ def  validate_example_sluglines(text, error_reporter):
         slug = slug.split(None, 1)[1]
         if "/" not in slug:
             error_reporter(f"Missing directory in {slug}")
+
+
+### Check for package names with capital letters
+
+def  validate_package_names(text, error_reporter):
+    for listing in extract_listings(text):
+        package_decl = [line for line in listing.splitlines() if line.startswith("package ")]
+        if not package_decl:
+            continue
+        # print(package_decl)
+        if bool(re.search('([A-Z])', package_decl[0])):
+            error_reporter(f"Capital letter in package name:\n\t{package_decl}")
