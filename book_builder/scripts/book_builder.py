@@ -146,3 +146,11 @@ def epub_make():
 def epub_create_new_status_file():
     "Create fresh STATUS.md if one doesn't exist"
     click.echo(util.create_new_status_file())
+
+
+@epub.command('release')
+def create_release():
+    "Create release package after running 'make'"
+    _epub.create_release()
+
+

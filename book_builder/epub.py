@@ -199,3 +199,26 @@ def convert_to_epub():
     fix_for_apple(config.epub_sample_file_name)
     os.system(f"copy {config.epub_file_name} ..")
     os.system(f"copy {config.epub_sample_file_name} ..")
+
+
+def create_release():
+    release_dir = config.root_path / "Release"
+    if release_dir.exists():
+        clean(release_dir)
+    os.makedirs(release_dir)
+    epub = config.root_path / config.epub_file_name
+    sample = config.root_path / config.epub_sample_file_name
+    assert epub.exists()
+    assert sample.exists()
+    os.system(f"mv {epub} {release_dir}")
+    os.system(f"mv {sample} {release_dir}")
+    os.chdir(str(release_dir))
+    os.system(f"kindlegen {config.epub_file_name}")
+    os.system(f"kindlegen {config.epub_sample_file_name}")
+    cmd = f"zip {config.base_name}.zip {config.epub_file_name} {config.base_name}.mobi"
+    print(cmd)
+    os.system(cmd)
+    sample_name = config.base_name + "Sample"
+    cmd = f"zip {sample_name}.zip {sample_name}.epub {sample_name}.mobi"
+    os.system(cmd)
+    print(cmd)
