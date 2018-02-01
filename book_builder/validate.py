@@ -263,30 +263,26 @@ def validate_hanging_hyphens(text, error_reporter):
 explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
 cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
 
+titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
+# pprint.pprint(titles)
+
 def validate_cross_links(text, error_reporter):
+    text = re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
     explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
-    explicits = [cross_link.findall(e)[0] for e in explicits]
+    explicits = [cross_link.findall(e)[0][1:-1] for e in explicits]
     # if explicits:
     #     print(f"--- {error_reporter.id} Explicits ---")
     #     pprint.pprint(explicits)
-    candidates = [c.replace("\n", " ") for c in cross_link.findall(text)]
-    result = []
+    candidates = [c.replace("\n", " ")[1:-1] for c in cross_link.findall(text)]
+    # print(f"Candidates: {pprint.pformat(candidates)}")
+    cross_links = []
     for c in candidates:
-        print(f"{c} in {explicits}: {c in explicits}")
         if c in explicits: continue
-        if len(c) < 6: continue
+        if len(c) < 4: continue
         if c.endswith(".com]"): continue
-        if "," in c: continue
-        if "<" in c: continue
-        if "(" in c: continue
-        if ")" in c: continue
-        if "$" in c: continue
-        if "%" in c: continue
-        if "/" in c: continue
-        if "'" in c: continue
-        if '"' in c: continue
-        result.append(c)
-    if result:
-        print(f"--- {error_reporter.id} ---")
-        pprint.pprint(result)
-
+        if any([ch in c for ch in """,<'"()$%/"""]): continue
+        cross_links.append(c)
+    unresolved = [cl for cl in cross_links if cl not in titles]
+    if unresolved:
+        error_reporter(f"""Unresolved cross-links:
+        {pprint.pformat(unresolved)}""")
