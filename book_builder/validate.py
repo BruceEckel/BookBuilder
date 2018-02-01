@@ -239,9 +239,10 @@ def extract_comments_and_code_components():
             all_comments += comment_block + " "
     for c in string.punctuation:
         all_comments = all_comments.replace(c," ")
-    all_comments = set(all_comments.split())
-    all_comments = sorted([c for c in all_comments if not is_number(c)])
-    pprint.pprint(all_comments)
+    all_comment_words = sorted([
+        c for c in set(all_comments.split()) if not is_number(c)
+    ])
+    pprint.pprint(all_comment_words)
 
 
 ### Ensure there are no hanging em-dashes or hyphens
