@@ -82,6 +82,11 @@ def validate():
     click.echo(_validate.all_checks())
 
 
+@cli.command()
+def code_spellcheck():
+    "Extract comments and code components"
+    click.echo(_validate.extract_comments_and_code_components())
+
 ##########################################################
 
 

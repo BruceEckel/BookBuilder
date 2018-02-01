@@ -2,9 +2,11 @@
 # Various validation checks
 import re
 import sys
+import pprint
 
 import book_builder.config as config
 from book_builder.epub import create_markdown_filename
+from book_builder.epub import combine_markdown_files
 from book_builder.util import *
 
 
@@ -27,6 +29,8 @@ def all_checks():
         validate_example_sluglines(text, reporter)
         validate_package_names(text, reporter)
         validate_code_listing_line_widths(text, reporter)
+        validate_hanging_hyphens(text, reporter)
+        validate_cross_links(text, reporter)
 
 
 #################################################################
@@ -90,7 +94,7 @@ def extract_listings(text):
 def parse_comment_block(n, lines):
     block = ""
     while n < len(lines) and "//" in lines[n]:
-        block += lines[n].split("//")[1].lstrip()
+        block += lines[n].split("//")[1].strip() + " "
         n += 1
     return n, block
 
@@ -203,7 +207,7 @@ def  validate_package_names(text, error_reporter):
 
 ### Check code listing line widths
 
-def  validate_code_listing_line_widths(text, error_reporter):
+def validate_code_listing_line_widths(text, error_reporter):
     for listing in extract_listings(text):
         lines = listing.splitlines()
         if not lines[0].startswith("// "):
@@ -211,3 +215,78 @@ def  validate_code_listing_line_widths(text, error_reporter):
         for n, line in enumerate(lines):
             if len(line.rstrip()) > config.code_width:
                 error_reporter(f"Line {n} too wide in {lines[0]}")
+
+
+### Extract comments and isolated code components for spell checking
+
+def is_number(s):
+    if not any(i in s for i in '1234567890'):
+        return False
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def extract_comments_and_code_components():
+    import string
+    combine_markdown_files(strip_notes = True)
+    all = config.combined_markdown.read_text()
+    all_comments = ""
+    for listing in extract_listings(all):
+        lines = listing.splitlines()
+        for comment_block in parse_blocks_of_comments(listing):
+            all_comments += comment_block + " "
+    for c in string.punctuation:
+        all_comments = all_comments.replace(c," ")
+    all_comments = set(all_comments.split())
+    all_comments = sorted([c for c in all_comments if not is_number(c)])
+    pprint.pprint(all_comments)
+
+
+### Ensure there are no hanging em-dashes or hyphens
+
+hanging_emdash = re.compile("[^-]+---$")
+hanging_hyphen = re.compile("[^-]+-$")
+
+def validate_hanging_hyphens(text, error_reporter):
+    for line in text.splitlines():
+        line = line.rstrip()
+        if hanging_emdash.match(line):
+            error_reporter(f"Hanging emdash: {line}")
+        if hanging_hyphen.match(line):
+            error_reporter(f"Hanging hyphen: {line}")
+
+
+### Check for invalid cross-links:
+
+explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
+cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
+
+def validate_cross_links(text, error_reporter):
+    explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
+    explicits = [cross_link.findall(e)[0] for e in explicits]
+    # if explicits:
+    #     print(f"--- {error_reporter.id} Explicits ---")
+    #     pprint.pprint(explicits)
+    candidates = [c.replace("\n", " ") for c in cross_link.findall(text)]
+    result = []
+    for c in candidates:
+        print(f"{c} in {explicits}: {c in explicits}")
+        if c in explicits: continue
+        if len(c) < 6: continue
+        if c.endswith(".com]"): continue
+        if "," in c: continue
+        if "<" in c: continue
+        if "(" in c: continue
+        if ")" in c: continue
+        if "$" in c: continue
+        if "%" in c: continue
+        if "/" in c: continue
+        if "'" in c: continue
+        if '"' in c: continue
+        result.append(c)
+    if result:
+        print(f"--- {error_reporter.id} ---")
+        pprint.pprint(result)
+
