@@ -243,28 +243,34 @@ def extract_comments_and_code_components():
         c for c in set(all_comments.split()) if not is_number(c)
     ])
     pprint.pprint(all_comment_words)
-    single_ticks = {t[1:-1] for t in re.findall("`.+?`", all) if t != "```"}
-    pprint.pprint(sorted(list(single_ticks)))
+
+
+def remove_nonletters(str):
+    for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
+        str = str.replace(rch, " ")
+    return str.strip()
 
 
 def strip_comments_from_code(listing):
     listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
     lines = [line.split("//")[0].rstrip() for line in listing.splitlines()]
-    stripped_listing = "\n".join(lines).strip()
-    for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
-        stripped_listing = stripped_listing.replace(rch, " ")
-    return stripped_listing
+    words = []
+    for line in lines:
+        words += [word for word in remove_nonletters(line).split()]
+    return words
 
 
 def extract_code_pieces():
     combine_markdown_files(strip_notes = True)
     all = config.combined_markdown.read_text()
+    print("-=-=-=-=-=-")
     stripped_listings = [strip_comments_from_code(listing) for listing in extract_listings(all)]
-    pieces = set()
-    for listing in stripped_listings:
-        for piece in listing.split():
-            pieces.add(piece)
-    pprint.pprint(pieces)
+    pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
+    print(f"compiled pieces: {pprint.pformat(pieces)}")
+    single_ticks = [remove_nonletters(t[1:-1]).split() for t in re.findall("`.+?`", all) if t != "```"]
+    single_ticks = {item for sublist in single_ticks for item in sublist}
+    print(f"single ticked: {pprint.pformat(single_ticks)}")
+    print(f"difference: {pprint.pformat(single_ticks.difference(pieces))}")
 
 
 
