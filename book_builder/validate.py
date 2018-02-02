@@ -243,6 +243,29 @@ def extract_comments_and_code_components():
         c for c in set(all_comments.split()) if not is_number(c)
     ])
     pprint.pprint(all_comment_words)
+    single_ticks = {t[1:-1] for t in re.findall("`.+?`", all) if t != "```"}
+    pprint.pprint(sorted(list(single_ticks)))
+
+
+def strip_comments_from_code(listing):
+    listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
+    lines = [line.split("//")[0].rstrip() for line in listing.splitlines()]
+    stripped_listing = "\n".join(lines).strip()
+    for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
+        stripped_listing = stripped_listing.replace(rch, " ")
+    return stripped_listing
+
+
+def extract_code_pieces():
+    combine_markdown_files(strip_notes = True)
+    all = config.combined_markdown.read_text()
+    stripped_listings = [strip_comments_from_code(listing) for listing in extract_listings(all)]
+    pieces = set()
+    for listing in stripped_listings:
+        for piece in listing.split():
+            pieces.add(piece)
+    pprint.pprint(pieces)
+
 
 
 ### Ensure there are no hanging em-dashes or hyphens

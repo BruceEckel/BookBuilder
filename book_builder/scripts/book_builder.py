@@ -87,6 +87,11 @@ def code_spellcheck():
     "Extract comments and code components"
     click.echo(_validate.extract_comments_and_code_components())
 
+@cli.command()
+def extract_code_pieces():
+    "Extract parts of code, without comments"
+    click.echo(_validate.extract_code_pieces())
+
 ##########################################################
 
 
