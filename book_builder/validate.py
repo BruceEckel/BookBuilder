@@ -6,7 +6,6 @@ import pprint
 from pathlib import Path
 import book_builder.config as config
 from book_builder.epub import create_markdown_filename
-# from book_builder.epub import combine_markdown_files
 from book_builder.util import *
 
 all_misspelled = set()
@@ -36,15 +35,18 @@ def all_checks():
         validate_ticked_phrases(text, error_reporter)
         validate_function_descriptions(text, error_reporter)
         full_spellcheck(text, error_reporter)
+        error_reporter.show()
+        error_reporter.edit()
 
     Path(config.root_path / "data" / "all_misspelled.txt").write_text("\n".join(sorted(all_misspelled)))
+
 
 #################################################################
 ############## Individual validation functions ##################
 #################################################################
 
 
-### Ensure there's no gap between ``` and language_name:
+### Ensure there's no gap between ``` and language_name
 
 
 def validate_tag_no_gap(text, error_reporter):
@@ -52,7 +54,7 @@ def validate_tag_no_gap(text, error_reporter):
         error_reporter(f"Contains spaces between ``` and {config.language_name}")
 
 
-### Check for code fragments that should be turned into examples:
+### Check for code fragments that should be turned into examples
 
 slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
 
@@ -77,8 +79,7 @@ def validate_complete_examples(text, error_reporter):
         error_reporter(f"Contains compileable example(s) without a slugline: {noslug}")
 
 
-### Ensure atom titles conform to standard and agree with file names:
-
+### Ensure atom titles conform to standard and agree with file names
 
 def validate_filenames_and_titles(md, text, error_reporter):
     if "Front.md" in md.name:
@@ -90,8 +91,7 @@ def validate_filenames_and_titles(md, text, error_reporter):
         error_reporter(f"'and' in title should be '&': {title}")
 
 
-### Check for un-capitalized comments:
-
+### Check for un-capitalized comments
 
 def extract_listings(text):
     return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL)]
@@ -136,7 +136,7 @@ def validate_capitalized_comments(text, error_reporter):
         error_reporter(f"Uncapitalized comment: {uncapped}")
 
 
-### Check for inconsistent indentation:
+### Check for inconsistent indentation
 
 def inconsistent_indentation(lines):
     listing_name = lines[0]
@@ -177,7 +177,7 @@ def validate_listing_indentation(text, error_reporter):
         error_reporter(f"Inconsistent indentation: {bad_indent}")
 
 
-### Check for tabs:
+### Check for tabs
 
 def validate_no_tabs(text, error_reporter):
     if "\t" in text:
@@ -211,6 +211,7 @@ def  validate_package_names(text, error_reporter):
         if bool(re.search('([A-Z])', package_decl[0])):
             error_reporter(f"Capital letter in package name:\n\t{package_decl}")
 
+
 ### Check code listing line widths
 
 def validate_code_listing_line_widths(text, error_reporter):
@@ -225,32 +226,6 @@ def validate_code_listing_line_widths(text, error_reporter):
 
 ### Spell-check single-ticked items against compiled code
 
-# def is_number(s):
-#     if not any(i in s for i in '1234567890'):
-#         return False
-#     try:
-#         float(s)
-#         return True
-#     except ValueError:
-#         return False
-
-# def extract_comments_and_code_components():
-#     import string
-#     combine_markdown_files(strip_notes = True)
-#     all = config.combined_markdown.read_text()
-#     all_comments = ""
-#     for listing in extract_listings(all):
-#         lines = listing.splitlines()
-#         for comment_block in parse_blocks_of_comments(listing):
-#             all_comments += comment_block + " "
-#     for c in string.punctuation:
-#         all_comments = all_comments.replace(c," ")
-#     all_comment_words = sorted([
-#         c for c in set(all_comments.split()) if not is_number(c)
-#     ])
-#     pprint.pprint(all_comment_words)
-
-
 single_tick_dictionary = set(Path(config.root_path / "data" / "single_tick_dictionary.txt").read_text().splitlines())
 
 def remove_nonletters(str):
@@ -264,29 +239,21 @@ def strip_comments_from_code(listing):
     lines = listing.splitlines()
     if lines[0].startswith("//"): # Retain elements of slugline
         lines[0] = lines[0][3:]
-        # print(lines[0])
     lines = [line.split("//")[0].rstrip() for line in lines]
     words = []
     for line in lines:
         words += [word for word in remove_nonletters(line).split()]
-    # pprint.pprint(words)
     return words
 
 
 def validate_ticked_phrases(text, error_reporter):
-    # combine_markdown_files(strip_notes = True)
-    # all = config.combined_markdown.read_text()
     stripped_listings = [strip_comments_from_code(listing) for listing in extract_listings(text)]
     pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
     pieces = pieces.union(single_tick_dictionary)
-    # print(f"compiled pieces: {pprint.pformat(pieces)}")
     raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
-    # print(f"raw single_ticks: {pprint.pformat(raw_single_ticks)}")
     single_ticks = [remove_nonletters(t[1:-1]).split() for t in raw_single_ticks]
     single_ticks = {item for sublist in single_ticks for item in sublist} # Flatten list
-    # print(f"single ticked: {pprint.pformat(single_ticks)}")
     not_in_examples = single_ticks.difference(pieces)
-    # print(f"not_in_examples: {pprint.pformat(not_in_examples)}")
     if not_in_examples:
         err_msg = ""
         for nie in not_in_examples:
@@ -327,23 +294,18 @@ def validate_hanging_hyphens(text, error_reporter):
             error_reporter(f"Hanging hyphen: {line}")
 
 
-### Check for invalid cross-links:
+### Check for invalid cross-links
 
 explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
 cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
 
 titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
-# pprint.pprint(titles)
 
 def validate_cross_links(text, error_reporter):
     text = re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
     explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
     explicits = [cross_link.findall(e)[0][1:-1] for e in explicits]
-    # if explicits:
-    #     print(f"--- {error_reporter.id} Explicits ---")
-    #     pprint.pprint(explicits)
     candidates = [c.replace("\n", " ")[1:-1] for c in cross_link.findall(text)]
-    # print(f"Candidates: {pprint.pformat(candidates)}")
     cross_links = []
     for c in candidates:
         if c in explicits: continue
@@ -360,4 +322,10 @@ def validate_cross_links(text, error_reporter):
 ### Make sure functions use parentheses, not 'function'
 
 def validate_function_descriptions(text, error_reporter):
-    pass
+    func_descriptions = re.findall("`[^(`]+?`\s+function", text) + re.findall("function\s+`[^(`]+?`", text)
+    if func_descriptions:
+        err_msg = "Function descriptions missing '()':\n"
+        for f in func_descriptions:
+            f = f.replace("\n", " ").strip()
+            err_msg += f"\t{f}\n"
+        error_reporter(err_msg.strip())
