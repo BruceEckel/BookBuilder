@@ -3,11 +3,13 @@
 import re
 import sys
 import pprint
-
+from pathlib import Path
 import book_builder.config as config
 from book_builder.epub import create_markdown_filename
 from book_builder.epub import combine_markdown_files
 from book_builder.util import *
+
+all_misspelled = set()
 
 
 def all_checks():
@@ -17,21 +19,23 @@ def all_checks():
         return f"Cannot find {config.markdown_dir}"
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
         # print(md)
-        reporter = ErrorReporter(md.name)
+        error_reporter = ErrorReporter(md.name)
         with md.open() as f:
             text = f.read()
-        validate_tag_no_gap(text, reporter)
-        validate_complete_examples(text, reporter)
-        validate_filenames_and_titles(md, text, reporter)
-        validate_capitalized_comments(text, reporter)
-        validate_no_tabs(text, reporter)
-        validate_listing_indentation(text, reporter)
-        validate_example_sluglines(text, reporter)
-        validate_package_names(text, reporter)
-        validate_code_listing_line_widths(text, reporter)
-        validate_hanging_hyphens(text, reporter)
-        validate_cross_links(text, reporter)
+        validate_tag_no_gap(text, error_reporter)
+        validate_complete_examples(text, error_reporter)
+        validate_filenames_and_titles(md, text, error_reporter)
+        validate_capitalized_comments(text, error_reporter)
+        validate_no_tabs(text, error_reporter)
+        validate_listing_indentation(text, error_reporter)
+        validate_example_sluglines(text, error_reporter)
+        validate_package_names(text, error_reporter)
+        validate_code_listing_line_widths(text, error_reporter)
+        validate_hanging_hyphens(text, error_reporter)
+        validate_cross_links(text, error_reporter)
+        full_spellcheck(text, error_reporter)
 
+    Path(config.root_path / "data" / "all_misspelled.txt").write_text("\n".join(sorted(all_misspelled)))
 
 #################################################################
 ############## Individual validation functions ##################
@@ -272,6 +276,21 @@ def extract_code_pieces():
     print(f"single ticked: {pprint.pformat(single_ticks)}")
     print(f"difference: {pprint.pformat(single_ticks.difference(pieces))}")
 
+
+### Spell-check everything
+
+dictionary = set(Path(config.root_path / "data" / "dictionary.txt").read_text().splitlines()).union(
+    set(Path(config.root_path / "data" / "supplemental_dictionary.txt").read_text().splitlines()))
+
+def full_spellcheck(text, error_reporter):
+    words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
+    misspelled = words - dictionary
+    if '' in misspelled:
+        misspelled.remove('')
+    if len(misspelled):
+        global all_misspelled
+        all_misspelled = all_misspelled.union(misspelled)
+        error_reporter(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
 ### Ensure there are no hanging em-dashes or hyphens
