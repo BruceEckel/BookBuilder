@@ -6,7 +6,7 @@ import pprint
 from pathlib import Path
 import book_builder.config as config
 from book_builder.epub import create_markdown_filename
-from book_builder.epub import combine_markdown_files
+# from book_builder.epub import combine_markdown_files
 from book_builder.util import *
 
 all_misspelled = set()
@@ -33,6 +33,8 @@ def all_checks():
         validate_code_listing_line_widths(text, error_reporter)
         validate_hanging_hyphens(text, error_reporter)
         validate_cross_links(text, error_reporter)
+        validate_ticked_phrases(text, error_reporter)
+        validate_function_descriptions(text, error_reporter)
         full_spellcheck(text, error_reporter)
 
     Path(config.root_path / "data" / "all_misspelled.txt").write_text("\n".join(sorted(all_misspelled)))
@@ -221,33 +223,35 @@ def validate_code_listing_line_widths(text, error_reporter):
                 error_reporter(f"Line {n} too wide in {lines[0]}")
 
 
-### Extract comments and isolated code components for spell checking
+### Spell-check single-ticked items against compiled code
 
-def is_number(s):
-    if not any(i in s for i in '1234567890'):
-        return False
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+# def is_number(s):
+#     if not any(i in s for i in '1234567890'):
+#         return False
+#     try:
+#         float(s)
+#         return True
+#     except ValueError:
+#         return False
 
-def extract_comments_and_code_components():
-    import string
-    combine_markdown_files(strip_notes = True)
-    all = config.combined_markdown.read_text()
-    all_comments = ""
-    for listing in extract_listings(all):
-        lines = listing.splitlines()
-        for comment_block in parse_blocks_of_comments(listing):
-            all_comments += comment_block + " "
-    for c in string.punctuation:
-        all_comments = all_comments.replace(c," ")
-    all_comment_words = sorted([
-        c for c in set(all_comments.split()) if not is_number(c)
-    ])
-    pprint.pprint(all_comment_words)
+# def extract_comments_and_code_components():
+#     import string
+#     combine_markdown_files(strip_notes = True)
+#     all = config.combined_markdown.read_text()
+#     all_comments = ""
+#     for listing in extract_listings(all):
+#         lines = listing.splitlines()
+#         for comment_block in parse_blocks_of_comments(listing):
+#             all_comments += comment_block + " "
+#     for c in string.punctuation:
+#         all_comments = all_comments.replace(c," ")
+#     all_comment_words = sorted([
+#         c for c in set(all_comments.split()) if not is_number(c)
+#     ])
+#     pprint.pprint(all_comment_words)
 
+
+single_tick_dictionary = set(Path(config.root_path / "data" / "single_tick_dictionary.txt").read_text().splitlines())
 
 def remove_nonletters(str):
     for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
@@ -257,24 +261,40 @@ def remove_nonletters(str):
 
 def strip_comments_from_code(listing):
     listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
-    lines = [line.split("//")[0].rstrip() for line in listing.splitlines()]
+    lines = listing.splitlines()
+    if lines[0].startswith("//"): # Retain elements of slugline
+        lines[0] = lines[0][3:]
+        # print(lines[0])
+    lines = [line.split("//")[0].rstrip() for line in lines]
     words = []
     for line in lines:
         words += [word for word in remove_nonletters(line).split()]
+    # pprint.pprint(words)
     return words
 
 
-def extract_code_pieces():
-    combine_markdown_files(strip_notes = True)
-    all = config.combined_markdown.read_text()
-    print("-=-=-=-=-=-")
-    stripped_listings = [strip_comments_from_code(listing) for listing in extract_listings(all)]
+def validate_ticked_phrases(text, error_reporter):
+    # combine_markdown_files(strip_notes = True)
+    # all = config.combined_markdown.read_text()
+    stripped_listings = [strip_comments_from_code(listing) for listing in extract_listings(text)]
     pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
-    print(f"compiled pieces: {pprint.pformat(pieces)}")
-    single_ticks = [remove_nonletters(t[1:-1]).split() for t in re.findall("`.+?`", all) if t != "```"]
-    single_ticks = {item for sublist in single_ticks for item in sublist}
-    print(f"single ticked: {pprint.pformat(single_ticks)}")
-    print(f"difference: {pprint.pformat(single_ticks.difference(pieces))}")
+    pieces = pieces.union(single_tick_dictionary)
+    # print(f"compiled pieces: {pprint.pformat(pieces)}")
+    raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
+    # print(f"raw single_ticks: {pprint.pformat(raw_single_ticks)}")
+    single_ticks = [remove_nonletters(t[1:-1]).split() for t in raw_single_ticks]
+    single_ticks = {item for sublist in single_ticks for item in sublist} # Flatten list
+    # print(f"single ticked: {pprint.pformat(single_ticks)}")
+    not_in_examples = single_ticks.difference(pieces)
+    # print(f"not_in_examples: {pprint.pformat(not_in_examples)}")
+    if not_in_examples:
+        err_msg = ""
+        for nie in not_in_examples:
+            err_msg += f"Not in examples: {nie}\n"
+            for rst in raw_single_ticks:
+                if nie in rst:
+                    err_msg += f"\t{rst}\n"
+        error_reporter(err_msg)
 
 
 ### Spell-check everything
@@ -335,3 +355,9 @@ def validate_cross_links(text, error_reporter):
     if unresolved:
         error_reporter(f"""Unresolved cross-links:
         {pprint.pformat(unresolved)}""")
+
+
+### Make sure functions use parentheses, not 'function'
+
+def validate_function_descriptions(text, error_reporter):
+    pass
