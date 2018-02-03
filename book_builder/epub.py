@@ -28,7 +28,7 @@ def regenerate_epub_build_dir():
     # copy(config.metadata)
 
 
-def combine_markdown_files(strip_notes = False):
+def combine_markdown_files(strip_notes = False, trace=False):
     """
     Put markdown files together
     """
@@ -46,7 +46,8 @@ def combine_markdown_files(strip_notes = False):
         assembled = strip_review_notes(assembled)
     with config.combined_markdown.open('w', encoding="utf8") as book:
         book.write(assembled)
-    pprint.pprint(atom_names)
+    if trace:
+        pprint.pprint(atom_names)
     # config.recent_atom_names.write_text(
     #     "anames = " + pprint.pformat(atom_names) + "\n")
     return "{} Created".format(config.combined_markdown.name)
