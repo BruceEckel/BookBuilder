@@ -2,6 +2,7 @@
 # Utilities
 import shutil
 import sys
+import os
 import textwrap
 import pprint
 import book_builder.config as config
@@ -11,11 +12,23 @@ class ErrorReporter:
 
     def __init__(self, id):
         self.id = f"{id}"
+        self.titled = False
+        self.msg = ""
 
     def __call__(self, msg):
-        if self.id:
-            self.id = print(self.id)
-        print(f"    {msg}")
+        if not self.titled:
+            self.msg += self.id + "\n"
+            self.titled = True # Print only once
+        self.msg += f"    {msg}"
+
+    def show(self):
+        if self.msg:
+            print(self.msg)
+
+    def edit(self):
+        if self.msg:
+            os.system(f"subl {self.id}")
+
 
 
 def create_markdown_filename(h1):
