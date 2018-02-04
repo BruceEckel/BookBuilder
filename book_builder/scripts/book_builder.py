@@ -6,7 +6,7 @@ import book_builder.util as util
 import book_builder.examples as examples
 import book_builder.packages as _packages
 import book_builder.validate as _validate
-import book_builder.fix as _fix
+# import book_builder.fix as _fix
 import book_builder.epub as _epub
 
 
@@ -59,7 +59,7 @@ def code_test_files():
 
 @cli.group()
 def packages():
-    """Discover and fix package issues"""
+    """Discover package issues"""
 
 
 @packages.command('unpackaged')
@@ -95,10 +95,10 @@ def validate():
 ##########################################################
 
 
-@cli.command()
-def fix():
-    "Batch fixes"
-    click.echo(_fix.all_fixes())
+# @cli.command()
+# def fix():
+#     "Batch fixes"
+#     click.echo(_fix.all_fixes())
 
 
 ##########################################################
@@ -123,7 +123,7 @@ def epub_clean():
 @epub.command('combine')
 def epub_combine():
     "Combine Markdown files into a single file"
-    click.echo(_epub.combine_markdown_files())
+    click.echo(_epub.combine_markdown_files(config.combined_markdown, strip_notes = False, trace=True))
     os.system("subl {}".format(config.combined_markdown))
 
 

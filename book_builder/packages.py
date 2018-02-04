@@ -1,5 +1,5 @@
 #! py -3
-# Discover examples that don't have packages, add package statements
+# Discover examples that don't have packages
 import logging
 import re
 from logging import debug

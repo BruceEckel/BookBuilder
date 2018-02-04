@@ -51,6 +51,7 @@ test_dir = root_path / "test"
 def ebook_file(fileid): return ebook_build_dir / f"{root_name}-{fileid}.md"
 
 combined_markdown = ebook_file("assembled")
+stripped_markdown = ebook_file("assembled-stripped")
 combined_markdown_html = ebook_file("assembled-html")
 combined_markdown_pdf = ebook_file("assembled-pdf")
 

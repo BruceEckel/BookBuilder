@@ -28,7 +28,7 @@ def regenerate_epub_build_dir():
     # copy(config.metadata)
 
 
-def combine_markdown_files(strip_notes = False, trace=False):
+def combine_markdown_files(target, strip_notes = False, trace=False):
     """
     Put markdown files together
     """
@@ -44,13 +44,13 @@ def combine_markdown_files(strip_notes = False, trace=False):
             assembled += chapter.read() + "\n\n"
     if strip_notes:
         assembled = strip_review_notes(assembled)
-    with config.combined_markdown.open('w', encoding="utf8") as book:
+    with target.open('w', encoding="utf8") as book:
         book.write(assembled)
     if trace:
         pprint.pprint(atom_names)
     # config.recent_atom_names.write_text(
     #     "anames = " + pprint.pformat(atom_names) + "\n")
-    return "{} Created".format(config.combined_markdown.name)
+    return f"{target.name} Created"
 
 
 def combine_sample_markdown():
@@ -75,7 +75,7 @@ def combine_sample_markdown():
         assembled += "(Not included in sample)\n\n"
     with config.sample_markdown.open('w', encoding="utf8") as book:
         book.write(strip_review_notes(assembled))
-    return "{} Created".format(config.sample_markdown.name)
+    return f"{config.sample_markdown.name} Created"
 
 
 def strip_chapter(chapter_text):
@@ -158,10 +158,10 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
 
 
 def pandoc_epub_command(input_file, output_name, title):
-    if not config.combined_markdown.exists():
-        return "Error: missing " + input_file
+    if not input_file.exists():
+        return "Error: missing " + input_file.name
     return (
-        "pandoc " + str(input_file) +
+        "pandoc " + str(input_file.name) +
         " -t epub3 -o " + output_name +
         " -f markdown-native_divs "
         " -f markdown+smart "
@@ -185,11 +185,11 @@ def convert_to_epub():
     Pandoc markdown to epub
     """
     regenerate_epub_build_dir()
-    combine_markdown_files(strip_notes = True)
+    combine_markdown_files(config.stripped_markdown, strip_notes = True)
     combine_sample_markdown()
     os.chdir(str(config.ebook_build_dir))
     cmd = pandoc_epub_command(
-        config.combined_markdown, config.epub_file_name, config.title)
+        config.stripped_markdown, config.epub_file_name, config.title)
     print(cmd)
     os.system(cmd)
     cmd = pandoc_epub_command(
