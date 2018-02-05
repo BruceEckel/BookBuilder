@@ -10,14 +10,14 @@ import book_builder.config as config
 
 class ErrorReporter:
 
-    def __init__(self, id):
-        self.id = f"{id}"
+    def __init__(self, md_path):
+        self.md_path = md_path
         self.titled = False
         self.msg = ""
 
     def __call__(self, msg):
         if not self.titled:
-            self.msg += self.id + "\n"
+            self.msg += self.md_path.name + "\n"
             self.titled = True # Print only once
         self.msg += f"    {msg}"
 
@@ -27,7 +27,7 @@ class ErrorReporter:
 
     def edit(self):
         if self.msg:
-            os.system(f"subl {self.id}")
+            os.system(f"subl {self.md_path}")
 
 
 

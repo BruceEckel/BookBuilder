@@ -16,14 +16,15 @@ def all_checks():
     print(f"Validating {config.markdown_dir}")
     if not config.markdown_dir.exists():
         return f"Cannot find {config.markdown_dir}"
+    global validators
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
         # print(md)
-        error_reporter = ErrorReporter(md.name)
+        error_reporter = ErrorReporter(md)
         with md.open() as f:
             text = f.read()
         validate_tag_no_gap(text, error_reporter)
         validate_complete_examples(text, error_reporter)
-        validate_filenames_and_titles(md, text, error_reporter)
+        validate_filenames_and_titles(text, error_reporter)
         validate_capitalized_comments(text, error_reporter)
         validate_no_tabs(text, error_reporter)
         validate_listing_indentation(text, error_reporter)
@@ -34,7 +35,8 @@ def all_checks():
         validate_cross_links(text, error_reporter)
         validate_ticked_phrases(text, error_reporter)
         validate_function_descriptions(text, error_reporter)
-        full_spellcheck(text, error_reporter)
+        validate_full_spellcheck(text, error_reporter)
+        validate_punctuation_inside_quotes(text, error_reporter)
         error_reporter.show()
         error_reporter.edit()
 
@@ -81,11 +83,11 @@ def validate_complete_examples(text, error_reporter):
 
 ### Ensure atom titles conform to standard and agree with file names
 
-def validate_filenames_and_titles(md, text, error_reporter):
-    if "Front.md" in md.name:
+def validate_filenames_and_titles(text, error_reporter):
+    if "Front.md" in error_reporter.md_path.name:
         return
     title = text.splitlines()[0]
-    if create_markdown_filename(title) != md.name[4:]:
+    if create_markdown_filename(title) != error_reporter.md_path.name[4:]:
         error_reporter(f"Atom Title: {title}")
     if " and " in title:
         error_reporter(f"'and' in title should be '&': {title}")
@@ -269,7 +271,7 @@ def validate_ticked_phrases(text, error_reporter):
 dictionary = set(Path(config.root_path / "data" / "dictionary.txt").read_text().splitlines()).union(
     set(Path(config.root_path / "data" / "supplemental_dictionary.txt").read_text().splitlines()))
 
-def full_spellcheck(text, error_reporter):
+def validate_full_spellcheck(text, error_reporter):
     words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
     misspelled = words - dictionary
     if '' in misspelled:
@@ -329,3 +331,22 @@ def validate_function_descriptions(text, error_reporter):
             f = f.replace("\n", " ").strip()
             err_msg += f"\t{f}\n"
         error_reporter(err_msg.strip())
+
+
+### Punctuation inside quotes
+
+def validate_punctuation_inside_quotes(text, error_reporter):
+    text = re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
+    text = re.sub("`.*?`", "", text, flags=re.DOTALL)
+    outside_commas = re.findall("\",", text)
+    if outside_commas:
+        error_reporter("commas outside quotes")
+    outside_periods = re.findall("\"\.", text)
+    if outside_periods:
+        error_reporter("periods outside quotes")
+
+
+### Capture all defined validators
+
+# validators = [v for v in globals() if v.startswith("validate_")]
+# pprint.pprint(validators)
