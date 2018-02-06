@@ -174,6 +174,19 @@ def pandoc_epub_command(input_file, output_name, title):
         " --css=" + config.base_name + ".css ")
 
 
+def pandoc_docx_command(input_file, output_name, title):
+    if not input_file.exists():
+        return "Error: missing " + input_file.name
+    return (
+        "pandoc " + str(input_file.name) +
+        " -t docx -o " + output_name +
+        " -f markdown-native_divs "
+        " -f markdown+smart "
+        " --toc-depth=2 " +
+        f'--metadata title="{title}"' +
+        " --css=" + config.base_name + ".css ")
+
+
 def fix_for_apple(epub_name):
     epub = zipfile.ZipFile(epub_name, "a")
     epub.write(config.meta_inf, "META-INF")
@@ -200,6 +213,19 @@ def convert_to_epub():
     fix_for_apple(config.epub_sample_file_name)
     os.system(f"copy {config.epub_file_name} ..")
     os.system(f"copy {config.epub_sample_file_name} ..")
+
+
+def convert_to_docx():
+    """
+    Pandoc markdown to docx
+    """
+    regenerate_epub_build_dir()
+    combine_markdown_files(config.stripped_markdown, strip_notes = True)
+    os.chdir(str(config.ebook_build_dir))
+    cmd = pandoc_docx_command(
+        config.stripped_markdown, config.base_name + ".docx", config.title)
+    print(cmd)
+    os.system(cmd)
 
 
 def create_release():

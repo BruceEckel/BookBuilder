@@ -152,6 +152,12 @@ def epub_make():
     _epub.convert_to_epub()
 
 
+@epub.command('docx')
+def epub_make():
+    "Create docx from Markdown files"
+    _epub.convert_to_docx()
+
+
 # @epub.command('newStatus')
 def epub_create_new_status_file():
     "Create fresh STATUS.md if one doesn't exist"
