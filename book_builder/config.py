@@ -34,7 +34,10 @@ exec(settings_path().read_text())
 root_name = base_name.lower()
 
 epub_file_name = base_name + ".epub"
-epub_sample_file_name = base_name + "Sample.epub"
+epub_sample_file_name = base_name + "-Sample.epub"
+epub_mono_file_name = base_name + "-monochrome.epub"
+epub_sample_mono_file_name = base_name + "-monochrome-Sample.epub"
+
 
 tools_dir = Path(__file__).parent.parent.resolve()
 root_path = tools_dir.parent / base_name

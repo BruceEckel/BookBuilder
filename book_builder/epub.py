@@ -157,10 +157,11 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     return "Successfully disassembled combined Markdown"
 
 
-def pandoc_epub_command(input_file, output_name, title):
+def pandoc_epub_command(input_file, output_name, title, highlighting=None):
+    "highlighting=None uses default (pygments) for source code color syntax highlighting"
     if not input_file.exists():
         return "Error: missing " + input_file.name
-    return (
+    command = (
         "pandoc " + str(input_file.name) +
         " -t epub3 -o " + output_name +
         " -f markdown-native_divs "
@@ -172,12 +173,16 @@ def pandoc_epub_command(input_file, output_name, title):
         + " --toc-depth=2 "
         f'--metadata title="{title}"'
         " --css=" + config.base_name + ".css ")
+    if highlighting:
+        command += f" --highlight-style={highlighting} "
+    print(command)
+    os.system(command)
 
 
 def pandoc_docx_command(input_file, output_name, title):
     if not input_file.exists():
         return "Error: missing " + input_file.name
-    return (
+    command = (
         "pandoc " + str(input_file.name) +
         " -t docx -o " + output_name +
         " -f markdown-native_divs "
@@ -185,6 +190,8 @@ def pandoc_docx_command(input_file, output_name, title):
         " --toc-depth=2 " +
         f'--metadata title="{title}"' +
         " --css=" + config.base_name + ".css ")
+    print(command)
+    os.system(command)
 
 
 def fix_for_apple(epub_name):
@@ -201,18 +208,26 @@ def convert_to_epub():
     combine_markdown_files(config.stripped_markdown, strip_notes = True)
     combine_sample_markdown()
     os.chdir(str(config.ebook_build_dir))
-    cmd = pandoc_epub_command(
-        config.stripped_markdown, config.epub_file_name, config.title)
-    print(cmd)
-    os.system(cmd)
-    cmd = pandoc_epub_command(
-        config.sample_markdown, config.epub_sample_file_name, config.title + " Sample")
-    print(cmd)
-    os.system(cmd)
+    pandoc_epub_command(
+        config.stripped_markdown,
+        config.epub_file_name,
+        config.title)
+    pandoc_epub_command(
+        config.sample_markdown,
+        config.epub_sample_file_name,
+        config.title + " Sample")
+    pandoc_epub_command(
+        config.stripped_markdown,
+        config.epub_mono_file_name,
+        config.title,
+        highlighting="monochrome")
+    pandoc_epub_command(
+        config.sample_markdown,
+        config.epub_sample_mono_file_name,
+        config.title + " Sample",
+        highlighting="monochrome")
     fix_for_apple(config.epub_file_name)
     fix_for_apple(config.epub_sample_file_name)
-    os.system(f"copy {config.epub_file_name} ..")
-    os.system(f"copy {config.epub_sample_file_name} ..")
 
 
 def convert_to_docx():
@@ -229,23 +244,22 @@ def convert_to_docx():
 
 
 def create_release():
+    books = [
+        config.epub_file_name,
+        config.epub_mono_file_name,
+    ]
+    samples = [
+        config.epub_sample_file_name,
+        config.epub_sample_mono_file_name,
+    ]
     release_dir = config.root_path / "Release"
     if release_dir.exists():
         clean(release_dir)
     os.makedirs(release_dir)
-    epub = config.root_path / config.epub_file_name
-    sample = config.root_path / config.epub_sample_file_name
-    assert epub.exists()
-    assert sample.exists()
-    os.system(f"mv {epub} {release_dir}")
-    os.system(f"mv {sample} {release_dir}")
+    [ os.system(f"cp {config.ebook_build_dir / src} {release_dir}") for src in books + samples ]
     os.chdir(str(release_dir))
-    os.system(f"kindlegen {config.epub_file_name}")
-    os.system(f"kindlegen {config.epub_sample_file_name}")
-    cmd = f"zip {config.base_name}.zip {config.epub_file_name} {config.base_name}.mobi"
-    print(cmd)
-    os.system(cmd)
-    sample_name = config.base_name + "Sample"
-    cmd = f"zip {sample_name}.zip {sample_name}.epub {sample_name}.mobi"
-    os.system(cmd)
-    print(cmd)
+    [ os.system(f"kindlegen {epf}") for epf in books + samples ]
+    def zzip(target_name, file_list):
+        os.system(f"zip {target_name}.zip {' '.join(file_list)}")
+    zzip(config.base_name, books + [b[:-4] + "mobi" for b in books])
+    zzip(config.base_name + "Sample", samples + [b[:-4] + "mobi" for b in samples])
