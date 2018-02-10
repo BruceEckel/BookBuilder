@@ -111,7 +111,7 @@ def epub():
 @epub.command('clean')
 def epub_clean():
     "Remove directory containing epub"
-    click.echo(util.clean(config.ebook_build_dir))
+    click.echo(util.clean(config.epub_build_dir))
 
 
 @epub.command('regen')

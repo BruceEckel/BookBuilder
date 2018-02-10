@@ -46,24 +46,24 @@ markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
 
-ebook_build_dir = root_path / "ebook_build"
-html_dir = ebook_build_dir / "html"
-images_dir = ebook_build_dir / "images"
+epub_build_dir = root_path / "epub_build"
+html_dir = epub_build_dir / "html"
+images_dir = epub_build_dir / "images"
 test_dir = root_path / "test"
 
-def ebook_file(fileid): return ebook_build_dir / f"{root_name}-{fileid}.md"
+def epub_file(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
 
-combined_markdown = ebook_file("assembled")
-stripped_markdown = ebook_file("assembled-stripped")
-combined_markdown_html = ebook_file("assembled-html")
-combined_markdown_pdf = ebook_file("assembled-pdf")
+combined_markdown = epub_file("assembled")
+stripped_markdown = epub_file("assembled-stripped")
+combined_markdown_html = epub_file("assembled-html")
+combined_markdown_pdf = epub_file("assembled-pdf")
 
-sample_markdown = ebook_file("sample")
-sample_markdown_html = ebook_file("sample-html")
-sample_markdown_pdf = ebook_file("sample-pdf")
+sample_markdown = epub_file("sample")
+sample_markdown_html = epub_file("sample-html")
+sample_markdown_pdf = epub_file("sample-pdf")
 
-stripped_for_style = ebook_file("stripped-for-style")
-stripped_for_spelling = ebook_file("stripped-for-spelling")
+stripped_for_style = epub_file("stripped-for-style")
+stripped_for_spelling = epub_file("stripped-for-spelling")
 
 # recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
