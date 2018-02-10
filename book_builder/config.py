@@ -25,11 +25,9 @@ def settings_path():
                 "ERROR: You must put a 'settings.config' in your book repo base directory")
             sys.exit(1)
 
-
+# Add elements from settings.config into this environment:
 exec(settings_path().read_text())
-# if 'comment_capitalization_OK' in globals():
-#     comment_capitalization_OK = comment_capitalization_OK.strip().splitlines()
-#     print(comment_capitalization_OK)
+
 
 root_name = base_name.lower()
 
@@ -38,6 +36,10 @@ epub_sample_file_name = base_name + "-Sample.epub"
 epub_mono_file_name = base_name + "-monochrome.epub"
 epub_sample_mono_file_name = base_name + "-monochrome-Sample.epub"
 
+mobi_file_name = base_name + ".mobi"
+mobi_sample_file_name = base_name + "-Sample.mobi"
+mobi_mono_file_name = base_name + "-monochrome.mobi"
+mobi_sample_mono_file_name = base_name + "-monochrome-Sample.mobi"
 
 tools_dir = Path(__file__).parent.parent.resolve()
 root_path = tools_dir.parent / base_name
@@ -47,9 +49,12 @@ example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
 
 epub_build_dir = root_path / "epub_build"
+mobi_build_dir = root_path / "mobi_build"
 html_dir = epub_build_dir / "html"
 images_dir = epub_build_dir / "images"
 test_dir = root_path / "test"
+
+release_dir = root_path / "Release"
 
 def epub_file(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
 

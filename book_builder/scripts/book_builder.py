@@ -8,6 +8,8 @@ import book_builder.packages as _packages
 import book_builder.validate as _validate
 # import book_builder.fix as _fix
 import book_builder.epub as _epub
+import book_builder.mobi as _mobi
+import book_builder.release as _release
 
 
 @click.group()
@@ -75,22 +77,11 @@ def packages_unpackaged():
 
 ##########################################################
 
-
 @cli.command()
 def validate():
     "Validation tests"
     click.echo(_validate.all_checks())
 
-
-# @cli.command()
-# def code_spellcheck():
-#     "Extract comments and code components"
-#     click.echo(_validate.extract_comments_and_code_components())
-
-# @cli.command()
-# def extract_code_pieces():
-#     "Extract parts of code, without comments"
-#     click.echo(_validate.extract_code_pieces())
 
 ##########################################################
 
@@ -152,21 +143,35 @@ def epub_make():
     _epub.convert_to_epub()
 
 
-@epub.command('docx')
-def epub_make():
-    "Create docx from Markdown files"
-    _epub.convert_to_docx()
-
-
 # @epub.command('newStatus')
 def epub_create_new_status_file():
     "Create fresh STATUS.md if one doesn't exist"
     click.echo(util.create_new_status_file())
 
 
-@epub.command('release')
-def create_release():
-    "Create release package after running 'make'"
-    _epub.create_release()
+##########################################################
+
+@cli.group()
+def mobi():
+    "Creates mobi files for kindle"
+
+@mobi.command('make')
+def mobi_make():
+    "Create epub from Markdown files"
+    click.echo(_mobi.convert_to_mobi())
 
 
+
+##########################################################
+
+@cli.command()
+def release():
+    "Create full release from scratch"
+    click.echo(_release.create_release())
+
+##########################################################
+
+@cli.command()
+def docx():
+    "Create docx from Markdown files"
+    _epub.convert_to_docx()
