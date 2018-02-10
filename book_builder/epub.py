@@ -6,8 +6,8 @@ import re
 from pathlib import Path
 from collections import OrderedDict
 import zipfile
-# import difflib
 import book_builder.config as config
+from book_builder.config import epub_md, epub
 from book_builder.util import *
 
 
@@ -22,26 +22,26 @@ def convert_to_epub():
     Pandoc markdown to epub
     """
     regenerate_ebook_build_dir(config.epub_build_dir)
-    combine_markdown_files(config.stripped_markdown, strip_notes = True)
-    combine_sample_markdown(config.sample_markdown)
+    combine_markdown_files(epub_md("assembled-stripped"), strip_notes = True)
+    combine_sample_markdown(epub_md("sample"))
     os.chdir(str(config.epub_build_dir))
     pandoc_epub_command(
-        config.stripped_markdown,
-        config.epub_file_name,
+        epub_md("assembled-stripped"),
+        epub(),
         config.title)
     pandoc_epub_command(
-        config.sample_markdown,
-        config.epub_sample_file_name,
+        epub_md("sample"),
+        epub("-Sample"),
         config.title + " Sample")
     pandoc_epub_command(
-        config.stripped_markdown,
-        config.epub_mono_file_name,
+        epub_md("assembled-stripped"),
+        epub("-monochrome"),
         config.title,
         highlighting="monochrome")
     pandoc_epub_command(
-        config.sample_markdown,
-        config.epub_sample_mono_file_name,
+        epub_md("sample"),
+        epub("-monochrome-Sample"),
         config.title + " Sample",
         highlighting="monochrome")
-    fix_for_apple(config.epub_file_name)
-    fix_for_apple(config.epub_sample_file_name)
+    fix_for_apple(epub())
+    fix_for_apple(epub("-Sample"))

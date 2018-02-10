@@ -8,28 +8,28 @@
 - All functionality is collected under the single `bb` command which will be
   installed automatically.
 
-## Creating `settings.config`
+## Creating `configuration.py`
 
-To use BookBuilder you must place a `settings.config` file in the
-base directory of your book's repository. For example, the `settings.config` for
-*Atomic Kotlin* contains:
+To use BookBuilder you must place a `configuration.py` file in the base
+directory of your book's repository.
+
+You must also set the environment variable `BOOK_PROJECT_HOME` to point to
+the base directory of your book's repository.
+
+For example, the `configuration.py` for *Atomic Kotlin* contains:
 
 ```
+from pathlib import Path
+import os
+
+title = "Atomic Kotlin"
 base_name = "AtomicKotlin"
 language_name = "kotlin"
 code_ext = "kt"
+code_width = 47
 start_comment = "//"
-extracted_examples = Path(os.environ['GIT_HOME']) / "AtomicKotlinExtractedExamples"
-```
-
-For *Thinking in Python*, it is:
-
-```
-base_name = "ThinkingInPython"
-language_name = "python"
-code_ext = "py"
-start_comment = "#"
-extracted_examples = Path(os.environ['GIT_HOME']) / base_name
+extracted_examples = Path(os.environ['GIT_HOME']) / "AtomicKotlinExamples"
+sample_size = 35 # Number of atoms in free sample
 ```
 
 Once you've invoked the virtual environment for BookBuilder, you can then run

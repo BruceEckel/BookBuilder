@@ -1,40 +1,35 @@
 """
 Common program configuration variables for Book Builder. You must create
-a 'settings.config' file in the base directory of each different book; see
+a 'configuration.py' file in the base directory of each different book; see
 README.md.
 """
 import os
 import sys
 from pathlib import Path
+from enum import Enum, unique
+import importlib
+# Add elements from configuration.py into this environment:
+sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
+from configuration import *
 
 
-def settings_path():
-    """
-    Starts wherever bb is invoked and climbs up the directory path
-    looking for settings.config
-    """
-    this = Path.cwd()
-    root = this.root
-    while True:
-        config = this / "settings.config"
-        if config.exists():
-            return config
-        this = this.parent
-        if this.samefile(root):
-            print(
-                "ERROR: You must put a 'settings.config' in your book repo base directory")
-            sys.exit(1)
-
-# Add elements from settings.config into this environment:
-exec(settings_path().read_text())
+@unique
+class BookType(Enum):
+    EPUB = "epub"
+    MOBI = "mobi"
+    DOCX = "docx"
 
 
 root_name = base_name.lower()
 
-epub_file_name = base_name + ".epub"
-epub_sample_file_name = base_name + "-Sample.epub"
-epub_mono_file_name = base_name + "-monochrome.epub"
-epub_sample_mono_file_name = base_name + "-monochrome-Sample.epub"
+def epub(tag=""): return f"{base_name}{tag}.epub"
+
+# epub_file_name = base_name + ".epub"
+# epub_sample_file_name = base_name + "-Sample.epub"
+# epub_mono_file_name = base_name + "-monochrome.epub"
+# epub_sample_mono_file_name = base_name + "-monochrome-Sample.epub"
+
+def mobi(tag=""): return f"{base_name}{tag}.mobi"
 
 mobi_file_name = base_name + ".mobi"
 mobi_sample_file_name = base_name + "-Sample.mobi"
@@ -56,19 +51,20 @@ test_dir = root_path / "test"
 
 release_dir = root_path / "Release"
 
-def epub_file(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
+def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
+def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
 
-combined_markdown = epub_file("assembled")
-stripped_markdown = epub_file("assembled-stripped")
-combined_markdown_html = epub_file("assembled-html")
-combined_markdown_pdf = epub_file("assembled-pdf")
+combined_markdown = epub_md("assembled")
+stripped_markdown = epub_md("assembled-stripped")
+combined_markdown_html = epub_md("assembled-html")
+combined_markdown_pdf = epub_md("assembled-pdf")
 
-sample_markdown = epub_file("sample")
-sample_markdown_html = epub_file("sample-html")
-sample_markdown_pdf = epub_file("sample-pdf")
+sample_markdown = epub_md("sample")
+sample_markdown_html = epub_md("sample-html")
+sample_markdown_pdf = epub_md("sample-pdf")
 
-stripped_for_style = epub_file("stripped-for-style")
-stripped_for_spelling = epub_file("stripped-for-spelling")
+stripped_for_style = epub_md("stripped-for-style")
+stripped_for_spelling = epub_md("stripped-for-spelling")
 
 # recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
@@ -77,7 +73,8 @@ images = ebookResources / "images"
 fonts = ebookResources / "fonts"
 bullets = ebookResources / "bullets"
 cover = ebookResources / "cover" / "Cover.png"
-css = ebookResources / (root_name + ".css")
+epub_css = ebookResources / (root_name + "-epub.css")
+mobi_css = ebookResources / (root_name + "-mobi.css")
 metadata = ebookResources / "metadata.yaml"
 meta_inf = ebookResources / "META-INF"
 

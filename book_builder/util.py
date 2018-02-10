@@ -1,18 +1,24 @@
-#! py -3
-# Utilities
+"""
+Utilities for BookBuilder
+"""
 import shutil
 import sys
 import os
 import re
 from pathlib import Path
 from itertools import chain
+from collections import OrderedDict
 import textwrap
 import pprint
 import book_builder.config as config
+from book_builder.config import BookType
 
 
 class ErrorReporter:
-
+    """
+    Pass into functions to capture errors in Markdown files.
+    Used by validate.py
+    """
     def __init__(self, md_path):
         self.md_path = md_path
         self.titled = False
@@ -60,8 +66,7 @@ def clean(dir_to_remove):
         if dir_to_remove.exists():
             shutil.rmtree(str(dir_to_remove))
             return f"Removed: {dir_to_remove}"
-        else:
-            return f"Doesn't exist: {dir_to_remove}"
+        return f"Doesn't exist: {dir_to_remove}"
     except Exception as e:
         print(f"""Removal failed: {dir_to_remove}
         Are you inside that directory, or using a file inside it?
@@ -69,7 +74,12 @@ def clean(dir_to_remove):
         print(e)
 
 
-def pandoc_epub_command(input_file, output_name, title, highlighting=None):
+def pandoc_epub_command(
+        input_file,
+        output_name,
+        title,
+        ebook_type: BookType = BookType.EPUB,
+        highlighting=None):
     "highlighting=None uses default (pygments) for source code color syntax highlighting"
     if not input_file.exists():
         return "Error: missing " + input_file.name
@@ -81,17 +91,17 @@ def pandoc_epub_command(input_file, output_name, title, highlighting=None):
         """ --epub-subdirectory="" """
         " --epub-cover-image=Cover.png " +
         " ".join([f"--epub-embed-font={font.name}" for font in
-          chain(config.bullets.glob("*"), config.fonts.glob("*")) ])
+                  chain(config.bullets.glob("*"), config.fonts.glob("*"))])
         + " --toc-depth=2 "
         f'--metadata title="{title}"'
-        " --css=" + config.base_name + ".css ")
+        f" --css={config.base_name}-{ebook_type.value}.css ")
     if highlighting:
         command += f" --highlight-style={highlighting} "
     print(command)
     os.system(command)
 
 
-def regenerate_ebook_build_dir(ebook_build_dir):
+def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.EPUB):
     clean(ebook_build_dir)
     os.makedirs(ebook_build_dir)
     def copy(src):
@@ -99,10 +109,15 @@ def regenerate_ebook_build_dir(ebook_build_dir):
         assert source.exists()
         shutil.copy(src, ebook_build_dir)
         assert (Path(ebook_build_dir) / source.name).exists()
-    [copy(font) for font in config.fonts.glob("*")]
-    [copy(bullet) for bullet in config.bullets.glob("*")]
+    for font in config.fonts.glob("*"):
+        copy(font)
+    for bullet in config.bullets.glob("*"):
+        copy(bullet)
     copy(config.cover)
-    copy(config.css)
+    if ebook_type == BookType.EPUB:
+        copy(config.epub_css)
+    elif ebook_type == BookType.MOBI:
+        copy(config.mobi_css)
     # copy(config.metadata)
 
 
@@ -133,7 +148,7 @@ def strip_review_notes(text):
     return result3 + "\n"
 
 
-def combine_markdown_files(target, strip_notes = False, trace=False):
+def combine_markdown_files(target, strip_notes=False, trace=False):
     """
     Put markdown files together
     """
@@ -148,8 +163,10 @@ def combine_markdown_files(target, strip_notes = False, trace=False):
             assembled += chapter.read() + "\n\n"
     if strip_notes:
         assembled = strip_review_notes(assembled)
-    with target.open('w', encoding="utf8") as book:
-        book.write(assembled)
+    # with target.open('w', encoding="utf8") as book:
+    #     book.write(assembled)
+    print(">>>>>>", target)
+    target.write_text(assembled)
     if trace:
         pprint.pprint(atom_names)
     return f"{target.name} Created"
@@ -197,7 +214,7 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
         print(disassembled_file_name)
         dest = target_dir / disassembled_file_name
         with dest.open('w', encoding="utf8") as chp:
-            if "Front" != p:
+            if p != "Front":
                 chp.write(p + "\n")
                 chp.write("=" * len(p) + "\n\n")
             chp.write(strip_chapter(chaps[p]) + "\n")
@@ -318,8 +335,7 @@ def adjust_lines(text):
         adjusted = lines[:num_of_lines + 1] +\
             ["                  ..."]
         return "\n".join(adjusted)
-    else:
-        return text
+    return text
 
 
 def fill_to_width(text):
