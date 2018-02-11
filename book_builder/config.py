@@ -25,9 +25,7 @@ root_name = base_name.lower()
 def epub_name(tag=""): return f"{base_name}{tag}.epub"
 def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
 
-tools_dir = Path(__file__).parent.parent.resolve()
-root_path = tools_dir.parent / base_name
-bb_code_dir = tools_dir / "book_builder"
+root_path = Path(__file__).parent.parent.parent.resolve() / base_name
 markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
@@ -36,10 +34,7 @@ epub_build_dir = root_path / "build"/ "epub"
 mobi_build_dir = root_path / "build"/ "mobi"
 docx_build_dir = root_path / "build"/ "docx"
 release_dir    = root_path / "build"/ "Release"
-
-html_dir = epub_build_dir / "html"
-# images_dir = epub_build_dir / "images"
-test_dir = root_path / "test"
+test_dir       = root_path / "test"
 
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
@@ -49,18 +44,54 @@ combined_markdown = epub_md("assembled")
 sample_markdown = epub_md("sample")
 # recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
-ebookResources = root_path / "resources"
-images = ebookResources / "images"
-fonts = ebookResources / "fonts"
-bullets = ebookResources / "bullets"
-cover = ebookResources / "cover" / "Cover.png"
-epub_css = ebookResources / (root_name + "-epub.css")
-mobi_css = ebookResources / (root_name + "-mobi.css")
-metadata = ebookResources / "metadata.yaml"
-meta_inf = ebookResources / "META-INF"
+def resource(path): return root_path / "resources" / path
+images        = resource("images")
+fonts         = resource("fonts")
+bullets       = resource("bullets")
+cover         = resource("cover") / "Cover.png"
+epub_css      = resource(root_name + "-epub.css")
+mobi_css      = resource(root_name + "-mobi.css")
+mobi_mono_css = resource(root_name + "-mobi-mono.css")
+metadata      = resource("metadata.yaml")
+meta_inf      = resource("META-INF")
 
-reformat_dir = root_path / "Reformatted"
+dictionary = root_path / "data" / "dictionary.txt"
+supplemental_dictionary = root_path / "data" / "supplemental_dictionary.txt"
+all_misspelled = root_path / "data" / "all_misspelled.txt"
 
-sample_book_dir = root_path / "SampleBook"
-sample_book_original_dir = root_path / "SampleBook" / "Original"
-combined_markdown_sample = sample_book_dir / (root_name + "-assembled.md")
+
+if __name__ == '__main__':
+    "Check to see if identifiers are used in this project"
+    from pprint import pprint
+    exclude_names = [
+        "__",
+        "Enum",
+        "unique",
+        "new_class",
+        "prepare_class",
+        "coroutine",
+        "exclude_names",
+        "exclude_types",
+        "resource",
+        "root_name",
+    ]
+    exclude_types = [
+        "<class 'module'>",
+        "<class 'type'>",
+    ]
+    g = dict(globals().items())
+    identifiers = set()
+    for k in g:
+        if any([ex in k for ex in exclude_names]):
+            continue
+        if any([ex in str(type(g[k])) for ex in exclude_types]):
+            continue
+        identifiers.add(k)
+    for id in list(identifiers):
+        for py in [p for p in Path().rglob("*.py") if p.name != "config.py"]:
+            if id in py.read_text():
+                identifiers.remove(id)
+                break # Found it so try next identifier
+    print("The following don't seem to be used")
+    pprint(identifiers)
+
