@@ -1,12 +1,14 @@
 #! py -3
 # Various validation checks
 import re
-import sys
+import os
+import shutil
 import pprint
 from pathlib import Path
 import book_builder.config as config
-from book_builder.epub import create_markdown_filename
-from book_builder.util import *
+from book_builder.util import create_markdown_filename
+from book_builder.util import ErrorReporter
+from book_builder.util import clean
 
 all_misspelled = set()
 
@@ -14,14 +16,14 @@ all_misspelled = set()
 def all_checks():
     "Multiple tests to find problems in the book"
     print(f"Validating {config.markdown_dir}")
-    if not config.markdown_dir.exists():
-        return f"Cannot find {config.markdown_dir}"
-    global validators
+    assert config.markdown_dir.exists(), f"Cannot find {config.markdown_dir}"
+    # global validators
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
         # print(md)
         error_reporter = ErrorReporter(md)
-        with md.open() as f:
-            text = f.read()
+        # with md.open() as f:
+        #     text = f.read()
+        text = md.read_text(encoding="UTF-8")
         validate_tag_no_gap(text, error_reporter)
         validate_complete_examples(text, error_reporter)
         validate_filenames_and_titles(text, error_reporter)
@@ -37,10 +39,12 @@ def all_checks():
         validate_function_descriptions(text, error_reporter)
         validate_full_spellcheck(text, error_reporter)
         validate_punctuation_inside_quotes(text, error_reporter)
+        validate_characters(text, error_reporter)
         error_reporter.show()
         error_reporter.edit()
 
-    Path(config.root_path / "data" / "all_misspelled.txt").write_text("\n".join(sorted(all_misspelled)))
+    Path(config.root_path / "data" / "all_misspelled.txt").write_text(
+        "\n".join(sorted(all_misspelled)))
 
 
 #################################################################
@@ -71,8 +75,7 @@ def examples_without_sluglines(text):
         for line in lines:
             if line.strip().startswith("fun "):
                 return listing
-    else:
-        return False
+    return False
 
 
 def validate_complete_examples(text, error_reporter):
@@ -228,17 +231,22 @@ def validate_code_listing_line_widths(text, error_reporter):
 
 ### Spell-check single-ticked items against compiled code
 
-single_tick_dictionary = set(Path(config.root_path / "data" / "single_tick_dictionary.txt").read_text().splitlines())
+single_tick_dictionary = set(Path(
+    config.root_path / "data" / "single_tick_dictionary.txt")
+    .read_text().splitlines())
 
-def remove_nonletters(str):
+def remove_nonletters(text):
     for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
-        str = str.replace(rch, " ")
-    return str.strip()
+        text = text.replace(rch, " ")
+    return text.strip()
 
 
-def strip_comments_from_code(listing):
+def strip_comments_from_code(listing, error_reporter):
     listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
     lines = listing.splitlines()
+    if not lines:
+        error_reporter("Empty listing")
+        return []
     if lines[0].startswith("//"): # Retain elements of slugline
         lines[0] = lines[0][3:]
     lines = [line.split("//")[0].rstrip() for line in lines]
@@ -249,7 +257,8 @@ def strip_comments_from_code(listing):
 
 
 def validate_ticked_phrases(text, error_reporter):
-    stripped_listings = [strip_comments_from_code(listing) for listing in extract_listings(text)]
+    stripped_listings = [strip_comments_from_code(listing, error_reporter)
+        for listing in extract_listings(text)]
     pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
     pieces = pieces.union(single_tick_dictionary)
     raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
@@ -324,7 +333,9 @@ def validate_cross_links(text, error_reporter):
 ### Make sure functions use parentheses, not 'function'
 
 def validate_function_descriptions(text, error_reporter):
-    func_descriptions = re.findall("`[^(`]+?`\s+function", text) + re.findall("function\s+`[^(`]+?`", text)
+    func_descriptions = \
+        re.findall("`[^(`]+?`\s+function", text) + \
+        re.findall("function\s+`[^(`]+?`", text)
     if func_descriptions:
         err_msg = "Function descriptions missing '()':\n"
         for f in func_descriptions:
@@ -345,8 +356,43 @@ def validate_punctuation_inside_quotes(text, error_reporter):
     if outside_periods:
         error_reporter("periods outside quotes")
 
+### Check for bad characters:
+
+bad_chars = ['’']
+
+def validate_characters(text, error_reporter):
+    for n, line in enumerate(text.splitlines()):
+        if any([bad_char in line for bad_char in bad_chars]):
+            error_reporter(f"line {n} contains bad character:\n{line}")
+
 
 ### Capture all defined validators
 
 # validators = [v for v in globals() if v.startswith("validate_")]
 # pprint.pprint(validators)
+
+
+### Test files individually to find problem characters
+
+def pandoc_test(md):
+    command = (
+        f"pandoc {md.name}"
+        f" -t epub3 -o {md.stem}.epub"
+        " -f markdown-native_divs "
+        " -f markdown+smart "
+        f'--metadata title="TEST"')
+    print(md.name)
+    os.system(command)
+
+def test_markdown_individually():
+    clean(config.test_dir)
+    config.test_dir.mkdir()
+    for md in config.markdown_dir.glob("*.md"):
+        shutil.copy(md, config.test_dir)
+    os.chdir(config.test_dir)
+    files = sorted(list(Path().glob("*.md")))
+    pprint.pprint(files)
+    with open('combined.md', 'w') as combined:
+        for f in files:
+            combined.write(f.read_text() + "\n")
+    pandoc_test(Path('combined.md'))

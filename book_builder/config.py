@@ -22,19 +22,8 @@ class BookType(Enum):
 
 root_name = base_name.lower()
 
-def epub(tag=""): return f"{base_name}{tag}.epub"
-
-# epub_file_name = base_name + ".epub"
-# epub_sample_file_name = base_name + "-Sample.epub"
-# epub_mono_file_name = base_name + "-monochrome.epub"
-# epub_sample_mono_file_name = base_name + "-monochrome-Sample.epub"
-
-def mobi(tag=""): return f"{base_name}{tag}.mobi"
-
-mobi_file_name = base_name + ".mobi"
-mobi_sample_file_name = base_name + "-Sample.mobi"
-mobi_mono_file_name = base_name + "-monochrome.mobi"
-mobi_sample_mono_file_name = base_name + "-monochrome-Sample.mobi"
+def epub_name(tag=""): return f"{base_name}{tag}.epub"
+def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
 
 tools_dir = Path(__file__).parent.parent.resolve()
 root_path = tools_dir.parent / base_name
@@ -43,29 +32,21 @@ markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
 
-epub_build_dir = root_path / "epub_build"
-mobi_build_dir = root_path / "mobi_build"
+epub_build_dir = root_path / "build"/ "epub"
+mobi_build_dir = root_path / "build"/ "mobi"
+docx_build_dir = root_path / "build"/ "docx"
+release_dir    = root_path / "build"/ "Release"
+
 html_dir = epub_build_dir / "html"
 images_dir = epub_build_dir / "images"
 test_dir = root_path / "test"
 
-release_dir = root_path / "Release"
-
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
+def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
 
 combined_markdown = epub_md("assembled")
-stripped_markdown = epub_md("assembled-stripped")
-combined_markdown_html = epub_md("assembled-html")
-combined_markdown_pdf = epub_md("assembled-pdf")
-
 sample_markdown = epub_md("sample")
-sample_markdown_html = epub_md("sample-html")
-sample_markdown_pdf = epub_md("sample-pdf")
-
-stripped_for_style = epub_md("stripped-for-style")
-stripped_for_spelling = epub_md("stripped-for-spelling")
-
 # recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
 ebookResources = root_path / "resources"

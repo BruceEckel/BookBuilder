@@ -11,7 +11,7 @@ from collections import OrderedDict
 import textwrap
 import pprint
 import book_builder.config as config
-from book_builder.config import BookType
+from book_builder.config import BookType, epub_name
 
 
 class ErrorReporter:
@@ -78,17 +78,17 @@ def pandoc_epub_command(
         input_file,
         output_name,
         title,
-        ebook_type: BookType = BookType.EPUB,
+        ebook_type: BookType,
         highlighting=None):
     "highlighting=None uses default (pygments) for source code color syntax highlighting"
     if not input_file.exists():
         return "Error: missing " + input_file.name
     command = (
-        "pandoc " + str(input_file.name) +
-        " -t epub3 -o " + output_name +
-        " -f markdown-native_divs "
+        f"pandoc {input_file.name}"
+        f" -t epub3 -o {output_name}"
+        " -f markdown-native_divs"
         " -f markdown+smart "
-        """ --epub-subdirectory="" """
+        ' --epub-subdirectory="" '
         " --epub-cover-image=Cover.png " +
         " ".join([f"--epub-embed-font={font.name}" for font in
                   chain(config.bullets.glob("*"), config.fonts.glob("*"))])
@@ -129,8 +129,8 @@ def strip_chapter(chapter_text):
     return stripped.strip() # In case the previous line adds another newline
 
 
-def strip_review_notes(text):
-    lines = text.strip().splitlines()
+def strip_review_notes(target):
+    lines = target.read_text().strip().splitlines()
     review = [x for x in lines if x.startswith("+ [")]
     mistakes = [x for x in review if not "Ready for Review" in x and not "Tech Checked" in x]
     assert not mistakes, mistakes
@@ -145,31 +145,80 @@ def strip_review_notes(text):
         if not in_notes:
             result2 += line + "\n"
     result3 = re.sub("{{.*?}}", "", result2, flags=re.DOTALL)
-    return result3 + "\n"
+    target.write_text(result3 + "\n")
 
 
-def combine_markdown_files(target, strip_notes=False, trace=False):
+def combine_markdown_files(target, strip_notes=False):
     """
     Put markdown files together
     """
     if not target.parent.exists():
         os.makedirs(target.parent)
-    assembled = ""
-    atom_names = []
-    for md in config.markdown_dir.glob("*.md"):
-        aname = md.name[:-3]
-        atom_names.append(aname.split('_', 1)[1])
-        with md.open(encoding="utf8") as chapter:
-            assembled += chapter.read() + "\n\n"
+    files = sorted(list(config.markdown_dir.glob("*.md")))
+    with open(target, 'w') as assembled:
+        for f in files:
+            assembled.write(f.read_text() + "\n\n")
     if strip_notes:
-        assembled = strip_review_notes(assembled)
-    # with target.open('w', encoding="utf8") as book:
-    #     book.write(assembled)
-    print(">>>>>>", target)
-    target.write_text(assembled)
-    if trace:
-        pprint.pprint(atom_names)
+        strip_review_notes(target)
     return f"{target.name} Created"
+
+
+def combine_sample_markdown(target):
+    """
+    Build markdown file for free sample
+    """
+    def extract(md, title_only=False):
+        with md.open(encoding="utf8") as chapter:
+            content = chapter.read().strip()
+            if title_only:
+                return ("\n".join(content.splitlines()[:3])).strip() + "\n\n"
+            return content + "\n\n"
+
+    if not target.parent.exists():
+        os.makedirs(target.parent)
+    assembled = ""
+    atoms = [md for md in config.markdown_dir.glob("*.md")]
+    for content in atoms[:config.sample_size + 1]:
+        assembled += extract(content)
+    for title_only in atoms[config.sample_size + 1:]:
+        assembled += extract(title_only, True)
+        assembled += "(Not included in sample)\n\n"
+    with target.open('w', encoding="utf8") as book:
+        book.write(assembled)
+    strip_review_notes(target)
+    return f"{target.name} Created"
+
+
+def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
+    """
+    Pandoc markdown to epub
+    """
+    regenerate_ebook_build_dir(target_dir, ebook_type)
+    combine_markdown_files(markdown_name("assembled-stripped"), strip_notes = True)
+    combine_sample_markdown(markdown_name("sample"))
+    os.chdir(str(target_dir))
+    pandoc_epub_command(
+        markdown_name("assembled-stripped"),
+        epub_name(),
+        config.title,
+        ebook_type)
+    pandoc_epub_command(
+        markdown_name("sample"),
+        epub_name("-Sample"),
+        config.title + " Sample",
+        ebook_type)
+    pandoc_epub_command(
+        markdown_name("assembled-stripped"),
+        epub_name("-monochrome"),
+        config.title,
+        ebook_type,
+        highlighting="monochrome")
+    pandoc_epub_command(
+        markdown_name("sample"),
+        epub_name("-monochrome-Sample"),
+        config.title + " Sample",
+        ebook_type,
+        highlighting="monochrome")
 
 
 def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
@@ -221,31 +270,6 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     if target_dir != config.markdown_dir:
         print("now run 'diff -r Markdown test'")
     return "Successfully disassembled combined Markdown"
-
-
-def combine_sample_markdown(target):
-    """
-    Build markdown file for free sample
-    """
-    def extract(md, title_only=False):
-        with md.open(encoding="utf8") as chapter:
-            content = chapter.read().strip()
-            if title_only:
-                return ("\n".join(content.splitlines()[:3])).strip() + "\n\n"
-            return content + "\n\n"
-
-    if not target.parent.exists():
-        os.makedirs(target.parent)
-    assembled = ""
-    atoms = [md for md in config.markdown_dir.glob("*.md")]
-    for content in atoms[:config.sample_size + 1]:
-        assembled += extract(content)
-    for title_only in atoms[config.sample_size + 1:]:
-        assembled += extract(title_only, True)
-        assembled += "(Not included in sample)\n\n"
-    with target.open('w', encoding="utf8") as book:
-        book.write(strip_review_notes(assembled))
-    return f"{target.name} Created"
 
 
 def check_for_existence(extension):

@@ -6,9 +6,9 @@ import book_builder.util as util
 import book_builder.examples as examples
 import book_builder.packages as _packages
 import book_builder.validate as _validate
-# import book_builder.fix as _fix
-import book_builder.epub as _epub
-import book_builder.mobi as _mobi
+from book_builder.ebook_generators import convert_to_epub
+from book_builder.ebook_generators import convert_to_mobi
+from book_builder.ebook_generators import convert_to_docx
 import book_builder.release as _release
 
 
@@ -44,16 +44,16 @@ def code_extract():
         click.echo(examples.create_tasks_for_gradle())
 
 
-@code.command('testall')
-def code_test_all_examples():
-    "Compile and capture all results, to show percentage of rewritten examples"
-    click.echo(examples.compile_all_examples())
+# @code.command('testall')
+# def code_test_all_examples():
+#     "Compile and capture all results, to show percentage of rewritten examples"
+#     click.echo(examples.compile_all_examples())
 
 
-@code.command('testfiles')
-def code_test_files():
-    "Create test.bat files for each package, to compile and run all files"
-    click.echo(examples.create_test_files())
+# @code.command('testfiles')
+# def code_test_files():
+#     "Create test.bat files for each package, to compile and run all files"
+#     click.echo(examples.create_test_files())
 
 
 ##########################################################
@@ -106,41 +106,43 @@ def epub_clean():
 
 
 @epub.command('regen')
-def epub_clean():
+def epub_regen():
     "Create and populate epub build dir"
-    click.echo(_epub.regenerate_epub_build_dir())
+    click.echo(util.regenerate_epub_build_dir())
 
 
 @epub.command('combine')
 def epub_combine():
     "Combine Markdown files into a single file"
-    click.echo(_epub.combine_markdown_files(config.combined_markdown, strip_notes = False, trace=True))
+    click.echo(util.combine_markdown_files(
+        config.combined_markdown, strip_notes=False))
     os.system("subl {}".format(config.combined_markdown))
 
 
 @epub.command('disassemble')
-@click.option('--test', is_flag=True, help='Unpack to "test" directory instead of overwriting Markdown.')
-def epub_disassemble(test):
+@click.option('--test', is_flag=True,
+              help='Unpack to "test" directory instead of overwriting Markdown.')
+def epub_disassemble(test_flag):
     "Split combined into atom-numbered files"
-    if test:
+    if test_flag:
         if config.test_dir.exists():
             click.echo(util.clean(config.test_dir))
-        click.echo(_epub.disassemble_combined_markdown_file(config.test_dir))
+        click.echo(util.disassemble_combined_markdown_file(config.test_dir))
     else:
-        click.echo(_epub.disassemble_combined_markdown_file())
+        click.echo(util.disassemble_combined_markdown_file())
 
 
 @epub.command('sample_markdown')
 def epub_sample_markdown():
     "Combine sample Markdown files into a single Markdown file"
-    click.echo(_epub.combine_sample_markdown())
+    click.echo(util.combine_sample_markdown(config.sample_markdown))
     os.system("subl {}".format(config.sample_markdown))
 
 
 @epub.command('make')
 def epub_make():
     "Create epub from Markdown files"
-    _epub.convert_to_epub()
+    click.echo(convert_to_epub())
 
 
 # @epub.command('newStatus')
@@ -158,7 +160,7 @@ def mobi():
 @mobi.command('make')
 def mobi_make():
     "Create epub from Markdown files"
-    click.echo(_mobi.convert_to_mobi())
+    click.echo(convert_to_mobi())
 
 
 
@@ -174,4 +176,11 @@ def release():
 @cli.command()
 def docx():
     "Create docx from Markdown files"
-    _epub.convert_to_docx()
+    click.echo(convert_to_docx())
+
+##########################################################
+
+@cli.command()
+def test():
+    "Perform current test"
+    click.echo(_validate.test_markdown_individually())

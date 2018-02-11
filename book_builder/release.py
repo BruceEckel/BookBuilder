@@ -10,14 +10,6 @@ from book_builder.util import clean
 def create_release():
     "Fix and put as a standalone command which runs everything"
     return "Incomplete"
-    books = [
-        config.epub_file_name,
-        config.epub_mono_file_name,
-    ]
-    samples = [
-        config.epub_sample_file_name,
-        config.epub_sample_mono_file_name,
-    ]
     if config.release_dir.exists():
         clean(config.release_dir)
     os.makedirs(config.release_dir)
