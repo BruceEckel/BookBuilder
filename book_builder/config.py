@@ -38,7 +38,7 @@ docx_build_dir = root_path / "build"/ "docx"
 release_dir    = root_path / "build"/ "Release"
 
 html_dir = epub_build_dir / "html"
-images_dir = epub_build_dir / "images"
+# images_dir = epub_build_dir / "images"
 test_dir = root_path / "test"
 
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"

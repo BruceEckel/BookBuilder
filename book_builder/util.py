@@ -6,6 +6,7 @@ import sys
 import os
 import re
 from pathlib import Path
+from distutils.dir_util import copy_tree
 from itertools import chain
 from collections import OrderedDict
 import textwrap
@@ -118,6 +119,7 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
         copy(config.epub_css)
     elif ebook_type == BookType.MOBI:
         copy(config.mobi_css)
+    copy_tree(str(config.images), str(ebook_build_dir / "images"))
     # copy(config.metadata)
 
 
@@ -194,7 +196,7 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
     Pandoc markdown to epub
     """
     regenerate_ebook_build_dir(target_dir, ebook_type)
-    combine_markdown_files(markdown_name("assembled-stripped"), strip_notes = True)
+    combine_markdown_files(markdown_name("assembled-stripped"), strip_notes=True)
     combine_sample_markdown(markdown_name("sample"))
     os.chdir(str(target_dir))
     pandoc_epub_command(
