@@ -119,6 +119,7 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
         copy(config.epub_css)
     elif ebook_type == BookType.MOBI:
         copy(config.mobi_css)
+        copy(config.mobi_mono_css)
     copy_tree(str(config.images), str(ebook_build_dir / "images"))
     # copy(config.metadata)
 
