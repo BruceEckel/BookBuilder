@@ -1,5 +1,6 @@
-#! py -3
-# Various validation checks
+"""
+Validation test framework and checks
+"""
 import re
 import os
 import shutil
@@ -10,41 +11,26 @@ from book_builder.util import create_markdown_filename
 from book_builder.util import ErrorReporter
 from book_builder.util import clean
 
-all_misspelled = set()
-
+misspellings = set()
 
 def all_checks():
     "Multiple tests to find problems in the book"
     print(f"Validating {config.markdown_dir}")
     assert config.markdown_dir.exists(), f"Cannot find {config.markdown_dir}"
-    # global validators
+    global validators
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
-        # print(md)
         error_reporter = ErrorReporter(md)
-        # with md.open() as f:
-        #     text = f.read()
         text = md.read_text(encoding="UTF-8")
-        validate_tag_no_gap(text, error_reporter)
-        validate_complete_examples(text, error_reporter)
-        validate_filenames_and_titles(text, error_reporter)
-        validate_capitalized_comments(text, error_reporter)
-        validate_no_tabs(text, error_reporter)
-        validate_listing_indentation(text, error_reporter)
-        validate_example_sluglines(text, error_reporter)
-        validate_package_names(text, error_reporter)
-        validate_code_listing_line_widths(text, error_reporter)
-        validate_hanging_hyphens(text, error_reporter)
-        validate_cross_links(text, error_reporter)
-        validate_ticked_phrases(text, error_reporter)
-        validate_function_descriptions(text, error_reporter)
-        validate_full_spellcheck(text, error_reporter)
-        validate_punctuation_inside_quotes(text, error_reporter)
-        validate_characters(text, error_reporter)
+        for val in validators:
+            # print(f"{val.__name__}")
+            val(text, error_reporter)
         error_reporter.show()
         error_reporter.edit()
 
-    Path(config.root_path / "data" / "all_misspelled.txt").write_text(
-        "\n".join(sorted(all_misspelled)))
+    if misspellings:
+        Path(config.all_misspelled).write_text("\n".join(sorted(misspellings)))
+        os.system(f"subl {config.all_misspelled}")
+        os.system(f"subl {config.supplemental_dictionary}")
 
 
 #################################################################
@@ -277,8 +263,8 @@ def validate_ticked_phrases(text, error_reporter):
 
 ### Spell-check everything
 
-dictionary = set(Path(config.root_path / "data" / "dictionary.txt").read_text().splitlines()).union(
-    set(Path(config.root_path / "data" / "supplemental_dictionary.txt").read_text().splitlines()))
+dictionary = set(config.dictionary.read_text().splitlines()).union(
+    set(config.supplemental_dictionary.read_text().splitlines()))
 
 def validate_full_spellcheck(text, error_reporter):
     words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
@@ -286,8 +272,8 @@ def validate_full_spellcheck(text, error_reporter):
     if '' in misspelled:
         misspelled.remove('')
     if len(misspelled):
-        global all_misspelled
-        all_misspelled = all_misspelled.union(misspelled)
+        global misspellings
+        misspellings = misspellings.union(misspelled)
         error_reporter(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
@@ -366,12 +352,6 @@ def validate_characters(text, error_reporter):
             error_reporter(f"line {n} contains bad character:\n{line}")
 
 
-### Capture all defined validators
-
-# validators = [v for v in globals() if v.startswith("validate_")]
-# pprint.pprint(validators)
-
-
 ### Test files individually to find problem characters
 
 def pandoc_test(md):
@@ -396,3 +376,10 @@ def test_markdown_individually():
         for f in files:
             combined.write(f.read_text() + "\n")
     pandoc_test(Path('combined.md'))
+
+
+### Capture all defined validators
+
+g = dict(sorted(globals().items()))
+validators = [g[v] for v in g if v.startswith("validate_")]
+
