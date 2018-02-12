@@ -16,6 +16,7 @@ from configuration import *
 class BookType(Enum):
     EPUB = "epub"
     MOBI = "mobi"
+    MOBIMONO = "mobi-mono"
     DOCX = "docx"
 
 

@@ -2,6 +2,7 @@
 Generate ebooks in different formats
 """
 import os
+from pathlib import Path
 import zipfile
 from itertools import chain
 import book_builder.config as config
@@ -56,6 +57,9 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
         epub_name("-Sample"),
         config.title + " Sample",
         ebook_type)
+
+    if ebook_type is BookType.MOBI:
+        ebook_type = BookType.MOBIMONO
     pandoc_epub_command(
         markdown_name("assembled-stripped"),
         epub_name("-monochrome"),
@@ -92,8 +96,12 @@ def convert_to_mobi():
     Create special EPUBs first in this directory that use AtomicKotlin-mobi.css
     """
     generate_epub_files(config.mobi_build_dir, config.mobi_md, BookType.MOBI)
-    # for epf in Path('.').glob("*.epub"):
-    #     os.system(f"kindlegen {epf.name}")
+    os.chdir(str(config.mobi_build_dir))
+    for epf in Path('.').glob("*.epub"):
+        cmd = f"kindlegen {epf.name} > {epf.stem}-kindlegen-messages.txt"
+        print(cmd)
+        os.system(cmd)
+        os.system(f"subl {epf.stem}-kindlegen-messages.txt")
     return f"{config.mobi_build_dir.name} Completed"
 
 

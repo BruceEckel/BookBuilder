@@ -5,6 +5,7 @@ import shutil
 import sys
 import os
 import re
+import time
 from pathlib import Path
 from distutils.dir_util import copy_tree
 from collections import OrderedDict
@@ -76,6 +77,7 @@ def clean(dir_to_remove):
 
 def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.EPUB):
     clean(ebook_build_dir)
+    time.sleep(1)
     os.makedirs(ebook_build_dir)
     def copy(src):
         source = Path(src)
