@@ -3,14 +3,11 @@
 # import logging
 import os
 import re
-import shutil
 import subprocess
 import sys
-import io
 from collections import defaultdict
 import string
 # from logging import debug
-from pathlib import Path
 
 import book_builder.config as config
 import book_builder.util as util

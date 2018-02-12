@@ -7,7 +7,6 @@ import os
 import sys
 from pathlib import Path
 from enum import Enum, unique
-import importlib
 # Add elements from configuration.py into this environment:
 sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
 from configuration import *
@@ -94,4 +93,3 @@ if __name__ == '__main__':
                 break # Found it so try next identifier
     print("The following don't seem to be used")
     pprint(identifiers)
-

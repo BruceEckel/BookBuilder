@@ -382,4 +382,3 @@ def test_markdown_individually():
 
 g = dict(sorted(globals().items()))
 validators = [g[v] for v in g if v.startswith("validate_")]
-

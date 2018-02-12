@@ -3,7 +3,6 @@
 # of that example, placed in the 'generated' subdirectory
 import os
 import subprocess
-import sys
 from pathlib import Path
 import click
 import book_builder.config as config

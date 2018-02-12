@@ -7,12 +7,11 @@ import os
 import re
 from pathlib import Path
 from distutils.dir_util import copy_tree
-from itertools import chain
 from collections import OrderedDict
 import textwrap
 import pprint
 import book_builder.config as config
-from book_builder.config import BookType, epub_name
+from book_builder.config import BookType
 
 
 class ErrorReporter:
@@ -73,33 +72,6 @@ def clean(dir_to_remove):
         Are you inside that directory, or using a file inside it?
         """)
         print(e)
-
-
-def pandoc_epub_command(
-        input_file,
-        output_name,
-        title,
-        ebook_type: BookType,
-        highlighting=None):
-    "highlighting=None uses default (pygments) for source code color syntax highlighting"
-    if not input_file.exists():
-        return "Error: missing " + input_file.name
-    command = (
-        f"pandoc {input_file.name}"
-        f" -t epub3 -o {output_name}"
-        " -f markdown-native_divs"
-        " -f markdown+smart "
-        ' --epub-subdirectory="" '
-        " --epub-cover-image=Cover.png " +
-        " ".join([f"--epub-embed-font={font.name}" for font in
-                  chain(config.bullets.glob("*"), config.fonts.glob("*"))])
-        + " --toc-depth=2 "
-        f'--metadata title="{title}"'
-        f" --css={config.base_name}-{ebook_type.value}.css ")
-    if highlighting:
-        command += f" --highlight-style={highlighting} "
-    print(command)
-    os.system(command)
 
 
 def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.EPUB):
@@ -190,38 +162,6 @@ def combine_sample_markdown(target):
         book.write(assembled)
     strip_review_notes(target)
     return f"{target.name} Created"
-
-
-def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
-    """
-    Pandoc markdown to epub
-    """
-    regenerate_ebook_build_dir(target_dir, ebook_type)
-    combine_markdown_files(markdown_name("assembled-stripped"), strip_notes=True)
-    combine_sample_markdown(markdown_name("sample"))
-    os.chdir(str(target_dir))
-    pandoc_epub_command(
-        markdown_name("assembled-stripped"),
-        epub_name(),
-        config.title,
-        ebook_type)
-    pandoc_epub_command(
-        markdown_name("sample"),
-        epub_name("-Sample"),
-        config.title + " Sample",
-        ebook_type)
-    pandoc_epub_command(
-        markdown_name("assembled-stripped"),
-        epub_name("-monochrome"),
-        config.title,
-        ebook_type,
-        highlighting="monochrome")
-    pandoc_epub_command(
-        markdown_name("sample"),
-        epub_name("-monochrome-Sample"),
-        config.title + " Sample",
-        ebook_type,
-        highlighting="monochrome")
 
 
 def disassemble_combined_markdown_file(target_dir=config.markdown_dir):

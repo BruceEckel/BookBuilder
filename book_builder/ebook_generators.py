@@ -1,15 +1,73 @@
 """
 Generate ebooks in different formats
 """
-from pathlib import Path
 import os
 import zipfile
+from itertools import chain
 import book_builder.config as config
 from book_builder.config import BookType
 from book_builder.config import epub_name
-from book_builder.util import generate_epub_files
 from book_builder.util import regenerate_ebook_build_dir
 from book_builder.util import combine_markdown_files
+from book_builder.util import combine_sample_markdown
+
+
+def pandoc_epub_command(
+        input_file,
+        output_name,
+        title,
+        ebook_type: BookType,
+        highlighting=None):
+    "highlighting=None uses default (pygments) for source code color syntax highlighting"
+    assert input_file.exists(), "Error: missing " + input_file.name
+    command = (
+        f"pandoc {input_file.name}"
+        f" -t epub3 -o {output_name}"
+        " -f markdown-native_divs"
+        " -f markdown+smart "
+        ' --epub-subdirectory="" '
+        " --epub-cover-image=Cover.png " +
+        " ".join([f"--epub-embed-font={font.name}" for font in
+                  chain(config.bullets.glob("*"), config.fonts.glob("*"))])
+        + " --toc-depth=2 "
+        f'--metadata title="{title}"'
+        f" --css={config.base_name}-{ebook_type.value}.css ")
+    if highlighting:
+        command += f" --highlight-style={highlighting} "
+    print(command)
+    os.system(command)
+
+
+def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
+    """
+    Pandoc markdown to epub
+    """
+    regenerate_ebook_build_dir(target_dir, ebook_type)
+    combine_markdown_files(markdown_name("assembled-stripped"), strip_notes=True)
+    combine_sample_markdown(markdown_name("sample"))
+    os.chdir(str(target_dir))
+    pandoc_epub_command(
+        markdown_name("assembled-stripped"),
+        epub_name(),
+        config.title,
+        ebook_type)
+    pandoc_epub_command(
+        markdown_name("sample"),
+        epub_name("-Sample"),
+        config.title + " Sample",
+        ebook_type)
+    pandoc_epub_command(
+        markdown_name("assembled-stripped"),
+        epub_name("-monochrome"),
+        config.title,
+        ebook_type,
+        highlighting="monochrome")
+    pandoc_epub_command(
+        markdown_name("sample"),
+        epub_name("-monochrome-Sample"),
+        config.title + " Sample",
+        ebook_type,
+        highlighting="monochrome")
 
 
 def fix_for_apple(name):
