@@ -2,6 +2,7 @@
 Generate ebooks in different formats
 """
 import os
+import re
 from pathlib import Path
 import zipfile
 from itertools import chain
@@ -26,10 +27,10 @@ def pandoc_epub_command(
         f" -t epub3 -o {output_name}"
         " -f markdown-native_divs"
         " -f markdown+smart "
-        ' --epub-subdirectory="" '
+        # ' --epub-subdirectory="" '
         " --epub-cover-image=Cover.png " +
         " ".join([f"--epub-embed-font={font.name}" for font in
-                  chain(config.bullets.glob("*"), config.fonts.glob("*"))])
+                  chain(config.bullets.glob("*"), config.fonts.glob("*.ttf"))])
         + " --toc-depth=2 "
         f'--metadata title="{title}"'
         f" --css={config.base_name}-{ebook_type.value}.css ")
@@ -90,6 +91,31 @@ def convert_to_epub():
     return f"{config.epub_build_dir.name} Completed"
 
 
+def show_important_kindlegen_output(fname_stem):
+    "Removes unimportant errors"
+    skip = [
+        "Amazon kindlegen(Windows)",
+        "'position: absolute'",
+        "'position: relative'",
+        "'overflow'",
+        "Added metadata",
+        "Info(prcgen)",
+        "Info(pagemap)",
+        "Warning(prcfile):W14029"
+    ]
+    path = config.mobi_build_dir / f"{fname_stem}-kindlegen-messages.txt"
+    messages = re.split("\n\n", path.read_text())
+    cleaned = []
+    for n, msg in enumerate(messages):
+        if any([s in msg for s in skip]):
+            continue
+        cleaned.append(msg)
+    for m in cleaned:
+        print("#" * 50)
+        print(m)
+
+
+
 def convert_to_mobi():
     """
     Pandoc markdown to mobi
@@ -98,10 +124,12 @@ def convert_to_mobi():
     generate_epub_files(config.mobi_build_dir, config.mobi_md, BookType.MOBI)
     os.chdir(str(config.mobi_build_dir))
     for epf in Path('.').glob("*.epub"):
+    # for epf in [Path() / "AtomicKotlin-monochrome.epub"]:
         cmd = f"kindlegen {epf.name} > {epf.stem}-kindlegen-messages.txt"
-        print(cmd)
+        print(f"\n{cmd}")
         os.system(cmd)
-        os.system(f"subl {epf.stem}-kindlegen-messages.txt")
+        # os.system(f"subl {epf.stem}-kindlegen-messages.txt")
+        show_important_kindlegen_output(epf.stem)
     return f"{config.mobi_build_dir.name} Completed"
 
 

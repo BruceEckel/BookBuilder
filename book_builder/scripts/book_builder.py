@@ -10,6 +10,7 @@ from book_builder.ebook_generators import convert_to_epub
 from book_builder.ebook_generators import convert_to_mobi
 from book_builder.ebook_generators import convert_to_docx
 import book_builder.release as _release
+from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 
 
 @click.group()
@@ -132,23 +133,29 @@ def epub_disassemble(test_flag):
         click.echo(util.disassemble_combined_markdown_file())
 
 
-@epub.command('sample_markdown')
-def epub_sample_markdown():
-    "Combine sample Markdown files into a single Markdown file"
-    click.echo(util.combine_sample_markdown(config.sample_markdown))
-    os.system("subl {}".format(config.sample_markdown))
-
-
-@epub.command('make')
-def epub_make():
+@epub.command('build')
+def epub_build():
     "Create epub from Markdown files"
     click.echo(convert_to_epub())
 
 
+@epub.command('renumber')
+def epub_rename():
+    "Renumber atoms and fix atom names"
+    click.echo(fix_names_and_renumber_atoms())
+
+
+# @epub.command('sample_markdown')
+# def epub_sample_markdown():
+#     "Combine sample Markdown files into a single Markdown file"
+#     click.echo(util.combine_sample_markdown(config.sample_markdown))
+#     os.system("subl {}".format(config.sample_markdown))
+
+
 # @epub.command('newStatus')
-def epub_create_new_status_file():
-    "Create fresh STATUS.md if one doesn't exist"
-    click.echo(util.create_new_status_file())
+# def epub_create_new_status_file():
+#     "Create fresh STATUS.md if one doesn't exist"
+#     click.echo(util.create_new_status_file())
 
 
 ##########################################################
@@ -157,12 +164,22 @@ def epub_create_new_status_file():
 def mobi():
     "Creates mobi files for kindle"
 
-@mobi.command('make')
-def mobi_make():
+@mobi.command('build')
+def mobi_build():
     "Create epub from Markdown files"
     click.echo(convert_to_mobi())
 
 
+##########################################################
+
+@cli.group()
+def docx():
+    "Create docx file for print version"
+
+@docx.command('build')
+def docx_build():
+    "Create docx from Markdown files"
+    click.echo(convert_to_docx())
 
 ##########################################################
 
@@ -174,13 +191,8 @@ def release():
 ##########################################################
 
 @cli.command()
-def docx():
-    "Create docx from Markdown files"
-    click.echo(convert_to_docx())
-
-##########################################################
-
-@cli.command()
 def test():
     "Perform current test"
-    click.echo(_validate.test_markdown_individually())
+    from book_builder.ebook_generators import show_important_kindlegen_output
+    click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
+    # click.echo(_validate.test_markdown_individually())
