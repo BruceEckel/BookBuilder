@@ -48,16 +48,16 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
     combine_markdown_files(markdown_name("assembled-stripped"), strip_notes=True)
     combine_sample_markdown(markdown_name("sample"))
     os.chdir(str(target_dir))
-    pandoc_epub_command(
-        markdown_name("assembled-stripped"),
-        epub_name(),
-        config.title,
-        ebook_type)
-    pandoc_epub_command(
-        markdown_name("sample"),
-        epub_name("-Sample"),
-        config.title + " Sample",
-        ebook_type)
+    # pandoc_epub_command(
+    #     markdown_name("assembled-stripped"),
+    #     epub_name(),
+    #     config.title,
+    #     ebook_type)
+    # pandoc_epub_command(
+    #     markdown_name("sample"),
+    #     epub_name("-Sample"),
+    #     config.title + " Sample",
+    #     ebook_type)
 
     if ebook_type is BookType.MOBI:
         ebook_type = BookType.MOBIMONO
@@ -67,12 +67,12 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
         config.title,
         ebook_type,
         highlighting="monochrome")
-    pandoc_epub_command(
-        markdown_name("sample"),
-        epub_name("-monochrome-Sample"),
-        config.title + " Sample",
-        ebook_type,
-        highlighting="monochrome")
+    # pandoc_epub_command(
+    #     markdown_name("sample"),
+    #     epub_name("-monochrome-Sample"),
+    #     config.title + " Sample",
+    #     ebook_type,
+    #     highlighting="monochrome")
 
 
 def fix_for_apple(name):
@@ -111,7 +111,6 @@ def show_important_kindlegen_output(fname_stem):
             continue
         cleaned.append(msg)
     for m in cleaned:
-        print("#" * 50)
         print(m)
 
 
@@ -123,13 +122,13 @@ def convert_to_mobi():
     """
     generate_epub_files(config.mobi_build_dir, config.mobi_md, BookType.MOBI)
     os.chdir(str(config.mobi_build_dir))
-    for epf in Path('.').glob("*.epub"):
-    # for epf in [Path() / "AtomicKotlin-monochrome.epub"]:
+    # for epf in Path('.').glob("*.epub"):
+    for epf in [Path() / "AtomicKotlin-monochrome.epub"]:
         cmd = f"kindlegen {epf.name} > {epf.stem}-kindlegen-messages.txt"
         print(f"\n{cmd}")
         os.system(cmd)
-        # os.system(f"subl {epf.stem}-kindlegen-messages.txt")
         show_important_kindlegen_output(epf.stem)
+        os.system(f"start AtomicKotlin-monochrome.mobi")
     return f"{config.mobi_build_dir.name} Completed"
 
 
