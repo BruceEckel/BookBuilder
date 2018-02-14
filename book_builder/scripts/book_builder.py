@@ -9,7 +9,7 @@ import book_builder.validate as _validate
 from book_builder.ebook_generators import convert_to_epub
 from book_builder.ebook_generators import convert_to_mobi
 from book_builder.ebook_generators import convert_to_docx
-import book_builder.release as _release
+from book_builder.ebook_generators import create_release
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 
 
@@ -186,7 +186,7 @@ def docx_build():
 @cli.command()
 def release():
     "Create full release from scratch"
-    click.echo(_release.create_release())
+    click.echo(create_release())
 
 ##########################################################
 

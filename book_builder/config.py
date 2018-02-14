@@ -22,9 +22,6 @@ class BookType(Enum):
 
 root_name = base_name.lower()
 
-def epub_name(tag=""): return f"{base_name}{tag}.epub"
-def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
-
 root_path = Path(__file__).parent.parent.parent.resolve() / base_name
 markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
@@ -39,6 +36,20 @@ test_dir       = root_path / "test"
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
 def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
+
+def epub_name(tag=""): return f"{base_name}{tag}.epub"
+def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
+
+built_ebooks = [
+    epub_build_dir / epub_name(),
+    epub_build_dir / epub_name("-monochrome"),
+    epub_build_dir / epub_name("-Sample"),
+    epub_build_dir / epub_name("-monochrome-Sample"),
+    mobi_build_dir / mobi_name(),
+    mobi_build_dir / mobi_name("-monochrome"),
+    mobi_build_dir / mobi_name("-Sample"),
+    mobi_build_dir / mobi_name("-monochrome-Sample"),
+]
 
 combined_markdown = epub_md("assembled")
 sample_markdown = epub_md("sample")
@@ -58,7 +69,6 @@ meta_inf      = resource("META-INF")
 dictionary = root_path / "data" / "dictionary.txt"
 supplemental_dictionary = root_path / "data" / "supplemental_dictionary.txt"
 all_misspelled = root_path / "data" / "all_misspelled.txt"
-
 
 if __name__ == '__main__':
     "Check to see if identifiers are used in this project"
