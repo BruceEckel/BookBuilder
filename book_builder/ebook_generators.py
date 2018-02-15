@@ -22,6 +22,7 @@ def pandoc_epub_command(
         ebook_type: BookType,
         highlighting=None):
     "highlighting=None uses default (pygments) for source code color syntax highlighting"
+    print(f"\tPandoc producing {output_name}")
     assert input_file.exists(), "Error: missing " + input_file.name
     command = (
         f"pandoc {input_file.name}"
@@ -37,7 +38,6 @@ def pandoc_epub_command(
         f" --css={config.base_name}-{ebook_type.value}.css ")
     if highlighting:
         command += f" --highlight-style={highlighting} "
-    print(command)
     os.system(command)
 
 
@@ -49,6 +49,7 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
     combine_markdown_files(markdown_name("assembled-stripped"), strip_notes=True)
     combine_sample_markdown(markdown_name("sample"))
     os.chdir(str(target_dir))
+    print(f"Producing {target_dir.name}")
     pandoc_epub_command(
         markdown_name("assembled-stripped"),
         epub_name(),
@@ -111,8 +112,9 @@ def show_important_kindlegen_output(fname_stem):
         if any([s in msg for s in skip]):
             continue
         cleaned.append(msg)
-    for m in cleaned:
-        print(m)
+    if cleaned:
+        for m in [m for m in cleaned if m.strip()]:
+            print(m)
 
 
 def convert_to_mobi():
@@ -125,7 +127,7 @@ def convert_to_mobi():
     for epf in Path('.').glob("*.epub"):
     # for epf in [Path() / "AtomicKotlin-monochrome.epub"]:
         cmd = f"kindlegen {epf.name} > {epf.stem}-kindlegen-messages.txt"
-        print(f"\n{cmd}")
+        print(f"\tCreating {epf.stem}.mobi")
         os.system(cmd)
         show_important_kindlegen_output(epf.stem)
         # os.system(f"start AtomicKotlin-monochrome.mobi")
@@ -172,6 +174,7 @@ def create_release():
 
     def zzip(target_name, file_list):
         "zip utility"
+        print(f"creating {target_name}.zip")
         os.system(f"zip -m {target_name}.zip {' '.join(file_list)}")
 
     files = glob.glob("*")
