@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 test.sh
 *.log
+book_builder/pylint-out.txt

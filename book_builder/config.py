@@ -84,6 +84,7 @@ if __name__ == '__main__':
         "exclude_types",
         "resource",
         "root_name",
+        "mobi_name",
     ]
     exclude_types = [
         "<class 'module'>",
@@ -102,5 +103,6 @@ if __name__ == '__main__':
             if id in py.read_text():
                 identifiers.remove(id)
                 break # Found it so try next identifier
-    print("The following don't seem to be used")
-    pprint(identifiers)
+    if identifiers:
+        print("The following don't seem to be used")
+        pprint(identifiers)

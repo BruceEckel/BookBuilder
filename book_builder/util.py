@@ -10,7 +10,6 @@ from pathlib import Path
 from distutils.dir_util import copy_tree
 from collections import OrderedDict
 import textwrap
-import pprint
 import book_builder.config as config
 from book_builder.config import BookType
 
@@ -245,6 +244,7 @@ def replace_code_in_text(generated, text):
     Both generated and text are NOT lists, but normal chunks of text
     returns new_text, starting_index so an editor can be opened at that line
     """
+    # import pprint
     code_lines = generated.splitlines()
     title = code_lines[0].strip()
     assert title in text, f"{title} not in text"
