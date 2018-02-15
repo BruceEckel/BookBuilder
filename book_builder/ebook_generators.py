@@ -159,11 +159,13 @@ def convert_to_docx():
 
 
 def create_release():
-    "Fix and put as a standalone command which runs everything"
+    "Create a release from scratch"
     import glob
     if config.release_dir.exists():
         clean(config.release_dir)
     os.makedirs(config.release_dir)
+    convert_to_epub()
+    convert_to_mobi()
     for src in config.built_ebooks:
         os.system(f"cp {config.epub_build_dir / src} {config.release_dir}")
     os.chdir(str(config.release_dir))
@@ -175,4 +177,4 @@ def create_release():
     files = glob.glob("*")
     zzip(config.base_name, [f for f in files if not "Sample" in f])
     zzip(config.base_name + "Sample", [f for f in files if "Sample" in f])
-    return f"{config.release_dir} Completed"
+    return f"\n{config.release_dir} Completed"
