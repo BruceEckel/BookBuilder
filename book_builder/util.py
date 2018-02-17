@@ -29,6 +29,7 @@ class ErrorReporter:
             self.msg += self.md_path.name + "\n"
             self.titled = True # Print only once
         self.msg += f"    {msg}"
+        return self.msg
 
     def show(self):
         if self.msg:

@@ -3,6 +3,7 @@ Validation test framework and checks
 """
 import re
 import os
+import sys
 import shutil
 import pprint
 from pathlib import Path
@@ -13,11 +14,37 @@ from book_builder.util import clean
 
 misspellings = set()
 
+
+class ExclusionFile:
+    "Maintains the exclusion file for a particular validate function"
+    def __init__(self, exclusion_file_name, error_reporter):
+        self.ef_path = config.data_path / exclusion_file_name
+        self.error_reporter = error_reporter
+        if not self.ef_path.exists():
+            self.ef_path.write_text("")
+        self.exclusions = self.ef_path.read_text()
+        if config.msgbreak in self.exclusions:
+            print(f"{self.ef_path.name} Needs Editing!")
+            os.system(f"subl {self.ef_path}")
+            sys.exit()
+
+    def __call__(self, msg):
+        with open(self.ef_path, "a") as ef:
+            ef.write(f"{self.error_reporter.md_path.name}:\n")
+            ef.write(f"    {msg}\n")
+            ef.write(config.msgbreak + "\n")
+        os.system(f"subl {self.ef_path}")
+
+    def __contains__(self, item):
+        return item in self.exclusions
+
+
 def all_checks():
     "Multiple tests to find problems in the book"
     print(f"Validating {config.markdown_dir}")
     assert config.markdown_dir.exists(), f"Cannot find {config.markdown_dir}"
-    global validators
+    g = dict(sorted(globals().items()))
+    validators = [g[v] for v in g if v.startswith("validate_")]
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
         error_reporter = ErrorReporter(md)
         text = md.read_text(encoding="UTF-8")
@@ -176,7 +203,8 @@ def validate_no_tabs(text, error_reporter):
 
 ### Check for sluglines that don't match the format
 
-def  validate_example_sluglines(text, error_reporter):
+def validate_example_sluglines(text, error_reporter):
+    exclusions = ExclusionFile("validate_example_sluglines.txt", error_reporter)
     for listing in extract_listings(text):
         lines = listing.splitlines()
         slug = lines[0]
@@ -186,8 +214,8 @@ def  validate_example_sluglines(text, error_reporter):
             error_reporter(f"Bad first line (no space after beginning of comment):\n\t{slug}")
             continue
         slug = slug.split(None, 1)[1]
-        if "/" not in slug:
-            error_reporter(f"Missing directory in {slug}")
+        if "/" not in slug and slug not in exclusions:
+            exclusions(error_reporter(f"Missing directory in:\n{slug}"))
 
 
 ### Check for package names with capital letters
@@ -227,11 +255,13 @@ def remove_nonletters(text):
 
 
 def strip_comments_from_code(listing, error_reporter):
-    listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
-    lines = listing.splitlines()
-    if not lines:
+    if len(listing.strip()) == 0:
         error_reporter("Empty listing")
         return []
+    listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
+    if len(listing.strip()) == 0:
+        return []
+    lines = listing.splitlines()
     if lines[0].startswith("//"): # Retain elements of slugline
         lines[0] = lines[0][3:]
     lines = [line.split("//")[0].rstrip() for line in lines]
@@ -242,6 +272,7 @@ def strip_comments_from_code(listing, error_reporter):
 
 
 def validate_ticked_phrases(text, error_reporter):
+    exclusions = ExclusionFile("validate_ticked_phrases.txt", error_reporter)
     stripped_listings = [strip_comments_from_code(listing, error_reporter)
         for listing in extract_listings(text)]
     pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
@@ -253,9 +284,12 @@ def validate_ticked_phrases(text, error_reporter):
     if not_in_examples:
         err_msg = ""
         for nie in not_in_examples:
+            if nie in exclusions:
+                continue
             err_msg += f"Not in examples: {nie}\n"
             for rst in raw_single_ticks:
                 if nie in rst:
+                    ef(nie)
                     err_msg += f"\t{rst}\n"
         error_reporter(err_msg)
 
@@ -387,21 +421,20 @@ def test_markdown_individually():
 def validate_mistaken_backquotes(text, error_reporter):
     "Discover when backquotes are messed up by paragraph reformatting"
     if not config.mistaken_backquote_exclusions.exists():
-        config.mistaken_backquote_exclusions.write_text(" ")
+        config.mistaken_backquote_exclusions.write_text("")
     exclusions = config.mistaken_backquote_exclusions.read_text()
+    if config.msgbreak in exclusions:
+        print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
+        os.system(f"subl {config.mistaken_backquote_exclusions}")
+        sys.exit()
     lines = remove_listings(text).splitlines()
     for n, line in enumerate(lines):
         if n+1 >= len(lines):
             break
         if line.startswith("`") and lines[n+1].startswith("`"):
-            err_msg = f"{'-'*35}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n"
-            error_reporter(err_msg)
+            if line in exclusions and lines[n+1] in exclusions:
+                continue
+            error_reporter(f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
             with open(config.mistaken_backquote_exclusions, "a") as mbe:
-                mbe.write(err_msg)
+                mbe.write(error_reporter.msg)
             os.system(f"subl {config.mistaken_backquote_exclusions}")
-
-
-### Capture all defined validators
-
-g = dict(sorted(globals().items()))
-validators = [g[v] for v in g if v.startswith("validate_")]

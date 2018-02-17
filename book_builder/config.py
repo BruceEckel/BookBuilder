@@ -11,6 +11,8 @@ from enum import Enum, unique
 sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
 from configuration import *
 
+msgbreak = '-=' * 25
+
 
 @unique
 class BookType(Enum):
@@ -66,11 +68,12 @@ mobi_mono_css = resource(root_name + "-mobi-mono.css")
 metadata      = resource("metadata.yaml")
 meta_inf      = resource("META-INF")
 
-dictionary = root_path / "data" / "dictionary.txt"
-supplemental_dictionary = root_path / "data" / "supplemental_dictionary.txt"
-all_misspelled = root_path / "data" / "all_misspelled.txt"
-comment_capitalization_exclusions = root_path / "data" / "comment_capitalization_exclusions.txt"
-mistaken_backquote_exclusions = root_path / "data" / "mistaken_backquote_exclusions.txt"
+data_path = root_path / "data"
+dictionary = data_path / "dictionary.txt"
+supplemental_dictionary = data_path / "supplemental_dictionary.txt"
+all_misspelled = data_path / "all_misspelled.txt"
+comment_capitalization_exclusions = data_path / "comment_capitalization_exclusions.txt"
+mistaken_backquote_exclusions = data_path / "mistaken_backquote_exclusions.txt"
 
 
 if __name__ == '__main__':
