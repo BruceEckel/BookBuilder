@@ -25,7 +25,7 @@ class ExclusionFile:
         self.exclusions = self.ef_path.read_text()
         if config.msgbreak in self.exclusions:
             print(f"{self.ef_path.name} Needs Editing!")
-            os.system(f"subl {self.ef_path}")
+            os.system(f"{config.editor} {self.ef_path}")
             sys.exit()
 
     def __call__(self, msg):
@@ -33,7 +33,7 @@ class ExclusionFile:
             ef.write(f"{self.error_reporter.md_path.name}:\n")
             ef.write(f"    {msg}\n")
             ef.write(config.msgbreak + "\n")
-        os.system(f"subl {self.ef_path}")
+        os.system(f"{config.editor} {self.ef_path}")
 
     def __contains__(self, item):
         return item in self.exclusions
@@ -56,8 +56,8 @@ def all_checks():
 
     if misspellings:
         Path(config.all_misspelled).write_text("\n".join(sorted(misspellings)))
-        os.system(f"subl {config.all_misspelled}")
-        os.system(f"subl {config.supplemental_dictionary}")
+        os.system(f"{config.editor} {config.all_misspelled}")
+        os.system(f"{config.editor} {config.supplemental_dictionary}")
 
 
 #################################################################
@@ -425,7 +425,7 @@ def validate_mistaken_backquotes(text, error_reporter):
     exclusions = config.mistaken_backquote_exclusions.read_text()
     if config.msgbreak in exclusions:
         print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
-        os.system(f"subl {config.mistaken_backquote_exclusions}")
+        os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
         sys.exit()
     lines = remove_listings(text).splitlines()
     for n, line in enumerate(lines):
@@ -437,4 +437,4 @@ def validate_mistaken_backquotes(text, error_reporter):
             error_reporter(f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
             with open(config.mistaken_backquote_exclusions, "a") as mbe:
                 mbe.write(error_reporter.msg)
-            os.system(f"subl {config.mistaken_backquote_exclusions}")
+            os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")

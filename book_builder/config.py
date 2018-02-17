@@ -11,6 +11,11 @@ from enum import Enum, unique
 sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
 from configuration import *
 
+if 'EDITOR' not in os.environ:
+    print("You must set the EDITOR environment variable to your favorite editor")
+    sys.exit()
+editor = os.environ['EDITOR']
+
 msgbreak = '-=' * 25
 
 

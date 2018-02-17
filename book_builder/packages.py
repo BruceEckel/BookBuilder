@@ -16,9 +16,9 @@ slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
 def unpackaged(source_dir=config.markdown_dir):
     print("Discovering examples that don't have packages ...")
     if not source_dir.exists():
-        return "Cannot find {}".format(source_dir)
+        return f"Cannot find {source_dir}"
     for sourceText in source_dir.glob("[0-9][0-9]_*.md"):
-        debug("--- {} ---".format(sourceText.name))
+        debug(f"--- {sourceText.name} ---")
         for group in re.findall("```(.*?)\n(.*?)\n```", sourceText.read_text(), re.DOTALL):
             listing = group[1].splitlines()
             title = listing[0]
@@ -30,13 +30,10 @@ def unpackaged(source_dir=config.markdown_dir):
                 debug(title)
                 fpath = title.split()[1].strip()
                 if package:
-                    print("{}: {} in package {}".format(
-                        sourceText.name, fpath, package))
+                    print(f"{sourceText.name}: {fpath} in package {package}")
                 else:
-                    print("{} : {} has no package".format(
-                        sourceText.name, fpath))
-                # print("should be in package {}".format(
-                #     atom_package_names[sourceText.name]))
+                    print(f"{sourceText.name} : {fpath} has no package")
+                # print(f"should be in package {atom_package_names[sourceText.name]}")
 
     return "Package check complete"
 
@@ -77,11 +74,11 @@ def contains_missing_package(lines):
 # def add_packages(target_dir=config.markdown_dir):
 #     print("Inserting package statements into examples that lack them")
 #     if not target_dir.exists():
-#         return "Cannot find {}".format(target_dir)
+#         return f"Cannot find {target_dir}"
 #     for md in target_dir.glob("[0-9][0-9]_*.md"):
 #         lines = md.read_text().splitlines()
 #         while contains_missing_package(lines):
-#             print("missing package in {}".format(md.name))
+#             print(f"missing package in {md.name}")
 #             lines = add_next_package(lines, md.name)
 
 #         md.write_text("\n".join(lines) + "\n")

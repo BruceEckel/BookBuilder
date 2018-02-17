@@ -19,14 +19,14 @@ def generate_example(source_file):
         out = result.stdout.decode('utf-8')
         err = result.stderr.decode('utf-8')
         if len(err):
-            print("{}".format(err))
+            print(f"{err}")
         return out, err
 
-    compiler_out, compiler_err = execute(["kotlinc", "{}".format(source_file.name)])
+    compiler_out, compiler_err = execute(["kotlinc", f"{source_file.name}"])
     if "error" in compiler_err:
         return None
     run_out, run_err = execute(
-        ["kotlin", "{}.{}".format(source_file.parent.stem, source_file.stem + "Kt")])
+        ["kotlin", f"{source_file.parent.stem}.{source_file.stem + "Kt"}"])
     if "error" in run_err:
         return None
 
@@ -40,10 +40,10 @@ def generate_example(source_file):
     run_out = ("\n".join([ln.rstrip() for ln in run_out.splitlines()])).strip()
     source_code = chop_output(source_file)
     if len(run_out):
-        source_code += "\n/* Output:\n{}\n*/".format(run_out.strip())
+        source_code += f"\n/* Output:\n{run_out.strip()}\n*/"
     generated_example = gen / source_file.name
     generated_example.write_text(source_code)
-    print("wrote {}".format(generated_example.relative_to(Path.cwd())))
+    print(f"wrote {generated_example.relative_to(Path.cwd())}")
     return generated_example
 
 
@@ -60,11 +60,11 @@ def reinsert_file(generated_file):
         text = md.read_text()
         if slug in text and package in text:
             updated_text, index = util.replace_code_in_text(generated, text)
-            # Write markdown file, open in sublime at index
+            # Write markdown file, open in editor at index
             md.write_text(updated_text + "\n")
-            os.system("subl {}:{}".format(md, index))
+            os.system(f"{config.editor} {md}:{index}")
             return
-    assert False, "No code found in any Markdown files for {}".format(generated_file)
+    assert False, f"No code found in any Markdown files for {generated_file}"
 
 
 def process_file(source_file, reinsert):
@@ -92,4 +92,4 @@ def generate(kotlin_files, reinsert, edit):
     generated_files = filter(None, [process_file(gf, reinsert) for gf in source_files])
     if edit:
         for gf in generated_files:
-            os.system("subl {}".format(gf))
+            os.system(f"{config.editor} {gf}")

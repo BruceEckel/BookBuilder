@@ -117,7 +117,7 @@ def epub_combine():
     "Combine Markdown files into a single file"
     click.echo(util.combine_markdown_files(
         config.combined_markdown, strip_notes=False))
-    os.system("subl {}".format(config.combined_markdown))
+    os.system(f"{config.editor}  {config.combined_markdown}")
 
 
 @epub.command('disassemble')
@@ -149,7 +149,7 @@ def epub_rename():
 # def epub_sample_markdown():
 #     "Combine sample Markdown files into a single Markdown file"
 #     click.echo(util.combine_sample_markdown(config.sample_markdown))
-#     os.system("subl {}".format(config.sample_markdown))
+#     os.system(f"{config.editor}  {config.sample_markdown}")
 
 
 # @epub.command('newStatus')

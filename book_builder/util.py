@@ -37,7 +37,7 @@ class ErrorReporter:
 
     def edit(self):
         if self.msg:
-            os.system(f"subl {self.md_path}")
+            os.system(f"{config.editor} {self.md_path}")
 
 
 
@@ -188,18 +188,18 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     # if diff:
     #     print("Old names not in new names:")
     #     for d in diff:
-    #         print("   {}".format(d))
+    #         print(f"   {d}")
     #     print("---- Near matches: ----")
     #     for d in diff:
-    #         print("{}: {}".format(d, difflib.get_close_matches(d, new_names)))
+    #         print(f"{d}: {difflib.get_close_matches(d, new_names)}")
     #     return "Disassembly failed"
 
     # Notify if the number of chapters are different
     # len_old_names = len(book_builder.recent_atom_names.anames)
     # len_new_names = len(names) + 1  # for Front
     # if len_old_names != len_new_names:
-    #     print("Number of old names: {}".format(len_old_names))
-    #     print("Number of new names: {}".format(len_new_names))
+    #     print(f"Number of old names: {len_old_names}")
+    #     print(f"Number of new names: {len_new_names}")
 
     if not target_dir.exists():
         target_dir.mkdir()
