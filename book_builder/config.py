@@ -69,6 +69,9 @@ meta_inf      = resource("META-INF")
 dictionary = root_path / "data" / "dictionary.txt"
 supplemental_dictionary = root_path / "data" / "supplemental_dictionary.txt"
 all_misspelled = root_path / "data" / "all_misspelled.txt"
+comment_capitalization_exclusions = root_path / "data" / "comment_capitalization_exclusions.txt"
+mistaken_backquote_exclusions = root_path / "data" / "mistaken_backquote_exclusions.txt"
+
 
 if __name__ == '__main__':
     "Check to see if identifiers are used in this project"

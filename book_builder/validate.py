@@ -120,8 +120,7 @@ def find_uncapitalized_comment(text):
 
 
 def validate_capitalized_comments(text, error_reporter):
-    with (config.root_path / "data" / "comment_capitalization_exclusions.txt").open() as f:
-        exclusions = f.read()
+    exclusions = config.comment_capitalization_exclusions.read_text()
     uncapped = find_uncapitalized_comment(text)
     if uncapped and uncapped not in exclusions:
         error_reporter(f"Uncapitalized comment: {uncapped}")
@@ -298,8 +297,13 @@ cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
 
 titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
 
+
+def remove_listings(text):
+    return re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
+
+
 def validate_cross_links(text, error_reporter):
-    text = re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
+    text = remove_listings(text)
     explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
     explicits = [cross_link.findall(e)[0][1:-1] for e in explicits]
     candidates = [c.replace("\n", " ")[1:-1] for c in cross_link.findall(text)]
@@ -376,6 +380,25 @@ def test_markdown_individually():
         for f in files:
             combined.write(f.read_text() + "\n")
     pandoc_test(Path('combined.md'))
+
+
+### Test files individually to find problem characters
+
+def validate_mistaken_backquotes(text, error_reporter):
+    "Discover when backquotes are messed up by paragraph reformatting"
+    if not config.mistaken_backquote_exclusions.exists():
+        config.mistaken_backquote_exclusions.write_text(" ")
+    exclusions = config.mistaken_backquote_exclusions.read_text()
+    lines = remove_listings(text).splitlines()
+    for n, line in enumerate(lines):
+        if n+1 >= len(lines):
+            break
+        if line.startswith("`") and lines[n+1].startswith("`"):
+            err_msg = f"{'-'*35}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n"
+            error_reporter(err_msg)
+            with open(config.mistaken_backquote_exclusions, "a") as mbe:
+                mbe.write(err_msg)
+            os.system(f"subl {config.mistaken_backquote_exclusions}")
 
 
 ### Capture all defined validators
