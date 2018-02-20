@@ -41,6 +41,13 @@ def pandoc_epub_command(
     os.system(command)
 
 
+def retain_files(target_dir, extension):
+    """
+    Delete all files except those with 'extension'
+    """
+    pass
+
+
 def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
     """
     Pandoc markdown to epub

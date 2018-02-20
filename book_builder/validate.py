@@ -11,7 +11,8 @@ import book_builder.config as config
 from book_builder.util import create_markdown_filename
 from book_builder.util import ErrorReporter
 from book_builder.util import clean
-
+def trace(_): pass
+# def trace(msg): print(msg)
 misspellings = set()
 
 
@@ -26,7 +27,7 @@ class ExclusionFile:
         if config.msgbreak in self.exclusions:
             print(f"{self.ef_path.name} Needs Editing!")
             os.system(f"{config.editor} {self.ef_path}")
-            sys.exit()
+            # sys.exit()
 
     def __call__(self, msg):
         with open(self.ef_path, "a") as ef:
@@ -38,6 +39,9 @@ class ExclusionFile:
     def __contains__(self, item):
         return item in self.exclusions
 
+    def __iter__(self):
+        return self.exclusions.splitlines().__iter__()
+
 
 def all_checks():
     "Multiple tests to find problems in the book"
@@ -46,10 +50,11 @@ def all_checks():
     g = dict(sorted(globals().items()))
     validators = [g[v] for v in g if v.startswith("validate_")]
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
+        # print(md.name)
         error_reporter = ErrorReporter(md)
         text = md.read_text(encoding="UTF-8")
         for val in validators:
-            # print(f"{val.__name__}")
+            trace(f"{val.__name__}")
             val(text, error_reporter)
         error_reporter.show()
         error_reporter.edit()
@@ -270,13 +275,14 @@ def strip_comments_from_code(listing, error_reporter):
         words += [word for word in remove_nonletters(line).split()]
     return words
 
-
-def validate_ticked_phrases(text, error_reporter):
+### Temporarily disabled:
+def _validate_ticked_phrases(text, error_reporter):
     exclusions = ExclusionFile("validate_ticked_phrases.txt", error_reporter)
     stripped_listings = [strip_comments_from_code(listing, error_reporter)
         for listing in extract_listings(text)]
     pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
-    pieces = pieces.union(single_tick_dictionary)
+    # pieces = pieces.union(single_tick_dictionary)
+    pieces = pieces.union(exclusions)
     raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
     single_ticks = [remove_nonletters(t[1:-1]).split() for t in raw_single_ticks]
     single_ticks = {item for sublist in single_ticks for item in sublist} # Flatten list
@@ -289,7 +295,7 @@ def validate_ticked_phrases(text, error_reporter):
             err_msg += f"Not in examples: {nie}\n"
             for rst in raw_single_ticks:
                 if nie in rst:
-                    ef(nie)
+                    exclusions(nie)
                     err_msg += f"\t{rst}\n"
         error_reporter(err_msg)
 
