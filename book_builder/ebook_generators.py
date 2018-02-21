@@ -13,6 +13,7 @@ from book_builder.util import clean
 from book_builder.util import regenerate_ebook_build_dir
 from book_builder.util import combine_markdown_files
 from book_builder.util import combine_sample_markdown
+from book_builder.util import retain_files
 
 
 def pandoc_epub_command(
@@ -39,13 +40,6 @@ def pandoc_epub_command(
     if highlighting:
         command += f" --highlight-style={highlighting} "
     os.system(command)
-
-
-def retain_files(target_dir, extension):
-    """
-    Delete all files except those with 'extension'
-    """
-    pass
 
 
 def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
@@ -97,6 +91,7 @@ def convert_to_epub():
     generate_epub_files(config.epub_build_dir, config.epub_md, BookType.EPUB)
     # fix_for_apple(epub_name())
     # fix_for_apple(epub_name("-Sample"))
+    retain_files(config.epub_build_dir, ["epub"])
     return f"\n{config.epub_build_dir.name} Completed"
 
 
@@ -138,6 +133,7 @@ def convert_to_mobi():
         os.system(cmd)
         show_important_kindlegen_output(epf.stem)
         # os.system(f"start AtomicKotlin-monochrome.mobi")
+    retain_files(config.mobi_build_dir, ["mobi"])
     return f"{config.mobi_build_dir.name} Completed"
 
 
@@ -187,4 +183,5 @@ def create_release():
     files = glob.glob("*")
     zzip(config.base_name, [f for f in files if not "Sample" in f])
     zzip(config.base_name + "Sample", [f for f in files if "Sample" in f])
+    retain_files(config.release_dir, ["zip"])
     return f"\n{config.release_dir} Completed"

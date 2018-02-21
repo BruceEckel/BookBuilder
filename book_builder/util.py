@@ -7,6 +7,7 @@ import os
 import re
 import time
 from pathlib import Path
+from typing import List
 from distutils.dir_util import copy_tree
 from collections import OrderedDict
 import textwrap
@@ -73,6 +74,25 @@ def clean(dir_to_remove):
         Are you inside that directory, or using a file inside it?
         """)
         print(e)
+
+
+def retain_files(target_dir: Path, extensions: List[str]):
+    """
+    Delete all files except those with 'extensions'
+    """
+    all_ = set(target_dir.glob("*"))
+    keep = {f for f in all_ for ext in extensions if f.name.endswith(ext)}
+    remove = all_ - keep
+    # for k in keep:
+    #     print(k.name)
+    for r in remove:
+        if r.is_dir():
+            clean(r)
+        if r.is_file():
+            r.unlink()
+
+if __name__ == '__main__':
+    retain_files(config.mobi_build_dir, ["mobi"])
 
 
 def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.EPUB):
