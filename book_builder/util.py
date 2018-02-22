@@ -15,33 +15,6 @@ import book_builder.config as config
 from book_builder.config import BookType
 
 
-class ErrorReporter:
-    """
-    Pass into functions to capture errors in Markdown files.
-    Used by validate.py
-    """
-    def __init__(self, md_path):
-        self.md_path = md_path
-        self.titled = False
-        self.msg = ""
-
-    def __call__(self, msg):
-        if not self.titled:
-            self.msg += self.md_path.name + "\n"
-            self.titled = True # Print only once
-        self.msg += f"    {msg}"
-        return self.msg
-
-    def show(self):
-        if self.msg:
-            print(self.msg)
-
-    def edit(self):
-        if self.msg:
-            os.system(f"{config.editor} {self.md_path}")
-
-
-
 def create_markdown_filename(h1):
     fn = h1.replace(": ", "_")
     fn = fn.replace(" ", "_") + ".md"
