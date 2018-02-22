@@ -9,22 +9,58 @@ import pprint
 from pathlib import Path
 import book_builder.config as config
 from book_builder.util import create_markdown_filename
-from book_builder.util import ErrorReporter
 from book_builder.util import clean
 def trace(_): pass
 # def trace(msg): print(msg)
 misspellings = set()
 
 
+class ErrorReporter:
+    """
+    Pass into functions to capture errors in Markdown files.
+    Used by validate.py
+    """
+    def __init__(self, md_path):
+        self.md_path = md_path
+        self.titled = False
+        self.msg = ""
+        self.line_number = None
+
+    def __call__(self, msg, line_number = None):
+        if not self.titled:
+            self.msg += self.md_path.name + "\n"
+            self.titled = True # Print only once
+        self.msg += f"    {msg}"
+        if line_number:
+            self.line_number = line_number
+        return self.msg
+
+    def show(self):
+        if self.msg:
+            print(self.msg)
+
+    def edit(self):
+        if self.msg:
+            if self.line_number:
+                os.system(f"{config.editor} {self.md_path}:{self.line_number}")
+            else:
+                os.system(f"{config.editor} {self.md_path}")
+
+
 class ExclusionFile:
     "Maintains the exclusion file for a particular validate function"
+    ef_names = {}
     def __init__(self, exclusion_file_name, error_reporter):
+        if exclusion_file_name not in ExclusionFile.ef_names:
+            ExclusionFile.ef_names[exclusion_file_name] = "False" # Not reported
+        self.needs_edit = False
         self.ef_path = config.data_path / exclusion_file_name
         self.error_reporter = error_reporter
         if not self.ef_path.exists():
             self.ef_path.write_text("")
         self.exclusions = self.ef_path.read_text()
-        if config.msgbreak in self.exclusions:
+        if config.msgbreak in self.exclusions and not ExclusionFile.ef_names[exclusion_file_name]:
+            ExclusionFile.ef_names[exclusion_file_name] = True
             print(f"{self.ef_path.name} Needs Editing!")
             os.system(f"{config.editor} {self.ef_path}")
             # sys.exit()
@@ -444,3 +480,21 @@ def validate_mistaken_backquotes(text, error_reporter):
             with open(config.mistaken_backquote_exclusions, "a") as mbe:
                 mbe.write(error_reporter.msg)
             os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
+
+
+### Test for println() without /* Output:
+
+OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
+
+def validate_println_output(text, error_reporter):
+    exclusions = ExclusionFile("validate_println_output.txt", error_reporter)
+    lines = text.splitlines()
+    for listing in re.findall("```kotlin(.*?)```", text, flags=re.DOTALL):
+        slug = listing.strip().splitlines()[0]
+        if "println" in listing and not any([ok in listing for ok in OK]):
+            if slug in exclusions:
+                continue # Next listing
+            for n, line in enumerate(lines):
+                if slug in line:
+                    exclusions(error_reporter(f"println without /* Output:\n{slug}\n", n))
+                    break
