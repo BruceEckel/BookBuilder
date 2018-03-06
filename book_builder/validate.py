@@ -100,7 +100,7 @@ def all_checks():
         error_reporter = ErrorReporter(md)
         text = md.read_text(encoding="UTF-8")
         for val in validators:
-            val.trace()
+            # val.trace()
             val.test(text, error_reporter)
         error_reporter.show()
         error_reporter.edit()
