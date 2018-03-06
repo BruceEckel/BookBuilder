@@ -123,9 +123,9 @@ def epub_combine():
 @epub.command('disassemble')
 @click.option('--test', is_flag=True,
               help='Unpack to "test" directory instead of overwriting Markdown.')
-def epub_disassemble(test_flag):
+def epub_disassemble(test):
     "Split combined into atom-numbered files"
-    if test_flag:
+    if test:
         if config.test_dir.exists():
             click.echo(util.clean(config.test_dir))
         click.echo(util.disassemble_combined_markdown_file(config.test_dir))

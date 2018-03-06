@@ -94,15 +94,15 @@ task run (dependsOn: [
 
 
 def report_duplicate_file_names(*patterns):
-    stems = []
+    fnames = []
     for pattern in patterns:
-        stems += [kt.stem for kt in config.example_dir.rglob(pattern)]
+        fnames += [kt.name for kt in config.example_dir.rglob(pattern)]
     # from pprint import pprint
-    # pprint(stems)
-    duplicates = [x.strip() for x in stems if stems.count(x) >= 2]
+    # pprint(fnames)
+    duplicates = [x.strip() for x in fnames if fnames.count(x) >= 2]
     if duplicates:
         dupstring = '\n\t'.join(duplicates)
-        print(f"ERROR: Duplicate names: \n{dupstring}")
+        print(f"ERROR: Duplicate code file names: \n{dupstring}")
         sys.exit(1)
 
 
