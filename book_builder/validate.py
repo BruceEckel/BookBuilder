@@ -64,7 +64,6 @@ class ExclusionFile:
             ExclusionFile.ef_names[exclusion_file_name] = True
             print(f"{self.ef_path.name} Needs Editing!")
             os.system(f"{config.editor} {self.ef_path}")
-            # sys.exit()
 
     def __call__(self, msg):
         with open(self.ef_path, "a") as ef:
@@ -91,18 +90,18 @@ class Validator(ABC):
 
 
 def all_checks():
-    "Multiple tests to find problems in the book"
+    "Run all tests to find problems in the book"
     print(f"Validating {config.markdown_dir}")
     assert config.markdown_dir.exists(), f"Cannot find {config.markdown_dir}"
-    g = dict(sorted(globals().items()))
-    validators = [g[v] for v in g if v.startswith("validate_")]
+    # Create an object for each Validator:
+    validators = [v() for v in globals()['Validator'].__subclasses__()]
     for md in config.markdown_dir.glob("[0-9]*_*.md"):
         # print(md.name)
         error_reporter = ErrorReporter(md)
         text = md.read_text(encoding="UTF-8")
         for val in validators:
-            trace(f"{val.__name__}")
-            val(text, error_reporter)
+            val.trace()
+            val.test(text, error_reporter)
         error_reporter.show()
         error_reporter.edit()
 
@@ -112,19 +111,24 @@ def all_checks():
         os.system(f"{config.editor} {config.supplemental_dictionary}")
 
 
-#################################################################
-############## Individual validation functions ##################
-#################################################################
+### Utilities ###
 
-### Ensure there's no gap between ``` and language_name
+def remove_listings(text):
+    return re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
+
+def extract_listings(text):
+    return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL)]
+
+### Validators ###
 
 
-def validate_tag_no_gap(text, error_reporter):
-    if re.search(f"``` +{config.language_name}", text):
-        error_reporter(f"Contains spaces between ``` and {config.language_name}")
+class TagNoGap(Validator):
+    "Ensure there's no gap between ``` and language_name"
 
+    def test(self, text, error_reporter):
+        if re.search(f"``` +{config.language_name}", text):
+            error_reporter(f"Contains spaces between ``` and {config.language_name}")
 
-### Check for code fragments that should be turned into examples
 
 slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
 
@@ -142,30 +146,31 @@ def examples_without_sluglines(text, exclusions):
     return False
 
 
-def validate_complete_examples(text, error_reporter):
-    exclusions = ExclusionFile("validate_complete_examples.txt", error_reporter)
-    noslug = examples_without_sluglines(text, exclusions)
-    if noslug:
-        exclusions(error_reporter(
-            f"Contains compileable example(s) without a slugline:\n{noslug}"))
+class CompleteExamples(Validator):
+    "Check for code fragments that should be turned into examples"
+
+    def test(self, text, error_reporter):
+        exclusions = ExclusionFile("validate_complete_examples.txt", error_reporter)
+        noslug = examples_without_sluglines(text, exclusions)
+        if noslug:
+            exclusions(error_reporter(
+                f"Contains compileable example(s) without a slugline:\n{noslug}"))
 
 
-### Ensure atom titles conform to standard and agree with file names
+class FilenamesAndTitles(Validator):
+    "Ensure atom titles conform to standard and agree with file names"
 
-def validate_filenames_and_titles(text, error_reporter):
-    if "Front.md" in error_reporter.md_path.name:
-        return
-    title = text.splitlines()[0]
-    if create_markdown_filename(title) != error_reporter.md_path.name[4:]:
-        error_reporter(f"Atom Title: {title}")
-    if " and " in title:
-        error_reporter(f"'and' in title should be '&': {title}")
+    def test(self, text, error_reporter):
+        if "Front.md" in error_reporter.md_path.name:
+            return
+        title = text.splitlines()[0]
+        if create_markdown_filename(title) != error_reporter.md_path.name[4:]:
+            error_reporter(f"Atom Title: {title}")
+        if " and " in title:
+            error_reporter(f"'and' in title should be '&': {title}")
 
 
-### Check for un-capitalized comments
-
-def extract_listings(text):
-    return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL)]
+###
 
 
 def parse_comment_block(n, lines):
@@ -199,14 +204,17 @@ def find_uncapitalized_comment(text):
     return False
 
 
-def validate_capitalized_comments(text, error_reporter):
-    exclusions = config.comment_capitalization_exclusions.read_text()
-    uncapped = find_uncapitalized_comment(text)
-    if uncapped and uncapped not in exclusions:
-        error_reporter(f"Uncapitalized comment: {uncapped}")
+class CapitalizedComments(Validator):
+    "Check for un-capitalized comments"
+
+    def test(self, text, error_reporter):
+        exclusions = config.comment_capitalization_exclusions.read_text()
+        uncapped = find_uncapitalized_comment(text)
+        if uncapped and uncapped not in exclusions:
+            error_reporter(f"Uncapitalized comment: {uncapped}")
 
 
-### Check for inconsistent indentation
+###
 
 def inconsistent_indentation(lines):
     listing_name = lines[0]
@@ -241,61 +249,68 @@ def find_inconsistent_indentation(text):
     return False
 
 
-def validate_listing_indentation(text, error_reporter):
-    bad_indent = find_inconsistent_indentation(text)
-    if bad_indent:
-        error_reporter(f"Inconsistent indentation: {bad_indent}")
+class ListingIndentation(Validator):
+    "Check for inconsistent indentation"
+
+    def test(self, text, error_reporter):
+        bad_indent = find_inconsistent_indentation(text)
+        if bad_indent:
+            error_reporter(f"Inconsistent indentation: {bad_indent}")
 
 
-### Check for tabs
+class NoTabs(Validator):
+    "Check for tabs"
 
-def validate_no_tabs(text, error_reporter):
-    if "\t" in text:
-        error_reporter("Tab found!")
-
-
-### Check for sluglines that don't match the format
-
-def validate_example_sluglines(text, error_reporter):
-    exclusions = ExclusionFile("validate_example_sluglines.txt", error_reporter)
-    for listing in extract_listings(text):
-        lines = listing.splitlines()
-        slug = lines[0]
-        if not slug.startswith(config.start_comment):
-            continue # Improper code fragments caught elsewhere
-        if not slug.startswith(config.start_comment + " "):
-            error_reporter(f"Bad first line (no space after beginning of comment):\n\t{slug}")
-            continue
-        slug = slug.split(None, 1)[1]
-        if "/" not in slug and slug not in exclusions:
-            exclusions(error_reporter(f"Missing directory in:\n{slug}"))
+    def test(self, text, error_reporter):
+        if "\t" in text:
+            error_reporter("Tab found!")
 
 
-### Check for package names with capital letters
+class ExampleSluglines(Validator):
+    "Check for sluglines that don't match the format"
 
-def  validate_package_names(text, error_reporter):
-    for listing in extract_listings(text):
-        package_decl = [line for line in listing.splitlines() if line.startswith("package ")]
-        if not package_decl:
-            continue
-        # print(package_decl)
-        if bool(re.search('([A-Z])', package_decl[0])):
-            error_reporter(f"Capital letter in package name:\n\t{package_decl}")
-
-
-### Check code listing line widths
-
-def validate_code_listing_line_widths(text, error_reporter):
-    for listing in extract_listings(text):
-        lines = listing.splitlines()
-        if not lines[0].startswith("// "):
-            continue
-        for n, line in enumerate(lines):
-            if len(line.rstrip()) > config.code_width:
-                error_reporter(f"Line {n} too wide in {lines[0]}")
+    def test(self, text, error_reporter):
+        exclusions = ExclusionFile("validate_example_sluglines.txt", error_reporter)
+        for listing in extract_listings(text):
+            lines = listing.splitlines()
+            slug = lines[0]
+            if not slug.startswith(config.start_comment):
+                continue # Improper code fragments caught elsewhere
+            if not slug.startswith(config.start_comment + " "):
+                error_reporter(f"Bad first line (no space after beginning of comment):\n\t{slug}")
+                continue
+            slug = slug.split(None, 1)[1]
+            if "/" not in slug and slug not in exclusions:
+                exclusions(error_reporter(f"Missing directory in:\n{slug}"))
 
 
-### Spell-check single-ticked items against compiled code
+class PackageNames(Validator):
+    "Check for package names with capital letters"
+
+    def test(self, text, error_reporter):
+        for listing in extract_listings(text):
+            package_decl = [line for line in listing.splitlines() if line.startswith("package ")]
+            if not package_decl:
+                continue
+            # print(package_decl)
+            if bool(re.search('([A-Z])', package_decl[0])):
+                error_reporter(f"Capital letter in package name:\n\t{package_decl}")
+
+
+class CodeListingLineWidths(Validator):
+    "Check code listing line widths"
+
+    def test(self, text, error_reporter):
+        for listing in extract_listings(text):
+            lines = listing.splitlines()
+            if not lines[0].startswith("// "):
+                continue
+            for n, line in enumerate(lines):
+                if len(line.rstrip()) > config.code_width:
+                    error_reporter(f"Line {n} too wide in {lines[0]}")
+
+
+###
 
 single_tick_dictionary = set(Path(
     config.root_path / "data" / "single_tick_dictionary.txt")
@@ -323,62 +338,72 @@ def strip_comments_from_code(listing, error_reporter):
         words += [word for word in remove_nonletters(line).split()]
     return words
 
+
 ### Temporarily disabled:
-def _validate_ticked_phrases(text, error_reporter):
-    exclusions = ExclusionFile("validate_ticked_phrases.txt", error_reporter)
-    stripped_listings = [strip_comments_from_code(listing, error_reporter)
-        for listing in extract_listings(text)]
-    pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
-    # pieces = pieces.union(single_tick_dictionary)
-    pieces = pieces.union(exclusions)
-    raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
-    single_ticks = [remove_nonletters(t[1:-1]).split() for t in raw_single_ticks]
-    single_ticks = {item for sublist in single_ticks for item in sublist} # Flatten list
-    not_in_examples = single_ticks.difference(pieces)
-    if not_in_examples:
-        err_msg = ""
-        for nie in not_in_examples:
-            if nie in exclusions:
-                continue
-            err_msg += f"Not in examples: {nie}\n"
-            for rst in raw_single_ticks:
-                if nie in rst:
-                    exclusions(nie)
-                    err_msg += f"\t{rst}\n"
-        error_reporter(err_msg)
+class TickedPhrases: # (Validator):
+    "Spell-check single-ticked items against compiled code"
+
+    def test(self, text, error_reporter):
+        exclusions = ExclusionFile("validate_ticked_phrases.txt", error_reporter)
+        stripped_listings = [strip_comments_from_code(listing, error_reporter)
+            for listing in extract_listings(text)]
+        pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
+        # pieces = pieces.union(single_tick_dictionary)
+        pieces = pieces.union(exclusions)
+        raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
+        single_ticks = [remove_nonletters(t[1:-1]).split() for t in raw_single_ticks]
+        single_ticks = {item for sublist in single_ticks for item in sublist} # Flatten list
+        not_in_examples = single_ticks.difference(pieces)
+        if not_in_examples:
+            err_msg = ""
+            for nie in not_in_examples:
+                if nie in exclusions:
+                    continue
+                err_msg += f"Not in examples: {nie}\n"
+                for rst in raw_single_ticks:
+                    if nie in rst:
+                        exclusions(nie)
+                        err_msg += f"\t{rst}\n"
+            error_reporter(err_msg)
 
 
-### Spell-check everything
+###
 
 dictionary = set(config.dictionary.read_text().splitlines()).union(
     set(config.supplemental_dictionary.read_text().splitlines()))
 
-def validate_full_spellcheck(text, error_reporter):
-    words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
-    misspelled = words - dictionary
-    if '' in misspelled:
-        misspelled.remove('')
-    if len(misspelled):
-        global misspellings
-        misspellings = misspellings.union(misspelled)
-        error_reporter(f"Spelling Errors: {pprint.pformat(misspelled)}")
+class FullSpellcheck(Validator):
+    "Spell-check everything"
+
+    def test(self, text, error_reporter):
+        words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
+        misspelled = words - dictionary
+        if '' in misspelled:
+            misspelled.remove('')
+        if len(misspelled):
+            global misspellings
+            misspellings = misspellings.union(misspelled)
+            error_reporter(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
-### Ensure there are no hanging em-dashes or hyphens
+###
 
 hanging_emdash = re.compile("[^-]+---$")
 hanging_hyphen = re.compile("[^-]+-$")
 
-def validate_hanging_hyphens(text, error_reporter):
-    for line in text.splitlines():
-        line = line.rstrip()
-        if hanging_emdash.match(line):
-            error_reporter(f"Hanging emdash: {line}")
-        if hanging_hyphen.match(line):
-            error_reporter(f"Hanging hyphen: {line}")
+class HangingHyphens(Validator):
+    "Ensure there are no hanging em-dashes or hyphens"
+
+    def test(self, text, error_reporter):
+        for line in text.splitlines():
+            line = line.rstrip()
+            if hanging_emdash.match(line):
+                error_reporter(f"Hanging emdash: {line}")
+            if hanging_hyphen.match(line):
+                error_reporter(f"Hanging hyphen: {line}")
 
 
-### Check for invalid cross-links
+###
 
 explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
 cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
@@ -386,63 +411,119 @@ cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
 titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
 
 
-def remove_listings(text):
-    return re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
+class CrossLinks(Validator):
+    "Check for invalid cross-links"
+
+    def test(self, text, error_reporter):
+        text = remove_listings(text)
+        explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
+        explicits = [cross_link.findall(e)[0][1:-1] for e in explicits]
+        candidates = [c.replace("\n", " ")[1:-1] for c in cross_link.findall(text)]
+        cross_links = []
+        for c in candidates:
+            if c in explicits: continue
+            if len(c) < 4: continue
+            if c.endswith(".com]"): continue
+            if any([ch in c for ch in """,<'"()$%/"""]): continue
+            cross_links.append(c)
+        unresolved = [cl for cl in cross_links if cl not in titles]
+        if unresolved:
+            error_reporter(f"""Unresolved cross-links:
+            {pprint.pformat(unresolved)}""")
 
 
-def validate_cross_links(text, error_reporter):
-    text = remove_listings(text)
-    explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
-    explicits = [cross_link.findall(e)[0][1:-1] for e in explicits]
-    candidates = [c.replace("\n", " ")[1:-1] for c in cross_link.findall(text)]
-    cross_links = []
-    for c in candidates:
-        if c in explicits: continue
-        if len(c) < 4: continue
-        if c.endswith(".com]"): continue
-        if any([ch in c for ch in """,<'"()$%/"""]): continue
-        cross_links.append(c)
-    unresolved = [cl for cl in cross_links if cl not in titles]
-    if unresolved:
-        error_reporter(f"""Unresolved cross-links:
-        {pprint.pformat(unresolved)}""")
+class FunctionDescriptions(Validator):
+    "Make sure functions use parentheses, not 'function'"
+
+    def test(self, text, error_reporter):
+        func_descriptions = \
+            re.findall("`[^(`]+?`\s+function", text) + \
+            re.findall("function\s+`[^(`]+?`", text)
+        if func_descriptions:
+            err_msg = "Function descriptions missing '()':\n"
+            for f in func_descriptions:
+                f = f.replace("\n", " ").strip()
+                err_msg += f"\t{f}\n"
+            error_reporter(err_msg.strip())
 
 
-### Make sure functions use parentheses, not 'function'
+class PunctuationInsideQuotes(Validator):
+    "Punctuation inside quotes"
 
-def validate_function_descriptions(text, error_reporter):
-    func_descriptions = \
-        re.findall("`[^(`]+?`\s+function", text) + \
-        re.findall("function\s+`[^(`]+?`", text)
-    if func_descriptions:
-        err_msg = "Function descriptions missing '()':\n"
-        for f in func_descriptions:
-            f = f.replace("\n", " ").strip()
-            err_msg += f"\t{f}\n"
-        error_reporter(err_msg.strip())
+    def test(self, text, error_reporter):
+        text = re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
+        text = re.sub("`.*?`", "", text, flags=re.DOTALL)
+        outside_commas = re.findall("\",", text)
+        if outside_commas:
+            error_reporter("commas outside quotes")
+        outside_periods = re.findall("\"\.", text)
+        if outside_periods:
+            error_reporter("periods outside quotes")
 
 
-### Punctuation inside quotes
+class Characters(Validator):
+    "Check for bad characters"
 
-def validate_punctuation_inside_quotes(text, error_reporter):
-    text = re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
-    text = re.sub("`.*?`", "", text, flags=re.DOTALL)
-    outside_commas = re.findall("\",", text)
-    if outside_commas:
-        error_reporter("commas outside quotes")
-    outside_periods = re.findall("\"\.", text)
-    if outside_periods:
-        error_reporter("periods outside quotes")
+    bad_chars = ['’']
 
-### Check for bad characters:
+    def test(self, text, error_reporter):
+        for n, line in enumerate(text.splitlines()):
+            if any([bad_char in line for bad_char in Characters.bad_chars]):
+                error_reporter(f"line {n} contains bad character:\n{line}")
 
-bad_chars = ['’']
 
-def validate_characters(text, error_reporter):
-    for n, line in enumerate(text.splitlines()):
-        if any([bad_char in line for bad_char in bad_chars]):
-            error_reporter(f"line {n} contains bad character:\n{line}")
+class MistakenBackquotes(Validator):
+    "Discover when backquotes are messed up by paragraph reformatting"
 
+    def test(self, text, error_reporter):
+        if not config.mistaken_backquote_exclusions.exists():
+            config.mistaken_backquote_exclusions.write_text("")
+        exclusions = config.mistaken_backquote_exclusions.read_text()
+        if config.msgbreak in exclusions:
+            print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
+            os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
+            sys.exit()
+        lines = remove_listings(text).splitlines()
+        for n, line in enumerate(lines):
+            if n+1 >= len(lines):
+                break
+            if line.startswith("`") and lines[n+1].startswith("`"):
+                if line in exclusions and lines[n+1] in exclusions:
+                    continue
+                error_reporter(
+                    f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
+                with open(config.mistaken_backquote_exclusions, "a") as mbe:
+                    mbe.write(error_reporter.msg)
+                os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
+
+
+class PrintlnOutput(Validator):
+    "Test for println() without /* Output:"
+
+    OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
+
+    def test(self, text, error_reporter):
+        exclusions = ExclusionFile("validate_println_output.txt", error_reporter)
+        lines = text.splitlines()
+        for listing in re.findall("```kotlin(.*?)```", text, flags=re.DOTALL):
+            slug = listing.strip().splitlines()[0]
+            if "println" in listing and not any([ok in listing for ok in PrintlnOutput.OK]):
+                if slug in exclusions:
+                    continue # Next listing
+                for n, line in enumerate(lines):
+                    if slug in line:
+                        exclusions(error_reporter(f"println without /* Output:\n{slug}\n", n))
+                        break
+
+
+class JavaPackageDirectory(Validator):
+    "Test for Java package name and directory name"
+
+    def test(self, text, error_reporter):
+        pass
+
+
+##################### Vestigial ######################
 
 ### Test files individually to find problem characters
 
@@ -470,50 +551,3 @@ def test_markdown_individually():
     pandoc_test(Path('combined.md'))
 
 
-### Test files individually to find problem characters
-
-def validate_mistaken_backquotes(text, error_reporter):
-    "Discover when backquotes are messed up by paragraph reformatting"
-    if not config.mistaken_backquote_exclusions.exists():
-        config.mistaken_backquote_exclusions.write_text("")
-    exclusions = config.mistaken_backquote_exclusions.read_text()
-    if config.msgbreak in exclusions:
-        print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
-        os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
-        sys.exit()
-    lines = remove_listings(text).splitlines()
-    for n, line in enumerate(lines):
-        if n+1 >= len(lines):
-            break
-        if line.startswith("`") and lines[n+1].startswith("`"):
-            if line in exclusions and lines[n+1] in exclusions:
-                continue
-            error_reporter(
-                f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
-            with open(config.mistaken_backquote_exclusions, "a") as mbe:
-                mbe.write(error_reporter.msg)
-            os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
-
-
-### Test for println() without /* Output:
-
-OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
-
-def validate_println_output(text, error_reporter):
-    exclusions = ExclusionFile("validate_println_output.txt", error_reporter)
-    lines = text.splitlines()
-    for listing in re.findall("```kotlin(.*?)```", text, flags=re.DOTALL):
-        slug = listing.strip().splitlines()[0]
-        if "println" in listing and not any([ok in listing for ok in OK]):
-            if slug in exclusions:
-                continue # Next listing
-            for n, line in enumerate(lines):
-                if slug in line:
-                    exclusions(error_reporter(f"println without /* Output:\n{slug}\n", n))
-                    break
-
-
-### Test for Java package name and directory name
-
-def validate_java_package_directory(text, error_reporter):
-    pass
