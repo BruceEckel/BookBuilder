@@ -30,7 +30,7 @@ class ErrorReporter:
         if not self.titled:
             self.msg += self.md_path.name + "\n"
             self.titled = True # Print only once
-        self.msg += f"    {msg}"
+        self.msg += f"    {msg}\n"
         if line_number:
             self.line_number = line_number
         return self.msg
@@ -118,7 +118,7 @@ def validate_tag_no_gap(text, error_reporter):
 
 slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
 
-def examples_without_sluglines(text):
+def examples_without_sluglines(text, exclusions):
     for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
         listing = group[1]
         lines = listing.splitlines()
@@ -133,9 +133,10 @@ def examples_without_sluglines(text):
 
 
 def validate_complete_examples(text, error_reporter):
-    noslug = examples_without_sluglines(text)
+    exclusions = ExclusionFile("validate_complete_examples.txt", error_reporter)
+    noslug = examples_without_sluglines(text, exclusions)
     if noslug:
-        error_reporter(f"Contains compileable example(s) without a slugline: {noslug}")
+        error_reporter(f"Contains compileable example(s) without a slugline:\n{noslug}")
 
 
 ### Ensure atom titles conform to standard and agree with file names
