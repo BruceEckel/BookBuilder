@@ -7,6 +7,7 @@ import sys
 import shutil
 import pprint
 from pathlib import Path
+from abc import ABC, abstractmethod
 import book_builder.config as config
 from book_builder.util import create_markdown_filename
 from book_builder.util import clean
@@ -79,6 +80,16 @@ class ExclusionFile:
         return self.exclusions.splitlines().__iter__()
 
 
+class Validator(ABC):
+
+    @abstractmethod
+    def test(self, text, error_reporter):
+        pass
+
+    def trace(self):
+        print(f"{self.__class__.__name__}")
+
+
 def all_checks():
     "Multiple tests to find problems in the book"
     print(f"Validating {config.markdown_dir}")
@@ -105,7 +116,6 @@ def all_checks():
 ############## Individual validation functions ##################
 #################################################################
 
-
 ### Ensure there's no gap between ``` and language_name
 
 
@@ -124,11 +134,11 @@ def examples_without_sluglines(text, exclusions):
         lines = listing.splitlines()
         if slugline.match(lines[0]):
             continue
-        if "Type1" in listing or "ReturnType" in listing:
+        if lines[0] in exclusions:
             continue
         for line in lines:
             if line.strip().startswith("fun "):
-                return listing
+                return lines[0]
     return False
 
 
@@ -136,7 +146,8 @@ def validate_complete_examples(text, error_reporter):
     exclusions = ExclusionFile("validate_complete_examples.txt", error_reporter)
     noslug = examples_without_sluglines(text, exclusions)
     if noslug:
-        error_reporter(f"Contains compileable example(s) without a slugline:\n{noslug}")
+        exclusions(error_reporter(
+            f"Contains compileable example(s) without a slugline:\n{noslug}"))
 
 
 ### Ensure atom titles conform to standard and agree with file names
@@ -477,7 +488,8 @@ def validate_mistaken_backquotes(text, error_reporter):
         if line.startswith("`") and lines[n+1].startswith("`"):
             if line in exclusions and lines[n+1] in exclusions:
                 continue
-            error_reporter(f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
+            error_reporter(
+                f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
             with open(config.mistaken_backquote_exclusions, "a") as mbe:
                 mbe.write(error_reporter.msg)
             os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
@@ -499,3 +511,9 @@ def validate_println_output(text, error_reporter):
                 if slug in line:
                     exclusions(error_reporter(f"println without /* Output:\n{slug}\n", n))
                     break
+
+
+### Test for Java package name and directory name
+
+def validate_java_package_directory(text, error_reporter):
+    pass
