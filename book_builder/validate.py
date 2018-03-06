@@ -113,11 +113,12 @@ def all_checks():
 
 ### Utilities ###
 
+def extract_listings(text):
+    return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, flags=re.DOTALL)]
+
 def remove_listings(text):
     return re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
 
-def extract_listings(text):
-    return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL)]
 
 ### Validators ###
 
@@ -130,28 +131,27 @@ class TagNoGap(Validator):
             error_reporter(f"Contains spaces between ``` and {config.language_name}")
 
 
-slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
-
-def examples_without_sluglines(text, exclusions):
-    for group in re.findall("```(.*?)\n(.*?)\n```", text, re.DOTALL):
-        listing = group[1]
-        lines = listing.splitlines()
-        if slugline.match(lines[0]):
-            continue
-        if lines[0] in exclusions:
-            continue
-        for line in lines:
-            if line.strip().startswith("fun "):
-                return lines[0]
-    return False
-
-
 class CompleteExamples(Validator):
     "Check for code fragments that should be turned into examples"
 
+    slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
+
+    @staticmethod
+    def examples_without_sluglines(text, exclusions):
+        for listing in extract_listings(text):
+            lines = listing.splitlines()
+            if CompleteExamples.slugline.match(lines[0]):
+                continue
+            if lines[0] in exclusions:
+                continue
+            for line in lines:
+                if line.strip().startswith("fun "):
+                    return lines[0]
+        return False
+
     def test(self, text, error_reporter):
         exclusions = ExclusionFile("validate_complete_examples.txt", error_reporter)
-        noslug = examples_without_sluglines(text, exclusions)
+        noslug = CompleteExamples.examples_without_sluglines(text, exclusions)
         if noslug:
             exclusions(error_reporter(
                 f"Contains compileable example(s) without a slugline:\n{noslug}"))
@@ -170,46 +170,43 @@ class FilenamesAndTitles(Validator):
             error_reporter(f"'and' in title should be '&': {title}")
 
 
-###
-
-
-def parse_comment_block(n, lines):
-    block = ""
-    while n < len(lines) and "//" in lines[n]:
-        block += lines[n].split("//")[1].strip() + " "
-        n += 1
-    return n, block
-
-
-def parse_blocks_of_comments(listing):
-    result = []
-    lines = listing.splitlines()[1:] # Ignore slugline
-    n = 0
-    while n < len(lines):
-        if "//" in lines[n]:
-            n, block = parse_comment_block(n, lines)
-            result.append(block)
-        else:
-            n += 1
-    return result
-
-
-def find_uncapitalized_comment(text):
-    "Need to add checks for '.' and following cap"
-    for listing in extract_listings(text):
-        for comment_block in parse_blocks_of_comments(listing):
-            first_char = comment_block.strip()[0]
-            if first_char.isalpha() and not first_char.isupper():
-                return comment_block.strip()
-    return False
-
-
 class CapitalizedComments(Validator):
     "Check for un-capitalized comments"
 
+    @staticmethod
+    def parse_comment_block(n, lines):
+        block = ""
+        while n < len(lines) and "//" in lines[n]:
+            block += lines[n].split("//")[1].strip() + " "
+            n += 1
+        return n, block
+
+    @staticmethod
+    def parse_blocks_of_comments(listing):
+        result = []
+        lines = listing.splitlines()[1:] # Ignore slugline
+        n = 0
+        while n < len(lines):
+            if "//" in lines[n]:
+                n, block = CapitalizedComments.parse_comment_block(n, lines)
+                result.append(block)
+            else:
+                n += 1
+        return result
+
+    @staticmethod
+    def find_uncapitalized_comment(text):
+        "Need to add checks for '.' and following cap"
+        for listing in extract_listings(text):
+            for comment_block in CapitalizedComments.parse_blocks_of_comments(listing):
+                first_char = comment_block.strip()[0]
+                if first_char.isalpha() and not first_char.isupper():
+                    return comment_block.strip()
+        return False
+
     def test(self, text, error_reporter):
         exclusions = config.comment_capitalization_exclusions.read_text()
-        uncapped = find_uncapitalized_comment(text)
+        uncapped = CapitalizedComments.find_uncapitalized_comment(text)
         if uncapped and uncapped not in exclusions:
             error_reporter(f"Uncapitalized comment: {uncapped}")
 
@@ -367,17 +364,15 @@ class TickedPhrases: # (Validator):
             error_reporter(err_msg)
 
 
-###
-
-dictionary = set(config.dictionary.read_text().splitlines()).union(
-    set(config.supplemental_dictionary.read_text().splitlines()))
-
 class FullSpellcheck(Validator):
     "Spell-check everything"
 
+    dictionary = set(config.dictionary.read_text().splitlines()).union(
+        set(config.supplemental_dictionary.read_text().splitlines()))
+
     def test(self, text, error_reporter):
         words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
-        misspelled = words - dictionary
+        misspelled = words - FullSpellcheck.dictionary
         if '' in misspelled:
             misspelled.remove('')
         if len(misspelled):
@@ -386,39 +381,33 @@ class FullSpellcheck(Validator):
             error_reporter(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
-###
-
-hanging_emdash = re.compile("[^-]+---$")
-hanging_hyphen = re.compile("[^-]+-$")
-
 class HangingHyphens(Validator):
     "Ensure there are no hanging em-dashes or hyphens"
+
+    hanging_emdash = re.compile("[^-]+---$")
+    hanging_hyphen = re.compile("[^-]+-$")
 
     def test(self, text, error_reporter):
         for line in text.splitlines():
             line = line.rstrip()
-            if hanging_emdash.match(line):
+            if HangingHyphens.hanging_emdash.match(line):
                 error_reporter(f"Hanging emdash: {line}")
-            if hanging_hyphen.match(line):
+            if HangingHyphens.hanging_hyphen.match(line):
                 error_reporter(f"Hanging hyphen: {line}")
-
-
-###
-
-explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
-cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
-
-titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
 
 
 class CrossLinks(Validator):
     "Check for invalid cross-links"
 
+    explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
+    cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
+    titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
+
     def test(self, text, error_reporter):
         text = remove_listings(text)
-        explicits = [e.replace("\n", " ") for e in explicit_link.findall(text)]
-        explicits = [cross_link.findall(e)[0][1:-1] for e in explicits]
-        candidates = [c.replace("\n", " ")[1:-1] for c in cross_link.findall(text)]
+        explicits = [e.replace("\n", " ") for e in CrossLinks.explicit_link.findall(text)]
+        explicits = [CrossLinks.cross_link.findall(e)[0][1:-1] for e in explicits]
+        candidates = [c.replace("\n", " ")[1:-1] for c in CrossLinks.cross_link.findall(text)]
         cross_links = []
         for c in candidates:
             if c in explicits: continue
@@ -426,7 +415,7 @@ class CrossLinks(Validator):
             if c.endswith(".com]"): continue
             if any([ch in c for ch in """,<'"()$%/"""]): continue
             cross_links.append(c)
-        unresolved = [cl for cl in cross_links if cl not in titles]
+        unresolved = [cl for cl in cross_links if cl not in CrossLinks.titles]
         if unresolved:
             error_reporter(f"""Unresolved cross-links:
             {pprint.pformat(unresolved)}""")
