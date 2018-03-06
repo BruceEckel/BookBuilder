@@ -2,6 +2,7 @@
 # Extract code into config.example_dir from Markdown files.
 # import logging
 import os
+import stat
 import re
 import subprocess
 import sys
@@ -182,14 +183,14 @@ def gradle(name):
     ensure(fpath.exists(), f"{fpath.name} doesn't exist")
     ensure("main(" in fpath.read_text(), f"No main() in {fpath.name}")
     os.chdir(home.parent.parent)
-    call(f"gradlew {fpath.stem}", shell=True)
+    call(f"./gradlew {fpath.stem}", shell=True)
     os.chdir(home)
 
 def multiple(name_list):
     names = " ".join(name_list)
     home = Path.cwd()
     os.chdir(home.parent.parent)
-    call(f"gradlew {names}", shell=True)
+    call(f"./gradlew {names}", shell=True)
     os.chdir(home)
 
 def glob(ext):
@@ -210,6 +211,9 @@ def create_test_files():
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
         (package / "run.bat").write_text(python_bat + run_py)
         (package / "run.sh").write_text(python_shell + run_py)
+        # os.chmod(package / "run.sh", stat.S_IXOTH)
+        os.chdir(package)
+        os.system("git update-index --chmod=+x run.sh")
     return "run.bat and run.sh files created"
 
 
