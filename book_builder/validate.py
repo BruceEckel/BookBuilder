@@ -211,46 +211,45 @@ class CapitalizedComments(Validator):
             error_reporter(f"Uncapitalized comment: {uncapped}")
 
 
-###
-
-def inconsistent_indentation(lines):
-    listing_name = lines[0]
-    if listing_name.startswith('//'):
-        listing_name = listing_name[3:]
-    else: # Skip listings without sluglines
-        return False
-    indents = [(len(line) - len(line.lstrip(' ')), line) for line in lines]
-    if indents[0][0]: return "First line can't be indented"
-    for indent, line in indents:
-        if indent % 2 != 0 and not line.startswith(" *"):
-            return f"{listing_name}: Non-even indent in line: {line}"
-    indent_counts = [ind//2 for ind, ln in indents] # For a desired indent of 2
-    indent_pairs = list(zip(indent_counts, indent_counts[1:]))
-    def test(x, y): return (
-        y == x + 1
-        or y == x
-        or y < x # No apparent consistency with dedenting
-    )
-    ok = [test(x, y) for x, y in indent_pairs]
-    if not all(ok):
-        return f"{listing_name} lines {[n + 2 for n, x in enumerate(ok) if not x]}"
-    return False
-
-
-def find_inconsistent_indentation(text):
-    for listing in extract_listings(text):
-        lines = listing.splitlines()
-        inconsistent = inconsistent_indentation(lines)
-        if inconsistent:
-            return inconsistent
-    return False
-
 
 class ListingIndentation(Validator):
     "Check for inconsistent indentation"
 
+    @staticmethod
+    def inconsistent_indentation(lines):
+        listing_name = lines[0]
+        if listing_name.startswith('//'):
+            listing_name = listing_name[3:]
+        else: # Skip listings without sluglines
+            return False
+        indents = [(len(line) - len(line.lstrip(' ')), line) for line in lines]
+        if indents[0][0]: return "First line can't be indented"
+        for indent, line in indents:
+            if indent % 2 != 0 and not line.startswith(" *"):
+                return f"{listing_name}: Non-even indent in line: {line}"
+        indent_counts = [ind//2 for ind, ln in indents] # For a desired indent of 2
+        indent_pairs = list(zip(indent_counts, indent_counts[1:]))
+        def test(x, y): return (
+            y == x + 1
+            or y == x
+            or y < x # No apparent consistency with dedenting
+        )
+        ok = [test(x, y) for x, y in indent_pairs]
+        if not all(ok):
+            return f"{listing_name} lines {[n + 2 for n, x in enumerate(ok) if not x]}"
+        return False
+
+    @staticmethod
+    def find_inconsistent_indentation(text):
+        for listing in extract_listings(text):
+            lines = listing.splitlines()
+            inconsistent = ListingIndentation.inconsistent_indentation(lines)
+            if inconsistent:
+                return inconsistent
+        return False
+
     def test(self, text, error_reporter):
-        bad_indent = find_inconsistent_indentation(text)
+        bad_indent = ListingIndentation.find_inconsistent_indentation(text)
         if bad_indent:
             error_reporter(f"Inconsistent indentation: {bad_indent}")
 
