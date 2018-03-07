@@ -29,13 +29,13 @@ def all_fixes():
 
 def degap(lines):
     for n, line in enumerate(lines):
-        if  line.startswith("package ") and \
-            lines[n+1].strip() == "" and \
-            lines[n+2].startswith("import "):
-                del lines[n+1]
-                # for i in range(n, n+2):
-                #     print(f"{lines[i]}")
-                return lines, True
+        if line.startswith("package ") and \
+                lines[n+1].strip() == "" and \
+                lines[n+2].startswith("import "):
+            del lines[n+1]
+            # for i in range(n, n+2):
+            #     print(f"{lines[i]}")
+            return lines, True
     return lines, False
 
 

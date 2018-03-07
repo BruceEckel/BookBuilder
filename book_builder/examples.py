@@ -15,6 +15,8 @@ import book_builder.util as util
 
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
+
+
 def debug(msg): pass
 # def debug(msg): print(msg)
 
@@ -53,7 +55,7 @@ def extractExamples():
                 listing = group[1].splitlines()
                 title = listing[0]
                 if '!!!' in title:
-                    continue # Don't save files that are marked bad
+                    continue  # Don't save files that are marked bad
                 if slugline.match(title):
                     debug(title)
                     fpath = title.split()[1].strip()
@@ -113,16 +115,18 @@ def create_tasks_for_gradle():
     # Produces sorted tasks by name:
     task_list = tasks_base
     runnable_list = []
-    ktfiles = {kt.stem : kt for kt in config.example_dir.rglob("*.kt")}
-    javafiles = {java.stem : java for java in config.example_dir.rglob("*.java")}
-    codefiles = {**ktfiles, **javafiles} # Combine the dictionaries
+    ktfiles = {kt.stem: kt for kt in config.example_dir.rglob("*.kt")}
+    javafiles = {
+        java.stem: java for java in config.example_dir.rglob("*.java")}
+    codefiles = {**ktfiles, **javafiles}  # Combine the dictionaries
     for key in sorted(codefiles):
         codefile = codefiles[key]
         gradle_task = task(codefile)
         if gradle_task:
             task_list += gradle_task + "\n"
             runnable_list.append("'" + codefile.stem + "'")
-    task_list += run_task.substitute(runtasks = ",\n    ".join(sorted(runnable_list)))
+    task_list += run_task.substitute(
+        runtasks=",\n    ".join(sorted(runnable_list)))
     tasks_file = config.extracted_examples / "gradle" / "tasks.gradle"
     tasks_file.write_text(task_list)
     return f"Wrote {tasks_file}"
@@ -153,7 +157,7 @@ def task(codefile):
     if package:
         classfile = f"{package}.{classfile}"
     if "main(" in code:
-        return task_template.substitute(task_name = codefile.stem, class_file = classfile)
+        return task_template.substitute(task_name=codefile.stem, class_file=classfile)
     return None
 
 
@@ -167,7 +171,7 @@ python_shell = """\
 #!/usr/bin/env python3.6
 """
 
-run_py ="""\
+run_py = """\
 from subprocess import call
 from pathlib import Path
 import sys, os

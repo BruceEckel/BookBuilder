@@ -64,6 +64,7 @@ def retain_files(target_dir: Path, extensions: List[str]):
         if r.is_file():
             r.unlink()
 
+
 if __name__ == '__main__':
     retain_files(config.mobi_build_dir, ["mobi"])
 
@@ -72,6 +73,7 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
     clean(ebook_build_dir)
     time.sleep(1)
     os.makedirs(ebook_build_dir)
+
     def copy(src):
         source = Path(src)
         assert source.exists()
@@ -96,13 +98,14 @@ def strip_chapter(chapter_text):
     chapter_text = chapter_text.strip()
     lines = [line.rstrip() for line in chapter_text.splitlines()]
     stripped = "\n".join(lines)
-    return stripped.strip() # In case the previous line adds another newline
+    return stripped.strip()  # In case the previous line adds another newline
 
 
 def strip_review_notes(target):
     lines = target.read_text().strip().splitlines()
     review = [x for x in lines if x.startswith("+ [")]
-    mistakes = [x for x in review if not "Ready for Review" in x and not "Tech Checked" in x]
+    mistakes = [
+        x for x in review if not "Ready for Review" in x and not "Tech Checked" in x]
     assert not mistakes, mistakes
     result = [x.rstrip() for x in lines if not x.startswith("+ [")]
     result2 = ""
@@ -262,8 +265,10 @@ def create_new_status_file():
     status_file = config.root_path / "STATUS.md"
     if status_file.exists():
         return "STATUS.md already exists; new one not created"
-    md_files = sorted([md.name for md in config.markdown_dir.glob("[0-9][0-9]_*.md")])
+    md_files = sorted(
+        [md.name for md in config.markdown_dir.glob("[0-9][0-9]_*.md")])
     status = ""
+
     def checkbox(item):
         nonlocal status
         status += f"+ [ ] {item}\n"

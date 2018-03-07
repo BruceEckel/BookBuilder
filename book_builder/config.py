@@ -34,18 +34,27 @@ markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
 
-epub_build_dir = root_path / "build"/ "epub"
-mobi_build_dir = root_path / "build"/ "mobi"
-docx_build_dir = root_path / "build"/ "docx"
-release_dir    = root_path / "build"/ "Release"
-test_dir       = root_path / "test"
+epub_build_dir = root_path / "build" / "epub"
+mobi_build_dir = root_path / "build" / "mobi"
+docx_build_dir = root_path / "build" / "docx"
+release_dir = root_path / "build" / "Release"
+test_dir = root_path / "test"
+
 
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
+
+
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
+
+
 def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
 
+
 def epub_name(tag=""): return f"{base_name}{tag}.epub"
+
+
 def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
+
 
 built_ebooks = [
     epub_build_dir / epub_name(),
@@ -62,22 +71,26 @@ combined_markdown = epub_md("assembled")
 sample_markdown = epub_md("sample")
 # recent_atom_names = bb_code_dir / "recent_atom_names.py"
 
+
 def resource(path): return root_path / "resources" / path
-images        = resource("images")
-fonts         = resource("fonts")
-bullets       = resource("bullets")
-cover         = resource("cover") / "Cover.png"
-epub_css      = resource(root_name + "-epub.css")
-mobi_css      = resource(root_name + "-mobi.css")
+
+
+images = resource("images")
+fonts = resource("fonts")
+bullets = resource("bullets")
+cover = resource("cover") / "Cover.png"
+epub_css = resource(root_name + "-epub.css")
+mobi_css = resource(root_name + "-mobi.css")
 mobi_mono_css = resource(root_name + "-mobi-mono.css")
-metadata      = resource("metadata.yaml")
-meta_inf      = resource("META-INF")
+metadata = resource("metadata.yaml")
+meta_inf = resource("META-INF")
 
 data_path = root_path / "data"
 dictionary = data_path / "dictionary.txt"
 supplemental_dictionary = data_path / "supplemental_dictionary.txt"
 all_misspelled = data_path / "all_misspelled.txt"
-comment_capitalization_exclusions = data_path / "comment_capitalization_exclusions.txt"
+comment_capitalization_exclusions = data_path / \
+    "comment_capitalization_exclusions.txt"
 mistaken_backquote_exclusions = data_path / "mistaken_backquote_exclusions.txt"
 
 
@@ -113,7 +126,7 @@ if __name__ == '__main__':
         for py in [p for p in Path().rglob("*.py") if p.name != "config.py"]:
             if id in py.read_text():
                 identifiers.remove(id)
-                break # Found it so try next identifier
+                break  # Found it so try next identifier
     if identifiers:
         print("The following don't seem to be used")
         pprint(identifiers)

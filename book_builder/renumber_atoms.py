@@ -19,8 +19,8 @@ def generate_name(n, markdown_atom):
 
 def title_list():
     return [[md.name, generate_name(n, md)]
-        for n, md in enumerate(config.markdown_dir.glob("*.md"))
-    ][1:] # Remove zeroeth element
+            for n, md in enumerate(config.markdown_dir.glob("*.md"))
+            ][1:]  # Remove zeroeth element
 
 
 def rename_atoms(titles):

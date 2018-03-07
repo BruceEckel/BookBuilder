@@ -11,7 +11,11 @@ from abc import ABC, abstractmethod
 import book_builder.config as config
 from book_builder.util import create_markdown_filename
 from book_builder.util import clean
+
+
 def trace(_): pass
+
+
 # def trace(msg): print(msg)
 misspellings = set()
 
@@ -21,16 +25,17 @@ class ErrorReporter:
     Pass into functions to capture errors in Markdown files.
     Used by validate.py
     """
+
     def __init__(self, md_path):
         self.md_path = md_path
         self.titled = False
         self.msg = ""
         self.line_number = None
 
-    def __call__(self, msg, line_number = None):
+    def __call__(self, msg, line_number=None):
         if not self.titled:
             self.msg += self.md_path.name + "\n"
-            self.titled = True # Print only once
+            self.titled = True  # Print only once
         self.msg += f"    {msg}\n"
         if line_number:
             self.line_number = line_number
@@ -51,9 +56,11 @@ class ErrorReporter:
 class ExclusionFile:
     "Maintains the exclusion file for a particular validate function"
     ef_names = {}
+
     def __init__(self, exclusion_file_name, error_reporter):
         if exclusion_file_name not in ExclusionFile.ef_names:
-            ExclusionFile.ef_names[exclusion_file_name] = "False" # Not reported
+            # Not reported
+            ExclusionFile.ef_names[exclusion_file_name] = "False"
         self.needs_edit = False
         self.ef_path = config.data_path / exclusion_file_name
         self.error_reporter = error_reporter
@@ -80,7 +87,7 @@ class ExclusionFile:
 
 
 class Validator(ABC):
-
+    "Base class for all validators"
     @abstractmethod
     def test(self, text, error_reporter):
         pass
@@ -116,6 +123,7 @@ def all_checks():
 def extract_listings(text):
     return [group[1] for group in re.findall("```(.*?)\n(.*?)\n```", text, flags=re.DOTALL)]
 
+
 def remove_listings(text):
     return re.sub("```(.*?)\n(.*?)\n```", "", text, flags=re.DOTALL)
 
@@ -128,7 +136,8 @@ class TagNoGap(Validator):
 
     def test(self, text, error_reporter):
         if re.search(f"``` +{config.language_name}", text):
-            error_reporter(f"Contains spaces between ``` and {config.language_name}")
+            error_reporter(
+                f"Contains spaces between ``` and {config.language_name}")
 
 
 class CompleteExamples(Validator):
@@ -150,7 +159,8 @@ class CompleteExamples(Validator):
         return False
 
     def test(self, text, error_reporter):
-        exclusions = ExclusionFile("validate_complete_examples.txt", error_reporter)
+        exclusions = ExclusionFile(
+            "validate_complete_examples.txt", error_reporter)
         noslug = CompleteExamples.examples_without_sluglines(text, exclusions)
         if noslug:
             exclusions(error_reporter(
@@ -184,7 +194,7 @@ class CapitalizedComments(Validator):
     @staticmethod
     def parse_blocks_of_comments(listing):
         result = []
-        lines = listing.splitlines()[1:] # Ignore slugline
+        lines = listing.splitlines()[1:]  # Ignore slugline
         n = 0
         while n < len(lines):
             if "//" in lines[n]:
@@ -211,7 +221,6 @@ class CapitalizedComments(Validator):
             error_reporter(f"Uncapitalized comment: {uncapped}")
 
 
-
 class ListingIndentation(Validator):
     "Check for inconsistent indentation"
 
@@ -220,19 +229,22 @@ class ListingIndentation(Validator):
         listing_name = lines[0]
         if listing_name.startswith('//'):
             listing_name = listing_name[3:]
-        else: # Skip listings without sluglines
+        else:  # Skip listings without sluglines
             return False
         indents = [(len(line) - len(line.lstrip(' ')), line) for line in lines]
-        if indents[0][0]: return "First line can't be indented"
+        if indents[0][0]:
+            return "First line can't be indented"
         for indent, line in indents:
             if indent % 2 != 0 and not line.startswith(" *"):
                 return f"{listing_name}: Non-even indent in line: {line}"
-        indent_counts = [ind//2 for ind, ln in indents] # For a desired indent of 2
+        # For a desired indent of 2
+        indent_counts = [ind//2 for ind, ln in indents]
         indent_pairs = list(zip(indent_counts, indent_counts[1:]))
+
         def test(x, y): return (
             y == x + 1
             or y == x
-            or y < x # No apparent consistency with dedenting
+            or y < x  # No apparent consistency with dedenting
         )
         ok = [test(x, y) for x, y in indent_pairs]
         if not all(ok):
@@ -266,14 +278,16 @@ class ExampleSluglines(Validator):
     "Check for sluglines that don't match the format"
 
     def test(self, text, error_reporter):
-        exclusions = ExclusionFile("validate_example_sluglines.txt", error_reporter)
+        exclusions = ExclusionFile(
+            "validate_example_sluglines.txt", error_reporter)
         for listing in extract_listings(text):
             lines = listing.splitlines()
             slug = lines[0]
             if not slug.startswith(config.start_comment):
-                continue # Improper code fragments caught elsewhere
+                continue  # Improper code fragments caught elsewhere
             if not slug.startswith(config.start_comment + " "):
-                error_reporter(f"Bad first line (no space after beginning of comment):\n\t{slug}")
+                error_reporter(
+                    f"Bad first line (no space after beginning of comment):\n\t{slug}")
                 continue
             slug = slug.split(None, 1)[1]
             if "/" not in slug and slug not in exclusions:
@@ -285,12 +299,14 @@ class PackageNames(Validator):
 
     def test(self, text, error_reporter):
         for listing in extract_listings(text):
-            package_decl = [line for line in listing.splitlines() if line.startswith("package ")]
+            package_decl = [
+                line for line in listing.splitlines() if line.startswith("package ")]
             if not package_decl:
                 continue
             # print(package_decl)
             if bool(re.search('([A-Z])', package_decl[0])):
-                error_reporter(f"Capital letter in package name:\n\t{package_decl}")
+                error_reporter(
+                    f"Capital letter in package name:\n\t{package_decl}")
 
 
 class CodeListingLineWidths(Validator):
@@ -312,6 +328,7 @@ single_tick_dictionary = set(Path(
     config.root_path / "data" / "single_tick_dictionary.txt")
     .read_text().splitlines())
 
+
 def remove_nonletters(text):
     for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
         text = text.replace(rch, " ")
@@ -326,7 +343,7 @@ def strip_comments_from_code(listing, error_reporter):
     if len(listing.strip()) == 0:
         return []
     lines = listing.splitlines()
-    if lines[0].startswith("//"): # Retain elements of slugline
+    if lines[0].startswith("//"):  # Retain elements of slugline
         lines[0] = lines[0][3:]
     lines = [line.split("//")[0].rstrip() for line in lines]
     words = []
@@ -335,20 +352,24 @@ def strip_comments_from_code(listing, error_reporter):
     return words
 
 
-### Temporarily disabled:
-class TickedPhrases: # (Validator):
+# Temporarily disabled:
+class TickedPhrases:  # (Validator):
     "Spell-check single-ticked items against compiled code"
 
     def test(self, text, error_reporter):
-        exclusions = ExclusionFile("validate_ticked_phrases.txt", error_reporter)
+        exclusions = ExclusionFile(
+            "validate_ticked_phrases.txt", error_reporter)
         stripped_listings = [strip_comments_from_code(listing, error_reporter)
-            for listing in extract_listings(text)]
-        pieces = {item for sublist in stripped_listings for item in sublist} # Flatten list
+                             for listing in extract_listings(text)]
+        # Flatten list
+        pieces = {item for sublist in stripped_listings for item in sublist}
         # pieces = pieces.union(single_tick_dictionary)
         pieces = pieces.union(exclusions)
         raw_single_ticks = [t for t in re.findall("`.+?`", text) if t != "```"]
-        single_ticks = [remove_nonletters(t[1:-1]).split() for t in raw_single_ticks]
-        single_ticks = {item for sublist in single_ticks for item in sublist} # Flatten list
+        single_ticks = [remove_nonletters(t[1:-1]).split()
+                        for t in raw_single_ticks]
+        # Flatten list
+        single_ticks = {item for sublist in single_ticks for item in sublist}
         not_in_examples = single_ticks.difference(pieces)
         if not_in_examples:
             err_msg = ""
@@ -370,7 +391,8 @@ class FullSpellcheck(Validator):
         set(config.supplemental_dictionary.read_text().splitlines()))
 
     def test(self, text, error_reporter):
-        words = set(re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
+        words = set(
+            re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", text))
         misspelled = words - FullSpellcheck.dictionary
         if '' in misspelled:
             misspelled.remove('')
@@ -400,19 +422,27 @@ class CrossLinks(Validator):
 
     explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
     cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
-    titles = {p.read_text().splitlines()[0].strip() for p in config.markdown_dir.glob("*.md")}
+    titles = {p.read_text().splitlines()[0].strip()
+              for p in config.markdown_dir.glob("*.md")}
 
     def test(self, text, error_reporter):
         text = remove_listings(text)
-        explicits = [e.replace("\n", " ") for e in CrossLinks.explicit_link.findall(text)]
-        explicits = [CrossLinks.cross_link.findall(e)[0][1:-1] for e in explicits]
-        candidates = [c.replace("\n", " ")[1:-1] for c in CrossLinks.cross_link.findall(text)]
+        explicits = [e.replace("\n", " ")
+                     for e in CrossLinks.explicit_link.findall(text)]
+        explicits = [CrossLinks.cross_link.findall(
+            e)[0][1:-1] for e in explicits]
+        candidates = [c.replace("\n", " ")[1:-1]
+                      for c in CrossLinks.cross_link.findall(text)]
         cross_links = []
         for c in candidates:
-            if c in explicits: continue
-            if len(c) < 4: continue
-            if c.endswith(".com]"): continue
-            if any([ch in c for ch in """,<'"()$%/"""]): continue
+            if c in explicits:
+                continue
+            if len(c) < 4:
+                continue
+            if c.endswith(".com]"):
+                continue
+            if any([ch in c for ch in """,<'"()$%/"""]):
+                continue
             cross_links.append(c)
         unresolved = [cl for cl in cross_links if cl not in CrossLinks.titles]
         if unresolved:
@@ -469,7 +499,8 @@ class MistakenBackquotes(Validator):
         exclusions = config.mistaken_backquote_exclusions.read_text()
         if config.msgbreak in exclusions:
             print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
-            os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
+            os.system(
+                f"{config.editor} {config.mistaken_backquote_exclusions}")
             sys.exit()
         lines = remove_listings(text).splitlines()
         for n, line in enumerate(lines):
@@ -482,7 +513,8 @@ class MistakenBackquotes(Validator):
                     f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
                 with open(config.mistaken_backquote_exclusions, "a") as mbe:
                     mbe.write(error_reporter.msg)
-                os.system(f"{config.editor} {config.mistaken_backquote_exclusions}")
+                os.system(
+                    f"{config.editor} {config.mistaken_backquote_exclusions}")
 
 
 class PrintlnOutput(Validator):
@@ -491,16 +523,18 @@ class PrintlnOutput(Validator):
     OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
 
     def test(self, text, error_reporter):
-        exclusions = ExclusionFile("validate_println_output.txt", error_reporter)
+        exclusions = ExclusionFile(
+            "validate_println_output.txt", error_reporter)
         lines = text.splitlines()
         for listing in re.findall("```kotlin(.*?)```", text, flags=re.DOTALL):
             slug = listing.strip().splitlines()[0]
             if "println" in listing and not any([ok in listing for ok in PrintlnOutput.OK]):
                 if slug in exclusions:
-                    continue # Next listing
+                    continue  # Next listing
                 for n, line in enumerate(lines):
                     if slug in line:
-                        exclusions(error_reporter(f"println without /* Output:\n{slug}\n", n))
+                        exclusions(error_reporter(
+                            f"println without /* Output:\n{slug}\n", n))
                         break
 
 
@@ -513,7 +547,7 @@ class JavaPackageDirectory(Validator):
 
 ##################### Vestigial ######################
 
-### Test files individually to find problem characters
+# Test files individually to find problem characters
 
 def pandoc_test(md):
     command = (
@@ -524,6 +558,7 @@ def pandoc_test(md):
         f'--metadata title="TEST"')
     print(md.name)
     os.system(command)
+
 
 def test_markdown_individually():
     clean(config.test_dir)
@@ -537,5 +572,3 @@ def test_markdown_individually():
         for f in files:
             combined.write(f.read_text() + "\n")
     pandoc_test(Path('combined.md'))
-
-

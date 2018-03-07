@@ -47,7 +47,8 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
     Pandoc markdown to epub
     """
     regenerate_ebook_build_dir(target_dir, ebook_type)
-    combine_markdown_files(markdown_name("assembled-stripped"), strip_notes=True)
+    combine_markdown_files(markdown_name(
+        "assembled-stripped"), strip_notes=True)
     combine_sample_markdown(markdown_name("sample"))
     os.chdir(str(target_dir))
     print(f"Producing {target_dir.name}")
@@ -127,7 +128,7 @@ def convert_to_mobi():
     generate_epub_files(config.mobi_build_dir, config.mobi_md, BookType.MOBI)
     os.chdir(str(config.mobi_build_dir))
     for epf in Path('.').glob("*.epub"):
-    # for epf in [Path() / "AtomicKotlin-monochrome.epub"]:
+        # for epf in [Path() / "AtomicKotlin-monochrome.epub"]:
         cmd = f"kindlegen {epf.name} > {epf.stem}-kindlegen-messages.txt"
         print(f"\tCreating {epf.stem}.mobi")
         os.system(cmd)
@@ -156,7 +157,8 @@ def convert_to_docx():
     Pandoc markdown to docx
     """
     regenerate_ebook_build_dir(config.docx_build_dir, BookType.DOCX)
-    combine_markdown_files(config.docx_md("assembled-stripped"), strip_notes=True)
+    combine_markdown_files(config.docx_md(
+        "assembled-stripped"), strip_notes=True)
     os.chdir(str(config.docx_build_dir))
     pandoc_docx_command(
         config.docx_md("assembled-stripped"), config.base_name + ".docx", config.title)
