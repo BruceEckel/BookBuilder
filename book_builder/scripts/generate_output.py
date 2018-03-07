@@ -26,7 +26,7 @@ def generate_example(source_file):
     if "error" in compiler_err:
         return None
     run_out, run_err = execute(
-        ["kotlin", f"{source_file.parent.stem}.{source_file.stem + "Kt"}"])
+        ["kotlin", f"{source_file.parent.stem}.{source_file.stem + 'Kt'}"])
     if "error" in run_err:
         return None
 

@@ -13,10 +13,6 @@ from book_builder.util import create_markdown_filename
 from book_builder.util import clean
 
 
-def trace(_): pass
-
-
-# def trace(msg): print(msg)
 misspellings = set()
 
 
@@ -339,7 +335,7 @@ def strip_comments_from_code(listing, error_reporter):
     if len(listing.strip()) == 0:
         error_reporter("Empty listing")
         return []
-    listing = re.sub("/\*.*?\*/", "", listing, flags=re.DOTALL)
+    listing = re.sub(r"/\*.*?\*/", "", listing, flags=re.DOTALL)
     if len(listing.strip()) == 0:
         return []
     lines = listing.splitlines()
@@ -420,8 +416,8 @@ class HangingHyphens(Validator):
 class CrossLinks(Validator):
     "Check for invalid cross-links"
 
-    explicit_link = re.compile("\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
-    cross_link = re.compile("\[.*?\]", flags=re.DOTALL)
+    explicit_link = re.compile(r"\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
+    cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
     titles = {p.read_text().splitlines()[0].strip()
               for p in config.markdown_dir.glob("*.md")}
 
@@ -455,8 +451,8 @@ class FunctionDescriptions(Validator):
 
     def test(self, text, error_reporter):
         func_descriptions = \
-            re.findall("`[^(`]+?`\s+function", text) + \
-            re.findall("function\s+`[^(`]+?`", text)
+            re.findall(r"`[^(`]+?`\s+function", text) + \
+            re.findall(r"function\s+`[^(`]+?`", text)
         if func_descriptions:
             err_msg = "Function descriptions missing '()':\n"
             for f in func_descriptions:
@@ -474,7 +470,7 @@ class PunctuationInsideQuotes(Validator):
         outside_commas = re.findall("\",", text)
         if outside_commas:
             error_reporter("commas outside quotes")
-        outside_periods = re.findall("\"\.", text)
+        outside_periods = re.findall(r"\"\.", text)
         if outside_periods:
             error_reporter("periods outside quotes")
 

@@ -7,6 +7,20 @@ import os
 import sys
 from pathlib import Path
 from enum import Enum, unique
+
+######## To quiet tools ############
+title = ""
+base_name = ""
+language_name = ""
+code_ext = ""
+code_width = ""
+start_comment = ""
+extracted_examples = ""
+sample_size = ""
+exclude_atoms = ""
+#####################################
+
+
 # Add elements from configuration.py into this environment:
 sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
 from configuration import *

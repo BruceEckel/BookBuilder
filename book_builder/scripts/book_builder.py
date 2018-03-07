@@ -164,6 +164,7 @@ def epub_rename():
 def mobi():
     "Creates mobi files for kindle"
 
+
 @mobi.command('build')
 def mobi_build():
     "Create epub from Markdown files"
@@ -176,12 +177,14 @@ def mobi_build():
 def docx():
     "Create docx file for print version"
 
+
 @docx.command('build')
 def docx_build():
     "Create docx from Markdown files"
     click.echo(convert_to_docx())
 
 ##########################################################
+
 
 @cli.command()
 def release():
@@ -190,9 +193,23 @@ def release():
 
 ##########################################################
 
+
 @cli.command()
 def test():
     "Perform current test"
     from book_builder.ebook_generators import show_important_kindlegen_output
     click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
     # click.echo(_validate.test_markdown_individually())
+
+
+##########################################################
+
+@cli.command()
+def edit():
+    "Edit BookBuilder files using VS Code"
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    os.chdir("..")
+    os.system("code .")
+
+
+##########################################################
