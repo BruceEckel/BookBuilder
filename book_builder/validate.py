@@ -37,16 +37,6 @@ def all_checks():
         os.system(f"{config.editor} {config.supplemental_dictionary}")
 
 
-class CodeListing:
-
-    is_slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
-    # TODO: Capture line listing where listing starts in markdown file
-    def __init__(self, code):
-        self.lines = code.splitlines()
-        self.slug = self.lines[0]   
-        self.proper_slugline = CodeListing.is_slugline.match(self.slug)     
-
-
 class MarkdownFile:
     """
     Contains everything about a Markdown file, including
@@ -65,7 +55,7 @@ class MarkdownFile:
         self.codeblocks = [
             group[1] for group in 
             re.findall("```(.*?)\n(.*?)\n```", self.text, flags=re.DOTALL)]
-        self.listings = [CodeListing(code) for code in self.codeblocks]
+        self.listings = [CodeListing(code, self) for code in self.codeblocks]
         self.no_listings = re.sub("```(.*?)\n(.*?)\n```", "", self.text, flags=re.DOTALL)
 
     def error(self, msg, line_number=None):
@@ -89,6 +79,17 @@ class MarkdownFile:
             else:
                 os.system(f"{config.editor} {self.path}")
         
+
+class CodeListing:
+
+    is_slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
+
+    def __init__(self, code, md: MarkdownFile):
+        self.lines = code.splitlines()
+        self.slug = self.lines[0]
+        self.md_starting_line = self.lines.index(self.slug)
+        self.proper_slugline = CodeListing.is_slugline.match(self.slug)     
+
 
 class ExclusionFile:
     "Maintains the exclusion file for a particular validate function"
@@ -532,7 +533,10 @@ class PrintlnOutput(Validator):
 
 
 class JavaPackageDirectory(Validator):
-    "Test for Java package name and directory name"
+    """
+    Test for Java package name and directory name.
+    Packages for atoms that contain Java examples must be lowercase.
+    """
 
     def test(self, md: MarkdownFile):
         pass
