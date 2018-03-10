@@ -53,7 +53,7 @@ class MarkdownFile:
         self.err_msg = ""
         self.line_number = None
         self.codeblocks = [
-            group[1] for group in 
+            group[1] for group in
             re.findall("```(.*?)\n(.*?)\n```", self.text, flags=re.DOTALL)]
         self.listings = [CodeListing(code, self) for code in self.codeblocks]
         self.no_listings = re.sub("```(.*?)\n(.*?)\n```", "", self.text, flags=re.DOTALL)
@@ -62,7 +62,7 @@ class MarkdownFile:
         # Add title for the first error only:
         if not self.titled:
             self.err_msg += self.path.name + "\n"
-            self.titled = True  
+            self.titled = True
         self.err_msg += f"    {msg}\n"
         if line_number:
             self.line_number = line_number
@@ -78,17 +78,19 @@ class MarkdownFile:
                 os.system(f"{config.editor} {self.path}:{self.line_number}")
             else:
                 os.system(f"{config.editor} {self.path}")
-        
+
 
 class CodeListing:
 
     is_slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
 
     def __init__(self, code, md: MarkdownFile):
+        self.md = md
+        self.code = code
         self.lines = code.splitlines()
         self.slug = self.lines[0]
-        self.md_starting_line = self.lines.index(self.slug)
-        self.proper_slugline = CodeListing.is_slugline.match(self.slug)     
+        self.proper_slugline = CodeListing.is_slugline.match(self.slug)
+        self.md_starting_line = self.md.lines.index(self.slug)
 
 
 class ExclusionFile:
@@ -320,55 +322,48 @@ class CodeListingLineWidths(Validator):
                     md.error(f"Line {n} too wide in {listing.slug}")
 
 
-###
-
-single_tick_dictionary = set(Path(
-    config.root_path / "data" / "single_tick_dictionary.txt")
-    .read_text().splitlines())
-
-
-def remove_nonletters(text):
-    for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
-        text = text.replace(rch, " ")
-    return text.strip()
-
-
-def strip_comments_from_code(listing):
-    if len(listing.strip()) == 0:
-        md.error("Empty listing")
-        return []
-    listing = re.sub(r"/\*.*?\*/", "", listing, flags=re.DOTALL)
-    if len(listing.strip()) == 0:
-        return []
-    lines = listing.splitlines()
-    if lines[0].startswith("//"):  # Retain elements of slugline
-        lines[0] = lines[0][3:]
-    lines = [line.split("//")[0].rstrip() for line in lines]
-    words = []
-    for line in lines:
-        words += [word for word in remove_nonletters(line).split()]
-    return words
-
-
 # Temporarily disabled:
-class TickedPhrases: #(Validator):
+class TickedPhrases(Validator):
     "Spell-check single-ticked items against compiled code"
+
+    @staticmethod
+    def remove_nonletters(text):
+        for rch in "\"'\\/_`?$|#@(){}[]<>:;.,=!-+*%&0123456789":
+            text = text.replace(rch, " ")
+        return text.strip()
+
+    @staticmethod
+    def strip_comments_from_code(listing: CodeListing):
+        if len(listing.code.strip()) == 0:
+            listing.md.error("Empty listing")
+            return []
+        code = re.sub(r"/\*.*?\*/", "", listing.code, flags=re.DOTALL)
+        if len(code.strip()) == 0:
+            return []
+        lines = code.splitlines()
+        if lines[0].startswith("//"):  # Retain elements of slugline
+            lines[0] = lines[0][3:]
+        lines = [line.split("//")[0].rstrip() for line in lines]
+        words = []
+        for line in lines:
+            words += [word for word in TickedPhrases.remove_nonletters(line).split()]
+        return words
 
     def test(self, md: MarkdownFile):
         exclusions = ExclusionFile("validate_ticked_phrases.txt", md)
-        stripped_listings = [strip_comments_from_code(listing)
+        stripped_listings = [TickedPhrases.strip_comments_from_code(listing)
                              for listing in md.listings]
         # Flatten list
         pieces = {item for sublist in stripped_listings for item in sublist}
-        # pieces = pieces.union(single_tick_dictionary)
         pieces = pieces.union(exclusions)
         raw_single_ticks = [t for t in re.findall("`.+?`", md.text) if t != "```"]
-        single_ticks = [remove_nonletters(t[1:-1]).split()
+        single_ticks = [TickedPhrases.remove_nonletters(t[1:-1]).split()
                         for t in raw_single_ticks]
         # Flatten list
         single_ticks = {item for sublist in single_ticks for item in sublist}
         not_in_examples = single_ticks.difference(pieces)
         if not_in_examples:
+            pprint.pprint(not_in_examples)
             err_msg = ""
             for nie in not_in_examples:
                 if nie in exclusions:
@@ -381,7 +376,7 @@ class TickedPhrases: #(Validator):
             md.error(err_msg)
 
 
-class FullSpellcheck(Validator):
+class FullSpellcheck: #(Validator):
     "Spell-check everything"
 
     dictionary = set(config.dictionary.read_text().splitlines()).union(
