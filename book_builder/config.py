@@ -8,7 +8,23 @@ import sys
 from pathlib import Path
 from enum import Enum, unique
 
-######## To quiet tools ############
+def get_editor(id):
+    if id not in os.environ:
+        print(f"To use a different editor, set the {id} environment variable to your favorite editor.")
+        if id == 'CODE_EDITOR':
+            print(f"Using VS Code by default for {id}")
+            return "code"
+        elif id == 'MD_EDITOR':
+            print(f"Using Sublime by default for {id}")
+            return "subl"
+        else:
+            assert false, f"Don't recognize {id}"
+    return os.environ[id]
+
+code_editor = get_editor('CODE_EDITOR')
+md_editor = get_editor('MD_EDITOR')
+
+# Defaults in configuration.py, to quiet tools:
 title = ""
 base_name = ""
 language_name = ""
@@ -18,17 +34,10 @@ start_comment = ""
 extracted_examples = ""
 sample_size = ""
 exclude_atoms = ""
-#####################################
-
 
 # Add elements from configuration.py into this environment:
 sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
 from configuration import *
-
-if 'EDITOR' not in os.environ:
-    print("You must set the EDITOR environment variable to your favorite editor")
-    sys.exit()
-editor = os.environ['EDITOR']
 
 msgbreak = '-=' * 25
 

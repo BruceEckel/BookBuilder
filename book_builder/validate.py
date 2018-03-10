@@ -33,8 +33,8 @@ def all_checks():
 
     if misspellings:
         Path(config.all_misspelled).write_text("\n".join(sorted(misspellings)))
-        os.system(f"{config.editor} {config.all_misspelled}")
-        os.system(f"{config.editor} {config.supplemental_dictionary}")
+        os.system(f"{config.md_editor} {config.all_misspelled}")
+        os.system(f"{config.md_editor} {config.supplemental_dictionary}")
 
 
 class MarkdownFile:
@@ -75,14 +75,33 @@ class MarkdownFile:
     def edit(self):
         if self.err_msg:
             if self.line_number:
-                os.system(f"{config.editor} {self.path}:{self.line_number}")
+                os.system(f"{config.md_editor} {self.path}:{self.line_number}")
             else:
-                os.system(f"{config.editor} {self.path}")
+                os.system(f"{config.md_editor} {self.path}")
+
+    def __str__(self):
+        return self.path.name
 
 
 class CodeListing:
 
-    is_slugline = re.compile(f"^// .+?\.{config.code_ext}$", re.MULTILINE)
+    is_slugline = re.compile(
+        f"^// .+?\.{config.code_ext}$", 
+        re.MULTILINE)
+
+    strip_comments = re.compile(
+        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        re.DOTALL | re.MULTILINE)
+
+    @staticmethod
+    def comment_remover(text):
+        def replacer(match):
+            s = match.group(0)
+            if s.startswith('/'):
+                return " " # note: a space and not an empty string
+            else:
+                return s
+        return re.sub(CodeListing.strip_comments, replacer, text)
 
     def __init__(self, code, md: MarkdownFile):
         self.md = md
@@ -91,6 +110,7 @@ class CodeListing:
         self.slug = self.lines[0]
         self.proper_slugline = CodeListing.is_slugline.match(self.slug)
         self.md_starting_line = self.md.lines.index(self.slug)
+        self.no_comments = CodeListing.comment_remover(code)
 
 
 class ExclusionFile:
@@ -109,15 +129,17 @@ class ExclusionFile:
         self.exclusions = self.ef_path.read_text()
         if config.msgbreak in self.exclusions and not ExclusionFile.ef_names[exclusion_file_name]:
             ExclusionFile.ef_names[exclusion_file_name] = True
-            print(f"{self.ef_path.name} Needs Editing!")
-            os.system(f"{config.editor} {self.ef_path}")
+            # print(f"{self.ef_path.name} Needs Editing!")
+            # os.system(f"{config.md_editor} {self.ef_path}")
+            md.error(f"{self.ef_path.name} Needs Editing!")
+        self.set = {line.strip() for line in self.exclusions.splitlines()}
 
     def __call__(self, msg):
         with open(self.ef_path, "a") as ef:
             ef.write(f"{self.md.path.name}:\n")
             ef.write(f"    {msg}\n")
             ef.write(config.msgbreak + "\n")
-        os.system(f"{config.editor} {self.ef_path}")
+        os.system(f"{config.md_editor} {self.ef_path}")
 
     def __contains__(self, item):
         return item in self.exclusions
@@ -230,10 +252,6 @@ class ListingIndentation(Validator):
 
     @staticmethod
     def inconsistent_indentation(listing: CodeListing):
-        # listing_name = lines[0]
-        # if listing_name.startswith('//'):
-        #     listing_name = listing_name[3:]
-        # else:  # Skip listings without sluglines
         if not listing.proper_slugline:
             return False
         indents = [(len(line) - len(line.lstrip(' ')), line) for line in listing.lines]
@@ -322,7 +340,6 @@ class CodeListingLineWidths(Validator):
                     md.error(f"Line {n} too wide in {listing.slug}")
 
 
-# Temporarily disabled:
 class TickedPhrases(Validator):
     "Spell-check single-ticked items against compiled code"
 
@@ -332,48 +349,55 @@ class TickedPhrases(Validator):
             text = text.replace(rch, " ")
         return text.strip()
 
-    @staticmethod
-    def strip_comments_from_code(listing: CodeListing):
-        if len(listing.code.strip()) == 0:
-            listing.md.error("Empty listing")
-            return []
-        code = re.sub(r"/\*.*?\*/", "", listing.code, flags=re.DOTALL)
-        if len(code.strip()) == 0:
-            return []
-        lines = code.splitlines()
-        if lines[0].startswith("//"):  # Retain elements of slugline
-            lines[0] = lines[0][3:]
-        lines = [line.split("//")[0].rstrip() for line in lines]
-        words = []
-        for line in lines:
-            words += [word for word in TickedPhrases.remove_nonletters(line).split()]
-        return words
+    # @staticmethod
+    # def strip_comments_from_code(listing: CodeListing):
+    #     if len(listing.code.strip()) == 0:
+    #         listing.md.error("Empty listing")
+    #         return []
+    #     code = re.sub(r"/\*.*?\*/", "", listing.code, flags=re.DOTALL)
+    #     if len(code.strip()) == 0:
+    #         return []
+    #     lines = code.splitlines()
+    #     if lines[0].startswith("//"):  # Retain elements of slugline
+    #         lines[0] = lines[0][3:]
+    #     lines = [line.split("//")[0].rstrip() for line in lines]
+    #     words = []
+    #     for line in lines:
+    #         words += [word for word in TickedPhrases.remove_nonletters(line).split()]
+    #     return words
 
     def test(self, md: MarkdownFile):
         exclusions = ExclusionFile("validate_ticked_phrases.txt", md)
-        stripped_listings = [TickedPhrases.strip_comments_from_code(listing)
+        # stripped_listings = [TickedPhrases.strip_comments_from_code(listing)
+        #                      for listing in md.listings]
+        stripped_listings = [TickedPhrases.remove_nonletters(listing.no_comments)
                              for listing in md.listings]
         # Flatten list
         pieces = {item for sublist in stripped_listings for item in sublist}
         pieces = pieces.union(exclusions)
-        raw_single_ticks = [t for t in re.findall("`.+?`", md.text) if t != "```"]
+        raw_single_ticks = [
+            t for t in re.findall("`.+?`", md.text, flags=re.DOTALL) if t != "```"
+        ]
+        print(f"{md} raw_single_ticks: {pprint.pformat(raw_single_ticks)}")
         single_ticks = [TickedPhrases.remove_nonletters(t[1:-1]).split()
                         for t in raw_single_ticks]
         # Flatten list
         single_ticks = {item for sublist in single_ticks for item in sublist}
-        not_in_examples = single_ticks.difference(pieces)
+        not_in_examples = single_ticks.difference(pieces).difference(exclusions.set)
         if not_in_examples:
-            pprint.pprint(not_in_examples)
-            err_msg = ""
-            for nie in not_in_examples:
-                if nie in exclusions:
-                    continue
-                err_msg += f"Not in examples: {nie}\n"
-                for rst in raw_single_ticks:
-                    if nie in rst:
-                        exclusions(nie)
-                        err_msg += f"\t{rst}\n"
-            md.error(err_msg)
+            print(f"{md} not_in_examples: {pprint.pformat(not_in_examples)}")
+            # err_msg = ""
+            # for nie in not_in_examples:
+            #     if nie in exclusions:
+            #         continue
+            #     err_msg += f"Not in examples: {nie}\n"
+            #     for rst in raw_single_ticks:
+            #         if nie in rst:
+            #             exclusions(nie)
+            #             err_msg += f"\t{rst}\n"
+            # md.error(err_msg)
+            # print(f"err_msg: {err_msg}")
+            # sys.exit()
 
 
 class FullSpellcheck: #(Validator):
@@ -491,7 +515,7 @@ class MistakenBackquotes(Validator):
         if config.msgbreak in exclusions:
             print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
             os.system(
-                f"{config.editor} {config.mistaken_backquote_exclusions}")
+                f"{config.md_editor} {config.mistaken_backquote_exclusions}")
             sys.exit()
         lines = md.no_listings.splitlines()
         for n, line in enumerate(lines):
@@ -505,7 +529,7 @@ class MistakenBackquotes(Validator):
                 with open(config.mistaken_backquote_exclusions, "a") as mbe:
                     mbe.write(md.err_msg)
                 os.system(
-                    f"{config.editor} {config.mistaken_backquote_exclusions}")
+                    f"{config.md_editor} {config.mistaken_backquote_exclusions}")
 
 
 class PrintlnOutput(Validator):

@@ -209,7 +209,7 @@ def edit():
     "Edit BookBuilder files using VS Code"
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
     os.chdir("..")
-    os.system("code .")
+    os.system(f"{config.code_editor} .")
 
 
 ##########################################################
