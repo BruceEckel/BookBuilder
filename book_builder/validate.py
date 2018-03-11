@@ -93,7 +93,7 @@ class MarkdownFile:
         if self.err_msg:
             self.trace(f"Editing {self}")
             if self.line_number:
-                os.system(f"{config.md_editor} {self.path}:{self.line_number}")
+                os.system(f"{config.md_editor} {self.path}:{self.line_number + 1}")
             else:
                 os.system(f"{config.md_editor} {self.path}")
 
@@ -387,31 +387,34 @@ class TickedWords(Validator):
 
     def test(self, md: MarkdownFile):
 
-        def trace(description, item):
-            if self.trace:
+        def trace(description, item, id):
+            if any([x for x in self.trace if x == id]):
                 print(f"{md} -> {description}: {pprint.pformat(item)}")
 
         exclusions = ExclusionFile("validate_ticked_phrases.txt", md)
         stripped_listings = [TickedWords.non_letters.split(listing.no_comments)
                              for listing in md.listings]
-        trace("stripped_listings", stripped_listings)
+        trace("stripped_listings", stripped_listings, 'a')
         # Flatten list
         pieces = {item for sublist in stripped_listings for item in sublist}
-        trace("pieces", pieces)
+        trace("pieces", pieces, 'b')
         pieces = pieces.union(exclusions)
         raw_single_ticks = set(
             t for t in re.findall("`.+?`", md.text, flags=re.DOTALL) if t != "```"
         )
-        trace("raw_single_ticks", raw_single_ticks)
+        trace("raw_single_ticks", raw_single_ticks, 'c')
         single_ticks = [TickedWords.non_letters.sub(" ", t[1:-1]).split()
                         for t in raw_single_ticks]
         # Flatten list
         single_ticks = {item for sublist in single_ticks for item in sublist}
-        trace("single_ticks", single_ticks)
+        trace("single_ticks", single_ticks, 'd')
         not_in_examples = single_ticks.difference(pieces).difference(exclusions.set)
         if not_in_examples:
-            trace("not_in_examples", not_in_examples)
-            md.error(f"Backticked word(s) not in examples: {pprint.pformat(not_in_examples)}")
+            e = next(iter(not_in_examples)) # Select any element from the set
+            for n, line in enumerate(md.lines):
+                if '`' in line and e in line:
+                    break
+            md.error(f"Backticked word(s) not in examples: {pprint.pformat(not_in_examples)}", n)
             exclusions.error(pprint.pformat(not_in_examples))
 
 
