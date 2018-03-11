@@ -79,9 +79,10 @@ def packages_unpackaged():
 ##########################################################
 
 @cli.command()
-def validate():
+@click.option('--trace', is_flag=True, default=False)
+def validate(trace):
     "Validation tests"
-    click.echo(_validate.all_checks())
+    click.echo(_validate.Validator.all_checks(trace))
 
 
 ##########################################################
