@@ -387,27 +387,27 @@ class TickedWords(Validator):
 
     def test(self, md: MarkdownFile):
 
-        def trace(description, item, id):
-            if any([x for x in self.trace if x == id]):
+        def trace(id, description, item):
+            if id in self.trace:
                 print(f"{md} -> {description}: {pprint.pformat(item)}")
 
-        exclusions = ExclusionFile("validate_ticked_phrases.txt", md)
+        exclusions = ExclusionFile("validate_ticked_words.txt", md)
         stripped_listings = [TickedWords.non_letters.split(listing.no_comments)
                              for listing in md.listings]
-        trace("stripped_listings", stripped_listings, 'a')
+        trace('a', "stripped_listings", stripped_listings)
         # Flatten list
         pieces = {item for sublist in stripped_listings for item in sublist}
-        trace("pieces", pieces, 'b')
+        trace('b', "pieces", pieces)
         pieces = pieces.union(exclusions)
         raw_single_ticks = set(
             t for t in re.findall("`.+?`", md.text, flags=re.DOTALL) if t != "```"
         )
-        trace("raw_single_ticks", raw_single_ticks, 'c')
+        trace('c', "raw_single_ticks", raw_single_ticks)
         single_ticks = [TickedWords.non_letters.sub(" ", t[1:-1]).split()
                         for t in raw_single_ticks]
         # Flatten list
         single_ticks = {item for sublist in single_ticks for item in sublist}
-        trace("single_ticks", single_ticks, 'd')
+        trace('d', "single_ticks", single_ticks)
         not_in_examples = single_ticks.difference(pieces).difference(exclusions.set)
         if not_in_examples:
             e = next(iter(not_in_examples)) # Select any element from the set
