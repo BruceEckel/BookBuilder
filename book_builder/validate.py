@@ -496,12 +496,10 @@ class PunctuationInsideQuotes(Validator):
     def validate(self, md: MarkdownFile):
         text = re.sub("```(.*?)\n(.*?)\n```", "", md.text, flags=re.DOTALL)
         text = re.sub("`.*?`", "", text, flags=re.DOTALL)
-        outside_commas = re.findall("\",", text)
-        if outside_commas:
-            md.error("commas outside quotes")
-        outside_periods = re.findall(r"\"\.", text)
-        if outside_periods:
-            md.error("periods outside quotes")
+        punctuation_outside = [line for line in text.splitlines()
+            if line.find('",') != -1 or line.find('".') != -1]
+        if punctuation_outside:
+            md.error("'.' or ',' outside quotes", md.lines.index(punctuation_outside[0]))
 
 
 class Characters(Validator):
