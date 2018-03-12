@@ -65,10 +65,10 @@ class MarkdownFile:
         self.titled = False
         self.err_msg = ""
         self.line_number = None
-        self.codeblocks = [
-            group[1] for group in
-            re.findall("```(.*?)\n(.*?)\n```", self.text, flags=re.DOTALL)]
-        self.listings = [CodeListing(code, self) for code in self.codeblocks]
+        self.listings = [CodeListing(marker, code, self) for (marker, code) in
+            re.findall("(```.*?)\n(.*?)\n```", self.text, flags=re.DOTALL)]
+        # for lst in self.listings:
+        #     print(lst)
         self.no_listings = re.sub("```(.*?)\n(.*?)\n```", "", self.text, flags=re.DOTALL)
 
     def trace(self, msg):
@@ -111,6 +111,8 @@ class CodeListing:
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
         re.DOTALL | re.MULTILINE)
 
+    package_name = re.compile(r'^package (\S*).*$', flags=re.MULTILINE)
+
     @staticmethod
     def comment_remover(text):
         def replacer(match):
@@ -121,14 +123,25 @@ class CodeListing:
                 return s
         return re.sub(CodeListing.strip_comments, replacer, text)
 
-    def __init__(self, code, md: MarkdownFile):
+    def __init__(self, marker, code, md: MarkdownFile):
         self.md = md
+        self.marker = marker
         self.code = code
         self.lines = code.splitlines()
         self.slug = self.lines[0]
         self.proper_slugline = CodeListing.is_slugline.match(self.slug)
+        self.directory = None
+        if self.proper_slugline:
+            self.directory = self.slug[3:].split('/')[0]
         self.md_starting_line = self.md.lines.index(self.slug)
         self.no_comments = CodeListing.comment_remover(code)
+        self.package = ""
+        package = CodeListing.package_name.findall(self.code)
+        if package:
+            self.package = package[0].replace(";", "")
+
+    def __str__(self):
+        return f"{self.marker}:\n{self.code}"
 
 
 class ExclusionFile:
@@ -177,9 +190,11 @@ class TagNoGap(Validator):
         super().__init__(trace)
 
     def test(self, md: MarkdownFile):
-        if re.search(f"``` +{config.language_name}", md.text):
-            md.error(
-                f"Contains spaces between ``` and {config.language_name}")
+        for listing in md.listings:
+            if " " in listing.marker:
+                md.error(
+                    f"Contains spaces between ``` and {config.language_name}",
+                    listing.md_starting_line - 1)
 
 
 class CompleteExamples(Validator):
@@ -352,14 +367,9 @@ class PackageNames(Validator):
 
     def test(self, md: MarkdownFile):
         for listing in md.listings:
-            package_decl = [
-                line for line in listing.lines if line.startswith("package ")]
-            if not package_decl:
-                continue
-            # print(package_decl)
-            if bool(re.search('([A-Z])', package_decl[0])):
+            if bool(re.search('([A-Z])', listing.package)):
                 md.error(
-                    f"Capital letter in package name:\n\t{package_decl}")
+                    f"Capital letter in package name:\n\t{listing.package}", listing.md_starting_line)
 
 
 class CodeListingLineWidths(Validator):
@@ -374,7 +384,7 @@ class CodeListingLineWidths(Validator):
                 continue
             for n, line in enumerate(listing.lines):
                 if len(line.rstrip()) > config.code_width:
-                    md.error(f"Line {n} too wide in {listing.slug}")
+                    md.error(f"Line {n} too wide in {listing.slug}", listing.md_starting_line + n)
 
 
 class TickedWords(Validator):
@@ -538,7 +548,7 @@ class Characters(Validator):
     def test(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
             if any([bad_char in line for bad_char in Characters.bad_chars]):
-                md.error(f"line {n} contains bad character:\n{line}")
+                md.error(f"line {n} contains bad character:\n{line}", n)
 
 
 class MistakenBackquotes(Validator):
@@ -596,14 +606,16 @@ class PrintlnOutput(Validator):
 class JavaPackageDirectory(Validator):
     """
     Test for Java package name and directory name.
-    Packages for atoms that contain Java examples must be lowercase.
+    Directory names for atoms that contain Java examples must be lowercase.
     """
 
     def __init__(self, trace):
         super().__init__(trace)
 
     def test(self, md: MarkdownFile):
-        pass
+        for listing in md.listings:
+            print(md, listing.slug, listing.directory)
+            # if 'java' in listing.marker:
 
 
 ##################### Vestigial ######################
