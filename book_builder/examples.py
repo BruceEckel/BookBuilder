@@ -213,7 +213,7 @@ def create_test_files():
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        (package / "run.bat").write_text(python_bat + run_py)
+        (package / "run.bat").write_text(python_bat + run_py.replace("./gradlew", "gradlew"))
         (package / "run.sh").write_text(python_shell + run_py)
         # os.chmod(package / "run.sh", stat.S_IXOTH)
         os.chdir(package)

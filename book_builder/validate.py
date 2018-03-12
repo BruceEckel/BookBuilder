@@ -623,7 +623,7 @@ class JavaPackageDirectory(Validator):
         super().__init__(trace)
 
     def test(self, md: MarkdownFile):
-        for listing in [lst for lst in md.listings if 'java' in lst.marker]:
+        for listing in [lst for lst in md.listings if 'java' in lst.marker and lst.package]:
             if bool(re.search('([A-Z])', listing.directory)):
                 self.debug(md, listing)
                 md.error(textwrap.dedent(f"""\
