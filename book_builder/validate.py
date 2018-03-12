@@ -7,6 +7,7 @@ import os
 import sys
 import shutil
 import pprint
+import textwrap
 from pathlib import Path
 from abc import ABC, abstractmethod
 import book_builder.config as config
@@ -103,9 +104,7 @@ class MarkdownFile:
 
 class CodeListing:
 
-    is_slugline = re.compile(
-        f"^// .+?\.{config.code_ext}$",
-        re.MULTILINE)
+    is_slugline = re.compile(f"^// .+?\.[a-z]+$", re.MULTILINE)
 
     strip_comments = re.compile(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
@@ -130,9 +129,10 @@ class CodeListing:
         self.lines = code.splitlines()
         self.slug = self.lines[0]
         self.proper_slugline = CodeListing.is_slugline.match(self.slug)
-        self.directory = None
         if self.proper_slugline:
             self.directory = self.slug[3:].split('/')[0]
+        else:
+            self.directory = None
         self.md_starting_line = self.md.lines.index(self.slug)
         self.no_comments = CodeListing.comment_remover(code)
         self.package = ""
@@ -609,39 +609,27 @@ class JavaPackageDirectory(Validator):
     Directory names for atoms that contain Java examples must be lowercase.
     """
 
+    def debug(self, md: MarkdownFile, listing: CodeListing):
+        if self.trace:
+            print(textwrap.dedent(f"""\
+            {md}
+                marker: {listing.marker}
+                slug: {listing.slug}
+                directory [{listing.directory}]
+                package ({listing.package})
+            """))
+
     def __init__(self, trace):
         super().__init__(trace)
 
     def test(self, md: MarkdownFile):
-        for listing in md.listings:
-            print(md, listing.slug, listing.directory)
-            # if 'java' in listing.marker:
-
-
-##################### Vestigial ######################
-
-# Test files individually to find problem characters
-
-def pandoc_test(md):
-    command = (
-        f"pandoc {md.name}"
-        f" -t epub3 -o {md.stem}.epub"
-        " -f markdown-native_divs "
-        " -f markdown+smart "
-        f'--metadata title="TEST"')
-    print(md.name)
-    os.system(command)
-
-
-def test_markdown_individually():
-    clean(config.test_dir)
-    config.test_dir.mkdir()
-    for md in config.markdown_dir.glob("*.md"):
-        shutil.copy(md, config.test_dir)
-    os.chdir(config.test_dir)
-    files = sorted(list(Path().glob("*.md")))
-    pprint.pprint(files)
-    with open('combined.md', 'w') as combined:
-        for f in files:
-            combined.write(f.read_text() + "\n")
-    pandoc_test(Path('combined.md'))
+        for listing in [lst for lst in md.listings if 'java' in lst.marker]:
+            if bool(re.search('([A-Z])', listing.directory)):
+                self.debug(md, listing)
+                md.error(textwrap.dedent(f"""\
+                    Capitalized directory containing a Java file:
+                        {listing.slug}
+                        directory: {listing.directory}
+                        package: {listing.package}
+                    """), 
+                    listing.md_starting_line)
