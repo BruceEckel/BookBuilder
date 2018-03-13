@@ -586,3 +586,23 @@ class JavaPackageDirectory(Validator):
                         package: {listing.package}
                     """),
                          listing.md_starting_line)
+
+
+class CheckBlankLines(Validator):
+    """
+    Make sure there isn't more than a single blank line anywhere,
+    and that there's a single blank line before/after the end of a code listing.
+    """
+    def validate(self, md: MarkdownFile):
+        for n, line in enumerate(md.lines):
+            if line.strip():
+                continue
+            if n+1 < len(md.lines) and md.lines[n+1].strip():
+                continue
+            md.error("More than one blank line", n)
+        for n, line in enumerate(md.lines):
+            if line.startswith("```"):
+                if n == 0 or n + 1 >= len(md.lines):
+                    continue
+                if not (md.lines[n-1].strip() == "" or md.lines[n+1].strip() == ""):
+                    md.error("Missing blank line before/after listing", n)
