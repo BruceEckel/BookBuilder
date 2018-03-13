@@ -154,29 +154,26 @@ class CodeListing:
 
 class ExclusionFile:
     "Maintains the exclusion file for a particular validate function"
-    ef_names = {}
+    names = {}
 
-    def __init__(self, exclusion_file_name, md: MarkdownFile):
-        if exclusion_file_name not in ExclusionFile.ef_names:
+    def __init__(self, exclusion_file_name):
+        if exclusion_file_name not in ExclusionFile.names:
             # Not reported
-            ExclusionFile.ef_names[exclusion_file_name] = "False"
+            ExclusionFile.names[exclusion_file_name] = "False"
         self.needs_edit = False
         self.ef_path = config.data_path / exclusion_file_name
-        self.md = md
         if not self.ef_path.exists():
             self.ef_path.write_text("")
         self.exclusions = self.ef_path.read_text()
-        if config.msgbreak in self.exclusions and not ExclusionFile.ef_names[exclusion_file_name]:
-            ExclusionFile.ef_names[exclusion_file_name] = True
-            # print(f"{self.ef_path.name} Needs Editing!")
-            # os.system(f"{config.md_editor} {self.ef_path}")
-            md.error(f"{self.ef_path.name} Needs Editing!")
+        if config.msgbreak in self.exclusions and not ExclusionFile.names[exclusion_file_name]:
+            ExclusionFile.names[exclusion_file_name] = True
+            print(f"{self.ef_path.name} Needs Editing!")
         self.set = {line.strip() for line in self.exclusions.splitlines()}
 
-    def error(self, msg):
+    def error(self, msg, md):
         "Add message to exclusion file and edit that file"
         with open(self.ef_path, "a") as ef:
-            ef.write(f"{self.md.path.name}:\n")
+            ef.write(f"{md.path.name}:\n")
             ef.write(f"    {msg}\n")
             ef.write(config.msgbreak + "\n")
         os.system(f"{config.md_editor} {self.ef_path}")
@@ -218,12 +215,12 @@ class CompleteExamples(Validator):
         return False
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("validate_complete_examples.txt", md)
+        exclusions = ExclusionFile("validate_complete_examples.txt")
         noslug = CompleteExamples.examples_without_sluglines(md, exclusions)
         if noslug:
             exclusions.error(md.error(
                 f"Contains compileable example(s) without a slugline:\n{noslug.slug}",
-                noslug.md_starting_line))
+                noslug.md_starting_line), md)
 
 
 class FilenamesAndTitles(Validator):
@@ -334,7 +331,7 @@ class ExampleSluglines(Validator):
     "Check for sluglines that don't match the format"
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("validate_example_sluglines.txt", md)
+        exclusions = ExclusionFile("validate_example_sluglines.txt")
         for listing in md.listings:
             if not listing.slug.startswith(config.start_comment):
                 continue  # Improper code fragments caught elsewhere
@@ -344,7 +341,7 @@ class ExampleSluglines(Validator):
                 continue
             slug = listing.slug.split(None, 1)[1]
             if "/" not in slug and slug not in exclusions:
-                exclusions.error(md.error(f"Missing directory in:\n{slug}"))
+                exclusions.error(md.error(f"Missing directory in:\n{slug}"), md)
 
 
 class PackageNames(Validator):
@@ -381,7 +378,7 @@ class TickedWords(Validator):
             if id in self.trace:
                 print(f"{md} -> {description}: {pprint.pformat(item)}")
 
-        exclusions = ExclusionFile("validate_ticked_words.txt", md)
+        exclusions = ExclusionFile("validate_ticked_words.txt")
         stripped_listings = [TickedWords.non_letters.split(listing.no_comments)
                              for listing in md.listings]
         trace('a', "stripped_listings", stripped_listings)
@@ -407,24 +404,24 @@ class TickedWords(Validator):
                     break
             md.error(
                 f"Backticked word(s) not in examples: {pprint.pformat(not_in_examples)}", n)
-            exclusions.error(pprint.pformat(not_in_examples))
+            exclusions.error(pprint.pformat(not_in_examples), md)
 
 
-class FullSpellcheck:  # (Validator):
+class Spellcheck(Validator):
     "Spell-check everything"
 
-    dictionary = set(config.dictionary.read_text().splitlines()).union(
-        set(config.supplemental_dictionary.read_text().splitlines()))
+    main_dictionary = ExclusionFile("dictionary.txt")
+    supplemental_dictionary = ExclusionFile("supplemental_dictionary.txt")
+    dictionary = main_dictionary.set.union(supplemental_dictionary.set)
 
     def validate(self, md: MarkdownFile):
         words = set(
             re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", md.text))
-        misspelled = words - FullSpellcheck.dictionary
+        misspelled = words - Spellcheck.dictionary
         if '' in misspelled:
             misspelled.remove('')
         if len(misspelled):
-            global misspellings
-            misspellings = misspellings.union(misspelled)
+            Spellcheck.supplemental_dictionary.error(f"{pprint.pformat(misspelled)}", md)
             md.error(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
@@ -546,7 +543,7 @@ class PrintlnOutput(Validator):
     OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("validate_println_output.txt", md)
+        exclusions = ExclusionFile("validate_println_output.txt")
         for listing in re.findall("```kotlin(.*?)```", md.text, flags=re.DOTALL):
             slug = listing.strip().splitlines()[0]
             if "println" in listing and not any([ok in listing for ok in PrintlnOutput.OK]):
@@ -606,3 +603,12 @@ class CheckBlankLines(Validator):
                     continue
                 if not (md.lines[n-1].strip() == "" or md.lines[n+1].strip() == ""):
                     md.error("Missing blank line before/after listing", n)
+
+
+class DirectoryNameConsistency(Validator):
+    """
+    Ensure that directory names in sluglines are consistent with
+    Atom names.
+    """
+    def validate(self, md: MarkdownFile):
+        pass
