@@ -83,28 +83,24 @@ def generate_epub_bug_demo_file(markdown_file):
     """
     Create epub file from a single Markdown source. Used to show creators of 
     epub readers problems with their reader, without giving them the whole book.
-    generate_epub_files(config.epub_build_dir, config.epub_md, BookType.EPUB)
     """
     mf = config.markdown_dir / markdown_file
     if not mf.exists():
         print(f"No {markdown_file} found in {config.markdown_dir}")
         return
-
-    def combine_bug_demo_files(target, markdown_file):
-        if not target.parent.exists():
-            os.makedirs(target.parent)
-        bug_demo = mf.read_text()
-        target.write_text(bug_demo)
-        return f"{target.name} Created"
-
+    bug_demo = mf.read_text()
     regenerate_ebook_build_dir(config.epub_build_dir, BookType.EPUB)
-    print(combine_bug_demo_files(config.epub_md("bug-demo"), markdown_file))
+    target = config.epub_md("bug-demo")
+    if not target.parent.exists():
+        os.makedirs(target.parent)
+    target.write_text(bug_demo)
+    print(f"{target.name} Created")
     os.chdir(str(config.epub_build_dir))
     print(f"Producing {config.epub_build_dir.name}")
     pandoc_epub_command(
         config.epub_md("bug-demo"),
-        epub_name(),
-        config.title,
+        "BugDemo.epub",
+        "Bug Demo",
         BookType.EPUB)
 
 
