@@ -79,6 +79,35 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
         highlighting="monochrome")
 
 
+def generate_epub_bug_demo_file(markdown_file):
+    """
+    Create epub file from a single Markdown source. Used to show creators of 
+    epub readers problems with their reader, without giving them the whole book.
+    generate_epub_files(config.epub_build_dir, config.epub_md, BookType.EPUB)
+    """
+    mf = config.markdown_dir / markdown_file
+    if not mf.exists():
+        print(f"No {markdown_file} found in {config.markdown_dir}")
+        return
+
+    def combine_bug_demo_files(target, markdown_file):
+        if not target.parent.exists():
+            os.makedirs(target.parent)
+        bug_demo = mf.read_text()
+        target.write_text(bug_demo)
+        return f"{target.name} Created"
+
+    regenerate_ebook_build_dir(config.epub_build_dir, BookType.EPUB)
+    print(combine_bug_demo_files(config.epub_md("bug-demo"), markdown_file))
+    os.chdir(str(config.epub_build_dir))
+    print(f"Producing {config.epub_build_dir.name}")
+    pandoc_epub_command(
+        config.epub_md("bug-demo"),
+        epub_name(),
+        config.title,
+        BookType.EPUB)
+
+
 def fix_for_apple(name):
     epub = zipfile.ZipFile(name, "a")
     epub.write(config.meta_inf, "META-INF")
@@ -201,7 +230,8 @@ def email_to_kindle_readers():
     import smtplib
     import sys
 
-    recipients = ['rcpt1@example.com','rcpt2@example.com','group1@example.com']
+    recipients = ['rcpt1@example.com',
+                  'rcpt2@example.com', 'group1@example.com']
     emaillist = [elem.strip().split(',') for elem in recipients]
     msg = MIMEMultipart()
     msg['Subject'] = str(sys.argv[1])
@@ -213,8 +243,9 @@ def email_to_kindle_readers():
     part = MIMEText("Hi, please find the attached file")
     msg.attach(part)
 
-    part = MIMEApplication(open(str(sys.argv[2]),"rb").read())
-    part.add_header('Content-Disposition', 'attachment', filename=str(sys.argv[2]))
+    part = MIMEApplication(open(str(sys.argv[2]), "rb").read())
+    part.add_header('Content-Disposition', 'attachment',
+                    filename=str(sys.argv[2]))
     msg.attach(part)
 
     server = smtplib.SMTP("smtp.gmail.com:587")
@@ -222,4 +253,4 @@ def email_to_kindle_readers():
     server.starttls()
     server.login("abcxyz@gmail.com", "yourpasswordhere")
 
-    server.sendmail(msg['From'], emaillist , msg.as_string())
+    server.sendmail(msg['From'], emaillist, msg.as_string())

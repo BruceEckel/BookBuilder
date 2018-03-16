@@ -10,6 +10,7 @@ from book_builder.ebook_generators import convert_to_epub
 from book_builder.ebook_generators import convert_to_mobi
 from book_builder.ebook_generators import convert_to_docx
 from book_builder.ebook_generators import create_release
+from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 
 
@@ -144,6 +145,13 @@ def epub_build():
 def epub_rename():
     "Renumber atoms and fix atom names"
     click.echo(fix_names_and_renumber_atoms())
+
+
+@epub.command('bugdemo')
+@click.option('--mdfile', prompt='Markdown File Name')
+def epub_bugdemo(mdfile):
+    "Create EPUB file from single Markdown file, to demonstrate epub reader bugs"
+    click.echo(generate_epub_bug_demo_file(mdfile))
 
 
 # @epub.command('sample_markdown')
