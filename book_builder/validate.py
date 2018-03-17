@@ -611,4 +611,9 @@ class DirectoryNameConsistency(Validator):
     Atom names.
     """
     def validate(self, md: MarkdownFile):
-        pass
+        dirset = { listing.directory for listing in md.listings if listing.directory }
+        if len(dirset) > 1:
+            md.error(f"Multiple directory names in one atom: {pprint.pformat(dirset)}")
+        # for listing in md.listings:
+        #     if listing.directory:
+        #         print(md, listing.directory)
