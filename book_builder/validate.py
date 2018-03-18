@@ -17,6 +17,10 @@ class MarkdownFile:
     pass
 
 
+class DuplicateExampleNames:
+    pass
+
+
 misspellings = set()
 
 
@@ -54,6 +58,8 @@ class Validator(ABC):
                 "\n".join(sorted(misspellings)))
             os.system(f"{config.md_editor} {config.all_misspelled}")
             os.system(f"{config.md_editor} {config.supplemental_dictionary}")
+
+        DuplicateExampleNames.check()
 
 
 class MarkdownFile:
@@ -341,7 +347,8 @@ class ExampleSluglines(Validator):
                 continue
             slug = listing.slug.split(None, 1)[1]
             if "/" not in slug and slug not in exclusions:
-                exclusions.error(md.error(f"Missing directory in:\n{slug}"), md)
+                exclusions.error(
+                    md.error(f"Missing directory in:\n{slug}"), md)
 
 
 class PackageNames(Validator):
@@ -421,7 +428,8 @@ class Spellcheck(Validator):
         if '' in misspelled:
             misspelled.remove('')
         if len(misspelled):
-            Spellcheck.supplemental_dictionary.error(f"{pprint.pformat(misspelled)}", md)
+            Spellcheck.supplemental_dictionary.error(
+                f"{pprint.pformat(misspelled)}", md)
             md.error(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
@@ -494,9 +502,10 @@ class PunctuationInsideQuotes(Validator):
         text = re.sub("```(.*?)\n(.*?)\n```", "", md.text, flags=re.DOTALL)
         text = re.sub("`.*?`", "", text, flags=re.DOTALL)
         punctuation_outside = [line for line in text.splitlines()
-            if line.find('",') != -1 or line.find('".') != -1]
+                               if line.find('",') != -1 or line.find('".') != -1]
         if punctuation_outside:
-            md.error("'.' or ',' outside quotes", md.lines.index(punctuation_outside[0]))
+            md.error("'.' or ',' outside quotes",
+                     md.lines.index(punctuation_outside[0]))
 
 
 class Characters(Validator):
@@ -590,6 +599,7 @@ class CheckBlankLines(Validator):
     Make sure there isn't more than a single blank line anywhere,
     and that there's a single blank line before/after the end of a code listing.
     """
+
     def validate(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
             if line.strip():
@@ -605,15 +615,44 @@ class CheckBlankLines(Validator):
                     md.error("Missing blank line before/after listing", n)
 
 
+class DuplicateExampleNames(Validator):
+    """
+    Ensure there are no duplicate example names.
+    """
+    all_examples = config.data_path / "AllExampleNames.txt"
+    all_examples.write_text("") # Initialize file to empty
+
+    def validate(self, md: MarkdownFile):
+        with open(DuplicateExampleNames.all_examples, "a") as aa:
+            for example in md.listings:
+                if example.proper_slugline:
+                    aa.write(f"{example.slug[3:]}\n")
+
+    @staticmethod
+    def check():
+        examples = DuplicateExampleNames.all_examples.read_text().splitlines()
+        duplicates = set([x for x in examples if examples.count(x) > 1])
+        if duplicates:
+            print(
+                f"Duplicate example sluglines:\n{pprint.pformat(duplicates)}")
+        example_names = [e.split('/')[-1] for e in examples]
+        dupnames = set(
+            [x for x in example_names if example_names.count(x) > 1])
+        if dupnames:
+            print(f"Duplicate example names:\n{pprint.pformat(dupnames)}")
+
+
 class DirectoryNameConsistency(Validator):
     """
     Ensure that directory names in sluglines are consistent with
     Atom names.
     """
+
     def validate(self, md: MarkdownFile):
-        dirset = { listing.directory for listing in md.listings if listing.directory }
+        dirset = {listing.directory for listing in md.listings if listing.directory}
         if len(dirset) > 1:
-            md.error(f"Multiple directory names in one atom: {pprint.pformat(dirset)}")
+            md.error(
+                f"Multiple directory names in one atom: {pprint.pformat(dirset)}")
         # for listing in md.listings:
         #     if listing.directory:
         #         print(md, listing.directory)
