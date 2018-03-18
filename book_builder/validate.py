@@ -620,7 +620,7 @@ class DuplicateExampleNames(Validator):
     Ensure there are no duplicate example names.
     """
     all_examples = config.data_path / "AllExampleNames.txt"
-    all_examples.write_text("")  # Initialize file to empty
+    all_examples.write_text("")  # Clear file during class construction
 
     def validate(self, md: MarkdownFile):
         with open(DuplicateExampleNames.all_examples, "a") as aa:
@@ -645,14 +645,16 @@ class DuplicateExampleNames(Validator):
 class PackageAndDirectoryNames(Validator):
     """
     Ensure that package names are consistent with directory names.
-    TODO: Needs an exclusion file
     """
 
     def validate(self, md: MarkdownFile):
+        exclusions = ExclusionFile("package_and_directory_names.txt")
         for listing in md.listings:
             if listing.directory and listing.package and listing.package != listing.directory.lower():
-                md.error(
-                    f"{listing.package} != {listing.directory.lower()}", listing.md_starting_line)
+                if listing.package not in exclusions:
+                    exclusions.error(listing.package, md)
+                    md.error(
+                        f"{listing.package} != {listing.directory.lower()}", listing.md_starting_line)
 
 
 class DirectoryNameConsistency(Validator):
