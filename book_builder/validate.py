@@ -34,6 +34,13 @@ class Validator(ABC):
     def validate(self, md: MarkdownFile):
         pass
 
+    def post_process(self):
+        """
+        This is run once, at the end of all_checks().
+        It performs any desired 'group actions'.
+        """
+        pass
+
     def name(self):
         return f"{self.__class__.__name__}"
 
@@ -53,13 +60,15 @@ class Validator(ABC):
             markdown_file.show()
             markdown_file.edit()
 
+        # This should be in a post_process():
         if misspellings:
             Path(config.all_misspelled).write_text(
                 "\n".join(sorted(misspellings)))
             os.system(f"{config.md_editor} {config.all_misspelled}")
             os.system(f"{config.md_editor} {config.supplemental_dictionary}")
 
-        DuplicateExampleNames.check()
+        for val in validators:
+            val.post_process()
 
 
 class MarkdownFile:
@@ -414,22 +423,20 @@ class TickedWords(Validator):
             exclusions.error(pprint.pformat(not_in_examples), md)
 
 
-class Spellcheck(Validator):
+class SpellCheck(Validator):
     "Spell-check everything"
 
     main_dictionary = ExclusionFile("dictionary.txt")
-    supplemental_dictionary = ExclusionFile("supplemental_dictionary.txt")
-    dictionary = main_dictionary.set.union(supplemental_dictionary.set)
+    supplemental = ExclusionFile("supplemental_dictionary.txt")
+    dictionary = main_dictionary.set.union(supplemental.set)
 
     def validate(self, md: MarkdownFile):
         words = set(
             re.split("(?:(?:[^a-zA-Z]+')|(?:'[^a-zA-Z]+))|(?:[^a-zA-Z']+)", md.text))
-        misspelled = words - Spellcheck.dictionary
-        if '' in misspelled:
-            misspelled.remove('')
+        misspelled = words - SpellCheck.dictionary
+        misspelled.discard('')
         if len(misspelled):
-            Spellcheck.supplemental_dictionary.error(
-                f"{pprint.pformat(misspelled)}", md)
+            SpellCheck.supplemental.error(f"{pprint.pformat(misspelled)}", md)
             md.error(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
@@ -628,8 +635,7 @@ class DuplicateExampleNames(Validator):
                 if example.proper_slugline:
                     aa.write(f"{example.slug[3:]}\n")
 
-    @staticmethod
-    def check():
+    def post_process(self):
         examples = DuplicateExampleNames.all_examples.read_text().splitlines()
         duplicates = set([x for x in examples if examples.count(x) > 1])
         if duplicates:
@@ -654,7 +660,8 @@ class PackageAndDirectoryNames(Validator):
                 if listing.package not in exclusions:
                     exclusions.error(listing.package, md)
                     md.error(
-                        f"{listing.package} != {listing.directory.lower()}", listing.md_starting_line)
+                        f"Inconsistent package/directory name:{listing.package} != {listing.directory.lower()}",
+                        listing.md_starting_line)
 
 
 class DirectoryNameConsistency(Validator):
@@ -663,10 +670,18 @@ class DirectoryNameConsistency(Validator):
     """
 
     def validate(self, md: MarkdownFile):
-        dirset = {listing.directory for listing in md.listings if listing.directory}
+        exclusions = ExclusionFile("directory_name_consistency.txt")
+        dirset = {
+            listing.directory for listing in md.listings if listing.directory} - exclusions.set
         if len(dirset) > 1:
+            exclusions.error(dirset, md)
             md.error(
                 f"Multiple directory names in one atom: {pprint.pformat(dirset)}")
-        # for listing in md.listings:
-        #     if listing.directory:
-        #         print(md, listing.directory)
+        dirname_exclusions = ExclusionFile("directory_name_exclusions.txt")
+        if dirset - dirname_exclusions.set:
+            calculated_dir = "".join([w.capitalize()
+                                      for w in md.path.name[4:-3].split("_")])
+            if calculated_dir not in dirset:
+                dirname_exclusions.error(f"{calculated_dir} -> {dirset}", md)
+                md.error(
+                    f"Inconsistent directory name: {calculated_dir} -> {dirset}")

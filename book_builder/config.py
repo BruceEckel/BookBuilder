@@ -109,9 +109,6 @@ metadata = resource("metadata.yaml")
 meta_inf = resource("META-INF")
 
 data_path = root_path / "data"
-# dictionary = data_path / "dictionary.txt"
-# supplemental_dictionary = data_path / "supplemental_dictionary.txt"
-# all_misspelled = data_path / "all_misspelled.txt"
 comment_capitalization_exclusions = data_path / \
     "comment_capitalization_exclusions.txt"
 mistaken_backquote_exclusions = data_path / "mistaken_backquote_exclusions.txt"
