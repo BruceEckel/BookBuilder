@@ -109,6 +109,8 @@ metadata = resource("metadata.yaml")
 meta_inf = resource("META-INF")
 
 data_path = root_path / "data"
+
+###### These should be exclusion files:
 comment_capitalization_exclusions = data_path / \
     "comment_capitalization_exclusions.txt"
 mistaken_backquote_exclusions = data_path / "mistaken_backquote_exclusions.txt"
