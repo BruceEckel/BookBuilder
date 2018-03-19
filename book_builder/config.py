@@ -8,9 +8,11 @@ import sys
 from pathlib import Path
 from enum import Enum, unique
 
+
 def get_editor(id):
     if id not in os.environ:
-        print(f"To use a different editor, set the {id} environment variable to your favorite editor.")
+        print(
+            f"To use a different editor, set the {id} environment variable to your favorite editor.")
         if id == 'CODE_EDITOR':
             print(f"Using VS Code by default for {id}")
             return "code"
@@ -20,6 +22,7 @@ def get_editor(id):
         else:
             assert false, f"Don't recognize {id}"
     return os.environ[id]
+
 
 code_editor = get_editor('CODE_EDITOR')
 md_editor = get_editor('MD_EDITOR')
@@ -51,33 +54,21 @@ class BookType(Enum):
 
 
 root_name = base_name.lower()
-
 root_path = Path(__file__).parent.parent.parent.resolve() / base_name
 markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
-
 epub_build_dir = root_path / "build" / "epub"
 mobi_build_dir = root_path / "build" / "mobi"
 docx_build_dir = root_path / "build" / "docx"
 release_dir = root_path / "build" / "Release"
 test_dir = root_path / "test"
 
-
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
-
-
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
-
-
 def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
-
-
 def epub_name(tag=""): return f"{base_name}{tag}.epub"
-
-
 def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
-
 
 built_ebooks = [
     epub_build_dir / epub_name(),
@@ -92,11 +83,8 @@ built_ebooks = [
 
 combined_markdown = epub_md("assembled")
 sample_markdown = epub_md("sample")
-# recent_atom_names = bb_code_dir / "recent_atom_names.py"
-
 
 def resource(path): return root_path / "resources" / path
-
 
 images = resource("images")
 fonts = resource("fonts")
@@ -107,14 +95,7 @@ mobi_css = resource(root_name + "-mobi.css")
 mobi_mono_css = resource(root_name + "-mobi-mono.css")
 metadata = resource("metadata.yaml")
 meta_inf = resource("META-INF")
-
 data_path = root_path / "data"
-
-###### These should be exclusion files:
-comment_capitalization_exclusions = data_path / \
-    "comment_capitalization_exclusions.txt"
-mistaken_backquote_exclusions = data_path / "mistaken_backquote_exclusions.txt"
-
 
 if __name__ == '__main__':
     "Check to see if identifiers are used in this project"

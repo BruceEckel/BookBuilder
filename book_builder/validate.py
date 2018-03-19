@@ -1,12 +1,5 @@
 """
 Validation test framework and checks
-TODO: check for use of 'variable'
-
-TODO:
-comment_capitalization_exclusions = data_path / \
-    "comment_capitalization_exclusions.txt"
-mistaken_backquote_exclusions = data_path / "mistaken_backquote_exclusions.txt"
-
 """
 import re
 import os
@@ -22,8 +15,8 @@ from book_builder.util import create_markdown_filename
 class MarkdownFile:
     """
     Contains everything about a Markdown file, including
-    all discovered error information.
-    Pass into functions to capture errors in Markdown files.
+    all discovered error information. Pass into functions 
+    to capture errors in Markdown files.
     """
 
     def __init__(self, md_path, trace=False):
@@ -37,8 +30,6 @@ class MarkdownFile:
         self.line_number = None
         self.listings = [CodeListing(marker, code, self) for (marker, code) in
                          re.findall("(```.*?)\n(.*?)\n```", self.text, flags=re.DOTALL)]
-        # for lst in self.listings:
-        #     print(lst)
         self.no_listings = re.sub(
             "```(.*?)\n(.*?)\n```", "", self.text, flags=re.DOTALL)
 
@@ -138,11 +129,12 @@ class Validator(ABC):
     @staticmethod
     def all_checks(trace):
         "Run all tests to find problems in the book"
-        print(f"Validating {config.markdown_dir}")
-        assert config.markdown_dir.exists(), f"Cannot find {config.markdown_dir}"
+        md_dir = config.markdown_dir
+        print(f"Validating {md_dir}")
+        assert md_dir.exists(), f"Cannot find {md_dir}"
         # Create an object for each Validator:
         validators = [v(trace) for v in Validator.__subclasses__()]
-        for md_path in config.markdown_dir.glob("[0-9]*_*.md"):
+        for md_path in md_dir.glob("[0-9]*_*.md"):
             markdown_file = MarkdownFile(md_path, trace)
             for val in validators:
                 val.validate(markdown_file)
@@ -240,6 +232,16 @@ class PackageNames(Validator):
             if bool(re.search('([A-Z])', listing.package)):
                 md.error(
                     f"Capital letter in package name:\n\t{listing.package}", listing.md_starting_line)
+
+
+class HotWords(Validator):
+    "Check for words that might need rewriting"
+    hot_words = ['variable']
+    def validate(self, md: MarkdownFile):
+        for n, line in enumerate(md.lines):
+            hw = [w for w in HotWords.hot_words if w in line]
+            if hw:
+                md.error(f"Hot word: {hw[0]}", n)
 
 
 class CodeListingLineWidths(Validator):
@@ -408,11 +410,11 @@ class CapitalizedComments(Validator):
         return False
 
     def validate(self, md: MarkdownFile):
-        # This should be an exclusion file:
-        exclusions = config.comment_capitalization_exclusions.read_text()
+        exclusions = ExclusionFile("comment_capitalization_exclusions.txt")
         uncapped = CapitalizedComments.find_uncapitalized_comment(md)
         if uncapped and uncapped not in exclusions:
             md.error(f"Uncapitalized comment: {uncapped}")
+            exclusions.error(f"{uncapped}", md)
 
 
 class ListingIndentation(Validator):
@@ -533,14 +535,7 @@ class MistakenBackquotes(Validator):
     "Discover when backquotes are messed up by paragraph reformatting"
 
     def validate(self, md: MarkdownFile):
-        if not config.mistaken_backquote_exclusions.exists():
-            config.mistaken_backquote_exclusions.write_text("")
-        exclusions = config.mistaken_backquote_exclusions.read_text()
-        if config.msgbreak in exclusions:
-            print(f"{config.mistaken_backquote_exclusions.name} Needs Editing!")
-            os.system(
-                f"{config.md_editor} {config.mistaken_backquote_exclusions}")
-            sys.exit()
+        exclusions = ExclusionFile("mistaken_backquote_exclusions.txt")
         lines = md.no_listings.splitlines()
         for n, line in enumerate(lines):
             if n+1 >= len(lines):
@@ -550,10 +545,7 @@ class MistakenBackquotes(Validator):
                     continue
                 md.error(
                     f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
-                with open(config.mistaken_backquote_exclusions, "a") as mbe:
-                    mbe.write(md.err_msg)
-                os.system(
-                    f"{config.md_editor} {config.mistaken_backquote_exclusions}")
+                exclusions.error(md.err_msg)
 
 
 class JavaPackageDirectory(Validator):
