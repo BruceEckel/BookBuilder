@@ -65,6 +65,9 @@ class MarkdownFile:
 
 
 class CodeListing:
+    """
+    Holds all information about a single code listing in a Markdown file.
+    """
 
     is_slugline = re.compile(f"^// .+?\.[a-z]+$", re.MULTILINE)
 
@@ -107,19 +110,20 @@ class CodeListing:
 
 
 class Validator(ABC):
-    "Base class for all validators"
+    "Abstract base class for all validators"
 
     def __init__(self, trace):
         self.trace = trace
 
     @abstractmethod
     def validate(self, md: MarkdownFile):
+        "Performs the actual validation."
         pass
 
     def post_process(self):
         """
-        This is run once, at the end of all_checks().
-        It performs any desired 'group actions'.
+        (Optional) Run once, at the end of all_checks().
+        Performs any desired 'group actions'.
         """
         pass
 
@@ -236,12 +240,16 @@ class PackageNames(Validator):
 
 class HotWords(Validator):
     "Check for words that might need rewriting"
-    hot_words = ['variable']
+    exclude = ExclusionFile("hotwords_sentences.txt")
+    words = ExclusionFile("hotwords_to_find.txt")
+
     def validate(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
-            hw = [w for w in HotWords.hot_words if w in line]
+            hw = [
+                w for w in HotWords.words.set if w in line and not line in HotWords.exclude]
             if hw:
-                md.error(f"Hot word: {hw[0]}", n)
+                md.error(f"Hot word: {hw}\n{line}", n)
+                HotWords.exclude.error(f"Hot word [{n}]: {hw}\n{line}", md)
 
 
 class CodeListingLineWidths(Validator):
@@ -259,9 +267,9 @@ class CodeListingLineWidths(Validator):
 
 class ExampleSluglines(Validator):
     "Check for sluglines that don't match the format"
+    exclude = ExclusionFile("validate_example_sluglines.txt")
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("validate_example_sluglines.txt")
         for listing in md.listings:
             if not listing.slug.startswith(config.start_comment):
                 continue  # Improper code fragments caught elsewhere
@@ -270,20 +278,21 @@ class ExampleSluglines(Validator):
                     f"Bad first line (no space after beginning of comment):\n\t{listing.slug}")
                 continue
             slug = listing.slug.split(None, 1)[1]
-            if "/" not in slug and slug not in exclusions:
-                exclusions.error(
+            if "/" not in slug and slug not in ExampleSluglines.exclude:
+                ExampleSuglines.exclude.error(
                     md.error(f"Missing directory in:\n{slug}"), md)
 
 
 class CompleteExamples(Validator):
     "Check for code fragments that should be turned into examples"
+    exclude = ExclusionFile("validate_complete_examples.txt")
 
     @staticmethod
-    def examples_without_sluglines(md: MarkdownFile, exclusions):
+    def examples_without_sluglines(md: MarkdownFile):
         for listing in md.listings:
             if listing.proper_slugline:
                 continue
-            if listing.slug in exclusions:
+            if listing.slug in CompleteExamples.exclude:
                 continue
             for line in listing.lines:
                 if line.strip().startswith("fun "):
@@ -291,10 +300,9 @@ class CompleteExamples(Validator):
         return False
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("validate_complete_examples.txt")
-        noslug = CompleteExamples.examples_without_sluglines(md, exclusions)
+        noslug = CompleteExamples.examples_without_sluglines(md)
         if noslug:
-            exclusions.error(md.error(
+            CompleteExamples.exclude.error(md.error(
                 f"Contains compileable example(s) without a slugline:\n{noslug.slug}",
                 noslug.md_starting_line), md)
 
@@ -363,20 +371,21 @@ class PrintlnOutput(Validator):
     "Test for println() without /* Output:"
 
     OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
+    exclude = ExclusionFile("validate_println_output.txt")
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("validate_println_output.txt")
         for listing in md.listings:
             if "println" in listing.code and not any([ok in listing.code for ok in PrintlnOutput.OK]):
-                if listing.slug in exclusions:
+                if listing.slug in PrintlnOutput.exclude:
                     continue  # Next listing
                 md.error(
                     f"println without /* Output:\n{listing.slug}\n", listing.md_starting_line)
-                exclusions.error(f"{listing.slug}", md)
+                PrintlnOutput.exclude.error(f"{listing.slug}", md)
 
 
 class CapitalizedComments(Validator):
     "Check for un-capitalized comments"
+    exclude = ExclusionFile("comment_capitalization_exclusions.txt")
 
     @staticmethod
     def parse_comment_block(n, lines):
@@ -410,11 +419,10 @@ class CapitalizedComments(Validator):
         return False
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("comment_capitalization_exclusions.txt")
         uncapped = CapitalizedComments.find_uncapitalized_comment(md)
-        if uncapped and uncapped not in exclusions:
+        if uncapped and uncapped not in CapitalizedComments.exclude:
             md.error(f"Uncapitalized comment: {uncapped}")
-            exclusions.error(f"{uncapped}", md)
+            CapitalizedComments.exclude.error(f"{uncapped}", md)
 
 
 class ListingIndentation(Validator):
@@ -462,6 +470,7 @@ class ListingIndentation(Validator):
 class TickedWords(Validator):
     "Spell-check single-ticked items against compiled code"
 
+    exclude = ExclusionFile("validate_ticked_words.txt")
     non_letters = re.compile("[^a-zA-Z]+")
 
     def validate(self, md: MarkdownFile):
@@ -470,14 +479,13 @@ class TickedWords(Validator):
             if id in self.trace:
                 print(f"{md} -> {description}: {pprint.pformat(item)}")
 
-        exclusions = ExclusionFile("validate_ticked_words.txt")
         stripped_listings = [TickedWords.non_letters.split(listing.no_comments)
                              for listing in md.listings]
         trace('a', "stripped_listings", stripped_listings)
         # Flatten list
         pieces = {item for sublist in stripped_listings for item in sublist}
         trace('b', "pieces", pieces)
-        pieces = pieces.union(exclusions)
+        pieces = pieces.union(TickedWords.exclude)
         raw_single_ticks = set(
             t for t in re.findall("`.+?`", md.text, flags=re.DOTALL) if t != "```"
         )
@@ -488,7 +496,7 @@ class TickedWords(Validator):
         single_ticks = {item for sublist in single_ticks for item in sublist}
         trace('d', "single_ticks", single_ticks)
         not_in_examples = single_ticks.difference(
-            pieces).difference(exclusions.set)
+            pieces).difference(TickedWords.exclude.set)
         if not_in_examples:
             e = next(iter(not_in_examples))  # Select any element from the set
             for n, line in enumerate(md.lines):
@@ -496,7 +504,7 @@ class TickedWords(Validator):
                     break
             md.error(
                 f"Backticked word(s) not in examples: {pprint.pformat(not_in_examples)}", n)
-            exclusions.error(pprint.pformat(not_in_examples), md)
+            TickedWords.exclude.error(pprint.pformat(not_in_examples), md)
 
 
 class CrossLinks(Validator):
@@ -533,19 +541,19 @@ class CrossLinks(Validator):
 
 class MistakenBackquotes(Validator):
     "Discover when backquotes are messed up by paragraph reformatting"
+    exclude = ExclusionFile("mistaken_backquote_exclusions.txt")
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("mistaken_backquote_exclusions.txt")
         lines = md.no_listings.splitlines()
         for n, line in enumerate(lines):
             if n+1 >= len(lines):
                 break
             if line.startswith("`") and lines[n+1].startswith("`"):
-                if line in exclusions and lines[n+1] in exclusions:
+                if line in MistakenBackquotes.exclude and lines[n+1] in MistakenBackquotes.exclude:
                     continue
                 md.error(
                     f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
-                exclusions.error(md.err_msg)
+                MistakenBackquotes.exclude.error(md.err_msg)
 
 
 class JavaPackageDirectory(Validator):
@@ -628,36 +636,38 @@ class PackageAndDirectoryNames(Validator):
     """
     Ensure that package names are consistent with directory names.
     """
+    exclude = ExclusionFile("package_and_directory_names.txt")
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("package_and_directory_names.txt")
-        for listing in md.listings:
-            if listing.directory and listing.package and listing.package != listing.directory.lower():
-                if listing.package not in exclusions:
-                    exclusions.error(listing.package, md)
-                    md.error(
-                        f"Inconsistent package/directory name:{listing.package} != {listing.directory.lower()}",
-                        listing.md_starting_line)
+        for lst in md.listings:
+            if lst.directory and lst.package and lst.package != lst.directory.lower():
+                if lst.package not in PackageAndDirectoryNames.exclude:
+                    PackageAndDirectoryNames.exclude.error(lst.package, md)
+                    md.error(textwrap.dedent(f"""\
+                        Inconsistent package/directory name:
+                            {lst.package} != {lst.directory.lower()}""",
+                        lst.md_starting_line))
 
 
 class DirectoryNameConsistency(Validator):
     """
     Ensure that directory names in sluglines are consistent with Atom names.
     """
+    exclude = ExclusionFile("directory_name_consistency.txt")
+    dirname_exclude = ExclusionFile("directory_name_exclusions.txt")
 
     def validate(self, md: MarkdownFile):
-        exclusions = ExclusionFile("directory_name_consistency.txt")
-        dirset = {
-            listing.directory for listing in md.listings if listing.directory} - exclusions.set
+        dirset = ({lst.directory for lst in md.listings if lst.directory}
+                  - DirectoryNameConsistency.exclude.set)
         if len(dirset) > 1:
-            exclusions.error(dirset, md)
+            DirectoryNameConsistency.exclude.error(dirset, md)
             md.error(
                 f"Multiple directory names in one atom: {pprint.pformat(dirset)}")
-        dirname_exclusions = ExclusionFile("directory_name_exclusions.txt")
-        if dirset - dirname_exclusions.set:
+        if dirset - DirectoryNameConsistency.dirname_exclude.set:
             calculated_dir = "".join([w.capitalize()
                                       for w in md.path.name[4:-3].split("_")])
             if calculated_dir not in dirset:
-                dirname_exclusions.error(f"{calculated_dir} -> {dirset}", md)
+                DirectoryNameConsistency.dirname_exclude.error(
+                    f"{calculated_dir} -> {dirset}", md)
                 md.error(
                     f"Inconsistent directory name: {calculated_dir} -> {dirset}")
