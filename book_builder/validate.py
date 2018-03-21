@@ -149,23 +149,23 @@ class Validator(ABC):
             val.post_process()
 
 
-class ExclusionFile:
-    "Maintains the exclusion file for a particular validate function"
+class Data:
+    "Maintains a data file for a particular validate function"
     names = {}
 
-    def __init__(self, exclusion_file_name):
-        if exclusion_file_name not in ExclusionFile.names:
+    def __init__(self, data_file_name, storage_dir = config.data_path):
+        if data_file_name not in Data.names:
             # Not reported
-            ExclusionFile.names[exclusion_file_name] = "False"
+            Data.names[data_file_name] = "False"
         self.needs_edit = False
-        self.ef_path = config.data_path / exclusion_file_name
+        self.ef_path = storage_dir / data_file_name
         if not self.ef_path.exists():
             self.ef_path.write_text("")
-        self.exclusions = self.ef_path.read_text()
-        if config.msgbreak in self.exclusions and not ExclusionFile.names[exclusion_file_name]:
-            ExclusionFile.names[exclusion_file_name] = True
+        self.data = self.ef_path.read_text()
+        if config.msgbreak in self.data and not Data.names[data_file_name]:
+            Data.names[data_file_name] = True
             print(f"{self.ef_path.name} Needs Editing!")
-        self.set = {line.strip() for line in self.exclusions.splitlines()}
+        self.set = {line.strip() for line in self.data.splitlines()}
 
     def error(self, msg, md: MarkdownFile):
         "Add message to exclusion file and edit that file"
@@ -176,10 +176,19 @@ class ExclusionFile:
         os.system(f"{config.md_editor} {self.ef_path}")
 
     def __contains__(self, item):
-        return item in self.exclusions
+        return item in self.data
 
     def __iter__(self):
-        return self.exclusions.splitlines().__iter__()
+        return self.data.splitlines().__iter__()
+
+
+class Exclusions(Data):
+    """
+    Maintains an exclusion file for a particular validate function.
+    Places files in the "exclusions" subdirectory.
+    """
+    def __init__(self, exclusion_file_name):
+        super().__init__(exclusion_file_name, config.data_path / "exclusions")
 
 
 ### Validators ###
@@ -240,8 +249,8 @@ class PackageNames(Validator):
 
 class HotWords(Validator):
     "Check for words that might need rewriting"
-    exclude = ExclusionFile("hotwords_sentences.txt")
-    words = ExclusionFile("hotwords_to_find.txt")
+    exclude = Exclusions("hotwords_sentences.txt")
+    words = Data("hotwords_to_find.txt")
 
     def validate(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
@@ -267,7 +276,7 @@ class CodeListingLineWidths(Validator):
 
 class ExampleSluglines(Validator):
     "Check for sluglines that don't match the format"
-    exclude = ExclusionFile("validate_example_sluglines.txt")
+    exclude = Exclusions("valid_example_sluglines.txt")
 
     def validate(self, md: MarkdownFile):
         for listing in md.listings:
@@ -279,13 +288,13 @@ class ExampleSluglines(Validator):
                 continue
             slug = listing.slug.split(None, 1)[1]
             if "/" not in slug and slug not in ExampleSluglines.exclude:
-                ExampleSuglines.exclude.error(
+                ExampleSluglines.exclude.error(
                     md.error(f"Missing directory in:\n{slug}"), md)
 
 
 class CompleteExamples(Validator):
     "Check for code fragments that should be turned into examples"
-    exclude = ExclusionFile("validate_complete_examples.txt")
+    exclude = Exclusions("valid_complete_examples.txt")
 
     @staticmethod
     def examples_without_sluglines(md: MarkdownFile):
@@ -310,8 +319,8 @@ class CompleteExamples(Validator):
 class SpellCheck(Validator):
     "Spell-check everything"
 
-    main_dictionary = ExclusionFile("dictionary.txt")
-    supplemental = ExclusionFile("supplemental_dictionary.txt")
+    main_dictionary = Data("dictionary.txt")
+    supplemental = Data("supplemental_dictionary.txt")
     dictionary = main_dictionary.set.union(supplemental.set)
 
     def validate(self, md: MarkdownFile):
@@ -370,8 +379,8 @@ class PunctuationInsideQuotes(Validator):
 class PrintlnOutput(Validator):
     "Test for println() without /* Output:"
 
-    OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]
-    exclude = ExclusionFile("validate_println_output.txt")
+    OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]  ######## A Data file?
+    exclude = Exclusions("valid_println_output.txt")
 
     def validate(self, md: MarkdownFile):
         for listing in md.listings:
@@ -385,7 +394,7 @@ class PrintlnOutput(Validator):
 
 class CapitalizedComments(Validator):
     "Check for un-capitalized comments"
-    exclude = ExclusionFile("comment_capitalization_exclusions.txt")
+    exclude = Exclusions("comment_capitalization.txt")
 
     @staticmethod
     def parse_comment_block(n, lines):
@@ -470,7 +479,7 @@ class ListingIndentation(Validator):
 class TickedWords(Validator):
     "Spell-check single-ticked items against compiled code"
 
-    exclude = ExclusionFile("validate_ticked_words.txt")
+    exclude = Exclusions("valid_ticked_words.txt")
     non_letters = re.compile("[^a-zA-Z]+")
 
     def validate(self, md: MarkdownFile):
@@ -541,7 +550,7 @@ class CrossLinks(Validator):
 
 class MistakenBackquotes(Validator):
     "Discover when backquotes are messed up by paragraph reformatting"
-    exclude = ExclusionFile("mistaken_backquote_exclusions.txt")
+    exclude = Exclusions("mistaken_backquotes.txt")
 
     def validate(self, md: MarkdownFile):
         lines = md.no_listings.splitlines()
@@ -636,7 +645,7 @@ class PackageAndDirectoryNames(Validator):
     """
     Ensure that package names are consistent with directory names.
     """
-    exclude = ExclusionFile("package_and_directory_names.txt")
+    exclude = Exclusions("package_and_directory_names.txt")
 
     def validate(self, md: MarkdownFile):
         for lst in md.listings:
@@ -653,8 +662,8 @@ class DirectoryNameConsistency(Validator):
     """
     Ensure that directory names in sluglines are consistent with Atom names.
     """
-    exclude = ExclusionFile("directory_name_consistency.txt")
-    dirname_exclude = ExclusionFile("directory_name_exclusions.txt")
+    exclude = Exclusions("directory_name_consistency.txt")
+    dirname_exclude = Exclusions("directory_names.txt")
 
     def validate(self, md: MarkdownFile):
         dirset = ({lst.directory for lst in md.listings if lst.directory}
