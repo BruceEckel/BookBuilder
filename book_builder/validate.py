@@ -15,7 +15,7 @@ from book_builder.util import create_markdown_filename
 class MarkdownFile:
     """
     Contains everything about a Markdown file, including
-    all discovered error information. Pass into functions 
+    all discovered error information. Pass into functions
     to capture errors in Markdown files.
     """
 
@@ -561,8 +561,8 @@ class MistakenBackquotes(Validator):
                 if line in MistakenBackquotes.exclude and lines[n+1] in MistakenBackquotes.exclude:
                     continue
                 md.error(
-                    f"{config.msgbreak}\nPotential error on line {n}:\n{line}\n{lines[n+1]}\n")
-                MistakenBackquotes.exclude.error(md.err_msg)
+                    f"{config.msgbreak}\nPotential backquote error on line {n}:\n{line}\n{lines[n+1]}\n")
+                MistakenBackquotes.exclude.error(md.err_msg, md)
 
 
 class JavaPackageDirectory(Validator):
@@ -654,8 +654,7 @@ class PackageAndDirectoryNames(Validator):
                     PackageAndDirectoryNames.exclude.error(lst.package, md)
                     md.error(textwrap.dedent(f"""\
                         Inconsistent package/directory name:
-                            {lst.package} != {lst.directory.lower()}""",
-                        lst.md_starting_line))
+                            {lst.package} != {lst.directory.lower()}"""),  lst.md_starting_line)
 
 
 class DirectoryNameConsistency(Validator):
