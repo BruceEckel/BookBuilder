@@ -12,6 +12,7 @@ from book_builder.ebook_generators import convert_to_docx
 from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
+import book_builder.zubtools
 
 
 @click.group()
@@ -222,3 +223,15 @@ def edit():
 
 
 ##########################################################
+
+
+@cli.group()
+def z():
+    "Subtools for special needs"
+
+@z.command()
+def remove_ready_boxes():
+    """
+    Remove + [ ] Ready for Review, + [ ] Tech Checked, convert + Notes: to {{}}
+    """
+    click.echo(book_builder.zubtools.remove_checkboxes())
