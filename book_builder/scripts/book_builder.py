@@ -203,6 +203,14 @@ def release():
 
 ##########################################################
 
+@cli.command()
+def notes():
+    "Show all {{ Notes }}"
+    for md in config.markdown_dir.glob("*.md"):
+        text = md.read_text()
+    click.echo("Showing all {{ Notes }}")
+
+##########################################################
 
 @cli.command()
 def test():
