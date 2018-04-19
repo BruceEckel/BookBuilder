@@ -204,6 +204,7 @@ def release():
 
 ##########################################################
 
+
 @cli.command()
 def notes():
     "Show all {{ Notes }}"
@@ -215,9 +216,9 @@ def notes():
             for cn in curly_notes:
                 print(cn)
             print("-" * 40)
-    click.echo("End of Notes")
 
 ##########################################################
+
 
 @cli.command()
 def test():
@@ -243,6 +244,7 @@ def edit():
 @cli.group()
 def z():
     "Subtools for special needs"
+
 
 @z.command()
 def remove_ready_boxes():
