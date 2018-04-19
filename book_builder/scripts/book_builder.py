@@ -1,5 +1,6 @@
 # The driver script for the main program
 import os
+import re
 import click
 import book_builder.config as config
 import book_builder.util as util
@@ -208,7 +209,13 @@ def notes():
     "Show all {{ Notes }}"
     for md in config.markdown_dir.glob("*.md"):
         text = md.read_text()
-    click.echo("Showing all {{ Notes }}")
+        curly_notes = re.findall("{{.*?}}", text, flags=re.DOTALL)
+        if curly_notes:
+            print(md.name)
+            for cn in curly_notes:
+                print(cn)
+            print("-" * 40)
+    click.echo("End of Notes")
 
 ##########################################################
 
