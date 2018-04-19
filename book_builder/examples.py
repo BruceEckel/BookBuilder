@@ -2,17 +2,17 @@
 # Extract code into config.example_dir from Markdown files.
 # import logging
 import os
-import stat
 import re
+import stat
+import string
 import subprocess
 import sys
 from collections import defaultdict
-import string
-# from logging import debug
 
 import book_builder.config as config
 import book_builder.util as util
 
+# from logging import debug
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 
@@ -213,7 +213,8 @@ def create_test_files():
     if not config.example_dir.exists():
         return "Run 'extract' command first"
     for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
-        (package / "run.bat").write_text(python_bat + run_py.replace("./gradlew", "gradlew"))
+        (package / "run.bat").write_text(python_bat +
+                                         run_py.replace("./gradlew", "gradlew"))
         (package / "run.sh").write_text(python_shell + run_py)
         # os.chmod(package / "run.sh", stat.S_IXOTH)
         os.chdir(package)
