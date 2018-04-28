@@ -79,6 +79,7 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
         assert source.exists()
         shutil.copy(src, ebook_build_dir)
         assert (Path(ebook_build_dir) / source.name).exists()
+
     for font in config.fonts.glob("*.ttf"):
         copy(font)
     for bullet in config.bullets.glob("*"):

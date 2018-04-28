@@ -86,7 +86,7 @@ sample_markdown = epub_md("sample")
 
 def resource(path): return root_path / "resources" / path
 
-images = resource("images")
+images = markdown_dir / "images"
 fonts = resource("fonts")
 bullets = resource("bullets")
 cover = resource("cover") / "Cover.png"
