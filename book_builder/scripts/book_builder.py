@@ -48,36 +48,11 @@ def code_extract():
         click.echo(examples.create_tasks_for_gradle())
 
 
-# @code.command('testall')
-# def code_test_all_examples():
-#     "Compile and capture all results, to show percentage of rewritten examples"
-#     click.echo(examples.compile_all_examples())
+@code.command('exec_run_sh')
+def code_exec_run_sh():
+    "Make run.sh files executable via git"
+    click.echo(examples.make_all_run_sh_executable())
 
-
-# @code.command('testfiles')
-# def code_test_files():
-#     "Create test.bat files for each package, to compile and run all files"
-#     click.echo(examples.create_test_files())
-
-
-##########################################################
-
-
-@cli.group()
-def packages():
-    """Discover package issues"""
-
-
-@packages.command('unpackaged')
-def packages_unpackaged():
-    "Show all examples that aren't in packages"
-    click.echo(_packages.unpackaged())
-
-
-# @packages.command('add')
-# def packages_add_packages():
-#     "Add package statements to all examples that don't have them"
-#     click.echo(_packages.add_packages())
 
 ##########################################################
 
@@ -221,16 +196,6 @@ def notes():
 
 
 @cli.command()
-def test():
-    "Perform current test"
-    from book_builder.ebook_generators import show_important_kindlegen_output
-    click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
-    # click.echo(_validate.test_markdown_individually())
-
-
-##########################################################
-
-@cli.command()
 def edit():
     "Edit BookBuilder files using VS Code"
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -252,3 +217,26 @@ def remove_ready_boxes():
     Remove + [ ] Ready for Review, + [ ] Tech Checked, convert + Notes: to {{}}
     """
     click.echo(book_builder.zubtools.remove_checkboxes())
+
+
+@z.command()
+def test():
+    "Perform current test"
+    from book_builder.ebook_generators import show_important_kindlegen_output
+    click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
+    # click.echo(_validate.test_markdown_individually())
+
+
+@z.command('unpackaged')
+def packages_unpackaged():
+    "Show all examples that aren't in packages"
+    click.echo(_packages.unpackaged())
+
+
+# @z.command('add')
+# def packages_add_packages():
+#     "Add package statements to all examples that don't have them"
+#     click.echo(_packages.add_packages())
+
+
+##########################################################

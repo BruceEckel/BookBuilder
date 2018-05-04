@@ -216,10 +216,21 @@ def create_test_files():
         (package / "run.bat").write_text(python_bat +
                                          run_py.replace("./gradlew", "gradlew"))
         (package / "run.sh").write_text(python_shell + run_py)
-        # os.chmod(package / "run.sh", stat.S_IXOTH)
+    return "run.bat and run.sh files created"
+
+
+def make_all_run_sh_executable():
+    """
+    Modify all run.sh files to make them executable. This is a slow operation,
+    so only do it when you've created new run.sh files, before you check them
+    into Github.
+    TODO: Discover which files have actually changed and only modify those.
+    """
+    for package in [d for d in config.example_dir.iterdir() if d.is_dir()]:
         os.chdir(package)
         os.system("git update-index --chmod=+x run.sh")
-    return "run.bat and run.sh files created"
+        # os.chmod(package / "run.sh", stat.S_IXOTH)
+    return "run.sh files now executable via git"
 
 
 def display_extracted_examples():
