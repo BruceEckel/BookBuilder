@@ -91,18 +91,38 @@ def epub_regen():
     click.echo(util.regenerate_epub_build_dir())
 
 
-@epub.command('combine')
-def epub_combine():
+@epub.command('build')
+def epub_build():
+    "Create epub from Markdown files"
+    click.echo(convert_to_epub())
+
+
+@epub.command('bugdemo')
+@click.option('--mdfile', prompt='Markdown File Name')
+def epub_bugdemo(mdfile):
+    "Create EPUB file from single Markdown file, to demonstrate epub reader bugs"
+    click.echo(generate_epub_bug_demo_file(mdfile))
+
+
+##########################################################
+
+@cli.group()
+def markdown():
+    "Markdown file manipulation"
+
+
+@markdown.command('combine')
+def markdown_combine():
     "Combine Markdown files into a single file"
     click.echo(util.combine_markdown_files(
         config.combined_markdown, strip_notes=False))
     os.system(f"{config.md_editor}  {config.combined_markdown}")
 
 
-@epub.command('disassemble')
+@markdown.command('disassemble')
 @click.option('--test', is_flag=True,
               help='Unpack to "test" directory instead of overwriting Markdown.')
-def epub_disassemble(test):
+def markdown_disassemble(test):
     "Split combined into atom-numbered files"
     if test:
         if config.test_dir.exists():
@@ -112,23 +132,10 @@ def epub_disassemble(test):
         click.echo(util.disassemble_combined_markdown_file())
 
 
-@epub.command('build')
-def epub_build():
-    "Create epub from Markdown files"
-    click.echo(convert_to_epub())
-
-
-@epub.command('renumber')
-def epub_rename():
+@markdown.command('renumber')
+def markdown_renumber():
     "Renumber atoms and fix atom names"
     click.echo(fix_names_and_renumber_atoms())
-
-
-@epub.command('bugdemo')
-@click.option('--mdfile', prompt='Markdown File Name')
-def epub_bugdemo(mdfile):
-    "Create EPUB file from single Markdown file, to demonstrate epub reader bugs"
-    click.echo(generate_epub_bug_demo_file(mdfile))
 
 
 # @epub.command('sample_markdown')
