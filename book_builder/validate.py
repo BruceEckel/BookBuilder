@@ -1,16 +1,37 @@
 """
 Validation test framework and checks
 """
-import re
 import os
-import sys
 import pprint
+import re
+import sys
 import textwrap
-from pathlib import Path
 from abc import ABC, abstractmethod
+from pathlib import Path
 import book_builder.config as config
 from book_builder.util import create_markdown_filename
 
+class Editor:
+    """
+    Controls editing of Markdown files and validation results.
+    In particular, organizes results to make it easier to
+    fix up the files. Also delays invoking the editor until all
+    the results are ready, to minimize screen thrashing and time-wasting.
+    """
+
+    def __init__(self):
+        self.data_files = set()
+        self.markdown_files = []
+
+    def open(self):
+        data_files = " ".join(self.data_files)
+        markdown_files = " ".join(self.markdown_files)
+        # pprint.pprint(self.data_files)
+        # pprint.pprint(self.markdown_files)
+        os.system(f"{config.md_editor} {data_files} {markdown_files}")
+
+
+editor = Editor()  # Global Editor for working with the results
 
 class MarkdownFile:
     """
@@ -30,7 +51,8 @@ class MarkdownFile:
         self.line_number = None
         self.listings = [CodeListing(marker, code, self) for (marker, code) in
                          re.findall("(```.*?)\n(.*?)\n```", self.text, flags=re.DOTALL)]
-        self.no_listings = re.sub(
+        # With listings removed:
+        self.prose = re.sub(
             "```(.*?)\n(.*?)\n```", "", self.text, flags=re.DOTALL)
 
     def trace(self, msg):
@@ -54,11 +76,9 @@ class MarkdownFile:
     def edit(self):
         if self.err_msg:
             self.trace(f"Editing {self}")
-            if self.line_number:
-                os.system(
-                    f"{config.md_editor} {self.path}:{self.line_number + 1}")
-            else:
-                os.system(f"{config.md_editor} {self.path}")
+            editor.markdown_files.append(
+                f"{self.path}:{self.line_number + 1}" if self.line_number else f"{self.path}"
+            )
 
     def __str__(self):
         return self.path.name
@@ -148,6 +168,8 @@ class Validator(ABC):
         for val in validators:
             val.post_process()
 
+        editor.open()
+
 
 class Data:
     "Maintains a data file for a particular validate function"
@@ -173,7 +195,7 @@ class Data:
             ef.write(f"{md.path.name}:\n")
             ef.write(f"    {msg}\n")
             ef.write(config.msgbreak + "\n")
-        os.system(f"{config.md_editor} {self.ef_path}")
+        editor.data_files.add(f"{self.ef_path}")
 
     def __contains__(self, item):
         return item in self.data
@@ -363,7 +385,7 @@ class FunctionDescriptions(Validator):
             md.error(err_msg.strip())
 
 
-class PunctuationInsideQuotes(Validator):
+class PunctuationInsideQuotes: #(Validator):
     "Punctuation inside quotes"
 
     def validate(self, md: MarkdownFile):
@@ -447,7 +469,7 @@ class ListingIndentation(Validator):
             return "First line can't be indented"
         for indent, line in indents:
             if indent % 2 != 0 and not line.startswith(" *"):
-                return f"{listing.name}: Non-even indent in line: {line}"
+                return f"{listing.slug}: Non-even indent in line: {line}"
         # For a desired indent of 2
         indent_counts = [ind//2 for ind, ln in indents]
         indent_pairs = list(zip(indent_counts, indent_counts[1:]))
@@ -526,11 +548,11 @@ class CrossLinks(Validator):
 
     def validate(self, md: MarkdownFile):
         explicits = [e.replace("\n", " ")
-                     for e in CrossLinks.explicit_link.findall(md.no_listings)]
+                     for e in CrossLinks.explicit_link.findall(md.prose)]
         explicits = [
             CrossLinks.cross_link.findall(e)[0][1:-1] for e in explicits]
         candidates = [c.replace("\n", " ")[1:-1]
-                      for c in CrossLinks.cross_link.findall(md.no_listings)]
+                      for c in CrossLinks.cross_link.findall(md.prose)]
         cross_links = []
         for c in candidates:
             if c in explicits:
@@ -553,7 +575,7 @@ class MistakenBackquotes(Validator):
     exclude = Exclusions("mistaken_backquotes.txt")
 
     def validate(self, md: MarkdownFile):
-        lines = md.no_listings.splitlines()
+        lines = md.prose.splitlines()
         for n, line in enumerate(lines):
             if n+1 >= len(lines):
                 break
