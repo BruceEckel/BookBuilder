@@ -51,6 +51,7 @@ class BookType(Enum):
     MOBI = "mobi"
     MOBIMONO = "mobi-mono"
     DOCX = "docx"
+    HTML = "html"
 
 
 root_name = base_name.lower()
@@ -61,12 +62,14 @@ exclude_dir = extracted_examples / "ExcludedExamples"
 epub_build_dir = root_path / "build" / "epub"
 mobi_build_dir = root_path / "build" / "mobi"
 docx_build_dir = root_path / "build" / "docx"
+html_build_dir = root_path / "build" / "html"
 release_dir = root_path / "build" / "Release"
 test_dir = root_path / "test"
 
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
 def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
+def html_md(fileid): return html_build_dir / f"{root_name}-{fileid}.md"
 def epub_name(tag=""): return f"{base_name}{tag}.epub"
 def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
 

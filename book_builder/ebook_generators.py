@@ -81,7 +81,7 @@ def generate_epub_files(target_dir, markdown_name, ebook_type: BookType):
 
 def generate_epub_bug_demo_file(markdown_file):
     """
-    Create epub file from a single Markdown source. Used to show creators of 
+    Create epub file from a single Markdown source. Used to show creators of
     epub readers problems with their reader, without giving them the whole book.
     """
     mf = config.markdown_dir / markdown_file
@@ -188,6 +188,33 @@ def convert_to_docx():
     pandoc_docx_command(
         config.docx_md("assembled-stripped"), config.base_name + ".docx", config.title)
     return f"{config.docx_build_dir.name} Completed"
+
+
+def pandoc_html_command(input_file, output_name, title):
+    assert input_file.exists(), f"Error: missing {input_file.name}"
+    command = (
+        "pandoc " + str(input_file.name) +
+        " -t html -o " + output_name +
+        " -f markdown-native_divs "
+        " -f markdown+smart "
+        " --toc-depth=2 " +
+        f'--metadata title="{title}"' +
+        " --css=" + config.base_name + ".css ")
+    print(command)
+    os.system(command)
+
+
+def convert_to_html():
+    """
+    Pandoc markdown to html
+    """
+    regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
+    combine_markdown_files(config.html_md(
+        "assembled-stripped"), strip_notes=True)
+    os.chdir(str(config.html_build_dir))
+    pandoc_html_command(
+        config.html_md("assembled-stripped"), config.base_name + ".html", config.title)
+    return f"{config.html_build_dir.name} Completed"
 
 
 def create_release():
