@@ -93,6 +93,7 @@ images = markdown_dir / "images"
 fonts = resource("fonts")
 bullets = resource("bullets")
 cover = resource("cover") / "Cover.png"
+html_css = resource(root_name + "-html.css")
 epub_css = resource(root_name + "-epub.css")
 mobi_css = resource(root_name + "-mobi.css")
 mobi_mono_css = resource(root_name + "-mobi-mono.css")

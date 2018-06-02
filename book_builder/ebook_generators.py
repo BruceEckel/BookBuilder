@@ -190,16 +190,20 @@ def convert_to_docx():
     return f"{config.docx_build_dir.name} Completed"
 
 
-def pandoc_html_command(input_file, output_name, title):
+def pandoc_html_command(input_file, output_name, title, ebook_type: BookType, highlighting=None):
+    "highlighting=None uses default (pygments) for source code color syntax highlighting"
     assert input_file.exists(), f"Error: missing {input_file.name}"
     command = (
-        "pandoc " + str(input_file.name) +
-        " -t html -o " + output_name +
+        f"pandoc {input_file.name}"
+        f" -t html -o {output_name}"
+        " --standalone "
         " -f markdown-native_divs "
         " -f markdown+smart "
-        " --toc-depth=2 " +
-        f'--metadata title="{title}"' +
-        " --css=" + config.base_name + ".css ")
+        " --toc-depth=2 "
+        f'--metadata title="{title}"'
+        f" --css={config.base_name}-{ebook_type.value}.css ")
+    if highlighting:
+        command += f" --highlight-style={highlighting} "
     print(command)
     os.system(command)
 
@@ -213,7 +217,7 @@ def convert_to_html():
         "assembled-stripped"), strip_notes=True)
     os.chdir(str(config.html_build_dir))
     pandoc_html_command(
-        config.html_md("assembled-stripped"), config.base_name + ".html", config.title)
+        config.html_md("assembled-stripped"), config.base_name + ".html", config.title, BookType.HTML)
     return f"{config.html_build_dir.name} Completed"
 
 
