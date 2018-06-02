@@ -74,6 +74,8 @@ the `bb` command from within any directory in your book's repo.
 
 ## To Quit the Virtual Environment
 
+The easiest thing to do is just kill the shell. If you want to keep the shell:
+
 ### Windows: type `venv`
 
 ### Mac/Linux: type `deactivate`
