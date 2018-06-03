@@ -124,9 +124,29 @@ def strip_review_notes(target):
     target.write_text(result3 + "\n")
 
 
+def copy_markdown_files(target_dir, strip_notes=False):
+    """
+    Copy markdown files to target directory
+    """
+    if not target_dir.exists():
+        os.makedirs(target_dir)
+
+    def copy(src):
+        source = Path(src)
+        assert source.exists()
+        shutil.copy(src, target_dir)
+        copied_file = Path(target_dir) / source.name
+        assert copied_file.exists()
+        if strip_notes:
+            strip_review_notes(copied_file)
+        return f"Created {copied_file.name}"
+
+    return "\n".join([copy(file) for file in sorted(list(config.markdown_dir.glob("*.md")))])
+
+
 def combine_markdown_files(target, strip_notes=False):
     """
-    Put markdown files together
+    Put markdown files together and place result in target directory
     """
     if not target.parent.exists():
         os.makedirs(target.parent)

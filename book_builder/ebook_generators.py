@@ -11,6 +11,7 @@ from book_builder.config import BookType
 from book_builder.config import epub_name
 from book_builder.util import clean
 from book_builder.util import regenerate_ebook_build_dir
+from book_builder.util import copy_markdown_files
 from book_builder.util import combine_markdown_files
 from book_builder.util import combine_sample_markdown
 from book_builder.util import retain_files
@@ -190,21 +191,21 @@ def convert_to_docx():
     return f"{config.docx_build_dir.name} Completed"
 
 
-def pandoc_html_command(input_file, output_name, title, ebook_type: BookType, highlighting=None):
+def pandoc_html_command(input_file, title, ebook_type: BookType, highlighting=None):
     "highlighting=None uses default (pygments) for source code color syntax highlighting"
     assert input_file.exists(), f"Error: missing {input_file.name}"
     command = (
         f"pandoc {input_file.name}"
-        f" -t html -o {output_name}"
-        " --standalone "
-        " -f markdown-native_divs "
-        " -f markdown+smart "
-        " --toc-depth=2 "
-        f'--metadata title="{title}"'
-        f" --css={config.base_name}-{ebook_type.value}.css ")
+        f" -t html -o {input_file.stem}.html"
+        " --standalone"
+        " -f markdown-native_divs"
+        " -f markdown+smart"
+        " --toc-depth=2"
+        f' --metadata title="{title}"'
+        f" --css={config.base_name}-{ebook_type.value}.css")
     if highlighting:
         command += f" --highlight-style={highlighting} "
-    print(command)
+    print(f"{input_file.stem}.html")
     os.system(command)
 
 
@@ -213,12 +214,11 @@ def convert_to_html():
     Pandoc markdown to html
     """
     regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
-    combine_markdown_files(config.html_md(
-        "assembled-stripped"), strip_notes=True)
+    copy_markdown_files(config.html_build_dir, strip_notes=True)
     os.chdir(str(config.html_build_dir))
-    pandoc_html_command(
-        config.html_md("assembled-stripped"), config.base_name + ".html", config.title, BookType.HTML)
-    return f"{config.html_build_dir.name} Completed"
+    for md in sorted(list(Path().glob("*.md"))):
+        pandoc_html_command(md, config.title, BookType.HTML)
+    return f"\n[{config.html_build_dir.name} Completed]"
 
 
 def create_release():
