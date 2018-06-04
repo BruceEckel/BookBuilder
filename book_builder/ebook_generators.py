@@ -15,6 +15,7 @@ from book_builder.util import copy_markdown_files
 from book_builder.util import combine_markdown_files
 from book_builder.util import combine_sample_markdown
 from book_builder.util import retain_files
+from book_builder.util import strip_review_notes
 
 
 def pandoc_epub_command(
@@ -210,15 +211,28 @@ def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
     os.system(command)
 
 
+def sample_end_fixup(end_text = ""):
+    tag = "{{SAMPLE_END}}"
+    for md in config.html_build_dir.glob("*.md"):
+        text = md.read_text()
+        if tag not in text:
+            continue
+        lines = text.splitlines()
+        i = lines.index(tag)
+        md.write_text("\n".join(lines[:i]).strip() + "\n\n" + end_text)
+        strip_review_notes(md)
+
+
 def convert_to_html():
     """
     Pandoc markdown to html demo book for website
     """
     regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
-    copy_markdown_files(config.html_build_dir, strip_notes=True) # Probably don't want to strip notes, actually
-    # 1) Strip out after {{SAMPLE_END}} tags
+    copy_markdown_files(config.html_build_dir, strip_notes=False)
+    sample_end_fixup("**End of sample. See [AtomicKotlin.com](https://atomickotlin.github.io/) for full early-access book.**")
     # 2) Create table of contents for website
     # 3) Insert cross-links
+    # 4) Inject results into hugo site
     os.chdir(str(config.html_build_dir))
     for md in sorted(list(Path().glob("*.md"))):
         pandoc_html_command(md, BookType.HTML)
