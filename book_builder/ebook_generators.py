@@ -212,10 +212,13 @@ def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
 
 def convert_to_html():
     """
-    Pandoc markdown to html
+    Pandoc markdown to html demo book for website
     """
     regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
-    copy_markdown_files(config.html_build_dir, strip_notes=True)
+    copy_markdown_files(config.html_build_dir, strip_notes=True) # Probably don't want to strip notes, actually
+    # 1) Strip out after {{SAMPLE_END}} tags
+    # 2) Create table of contents for website
+    # 3) Insert cross-links
     os.chdir(str(config.html_build_dir))
     for md in sorted(list(Path().glob("*.md"))):
         pandoc_html_command(md, BookType.HTML)
