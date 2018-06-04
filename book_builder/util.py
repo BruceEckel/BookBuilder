@@ -35,6 +35,18 @@ def create_numbered_markdown_filename(h1, n):
     return "%03d_" % n + create_markdown_filename(h1)
 
 
+def header_to_filename_map(dir_to_map: Path):
+    result = dict()
+    for md in sorted(list(dir_to_map.glob("*.md"))):
+        if "000_Front.md" in md.name:
+            continue
+        header = md.read_text().splitlines()[0].strip()
+        name_base = create_markdown_filename(header)[:-3]
+        assert name_base in md.name
+        result[header] = name_base
+    return result
+
+
 def clean(dir_to_remove):
     "Remove directory"
     try:
