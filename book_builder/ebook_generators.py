@@ -191,17 +191,18 @@ def convert_to_docx():
     return f"{config.docx_build_dir.name} Completed"
 
 
-def pandoc_html_command(input_file, title, ebook_type: BookType, highlighting=None):
+def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
     "highlighting=None uses default (pygments) for source code color syntax highlighting"
     assert input_file.exists(), f"Error: missing {input_file.name}"
     command = (
         f"pandoc {input_file.name}"
         f" -t html -o {input_file.stem}.html"
         " --standalone"
+        " --template=pandoc-template.html"
         " -f markdown-native_divs"
         " -f markdown+smart"
         " --toc-depth=2"
-        f' --metadata title="{title}"'
+        f' --metadata title="{config.title}: {(input_file.stem)[4:]}"'
         f" --css={config.base_name}-{ebook_type.value}.css")
     if highlighting:
         command += f" --highlight-style={highlighting} "
@@ -217,7 +218,7 @@ def convert_to_html():
     copy_markdown_files(config.html_build_dir, strip_notes=True)
     os.chdir(str(config.html_build_dir))
     for md in sorted(list(Path().glob("*.md"))):
-        pandoc_html_command(md, config.title, BookType.HTML)
+        pandoc_html_command(md, BookType.HTML)
     return f"\n[{config.html_build_dir.name} Completed]"
 
 

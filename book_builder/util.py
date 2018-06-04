@@ -92,6 +92,9 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
         copy(config.mobi_mono_css)
     elif ebook_type == BookType.HTML:
         copy(config.html_css)
+        copy(config.html_pandoc_template)
+        copy(config.banner)
+        copy(config.favicon)
     copy_tree(str(config.images), str(ebook_build_dir / "images"))
     # copy(config.metadata)
 
