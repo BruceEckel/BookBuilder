@@ -3,21 +3,18 @@ Generate ebooks in different formats
 """
 import os
 import re
-from pathlib import Path
 import zipfile
-from itertools import chain
-import book_builder.config as config
-from book_builder.config import BookType
-from book_builder.config import epub_name
-from book_builder.util import clean
-from book_builder.util import regenerate_ebook_build_dir
-from book_builder.util import copy_markdown_files
-from book_builder.util import combine_markdown_files
-from book_builder.util import combine_sample_markdown
-from book_builder.util import retain_files
-from book_builder.util import strip_review_notes
-from book_builder.util import header_to_filename_map
 from distutils.dir_util import copy_tree
+from itertools import chain
+from pathlib import Path
+
+import book_builder.config as config
+from book_builder.config import BookType, epub_name
+from book_builder.util import (clean, combine_markdown_files,
+                               combine_sample_markdown, copy_markdown_files,
+                               header_to_filename_map,
+                               regenerate_ebook_build_dir, retain_files,
+                               strip_review_notes)
 
 
 def pandoc_epub_command(
@@ -214,6 +211,23 @@ def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
     os.system(command)
 
 
+def html_fix_crosslinks():
+    hfm = header_to_filename_map(config.html_build_dir)
+    titles = list(hfm.keys())
+    cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
+    for md in config.html_build_dir.glob("*.md"):
+        if "000_Front" in md.name:
+            continue
+        text = md.read_text()
+        for lnk in cross_link.findall(text):
+            link = lnk.replace("\n", " ")
+            if link[1:-1] in titles:
+                trans = hfm[link[1:-1]]
+                new_link = f'<a target="_blank" href="{trans[1]}.html">{link[1:-1]}</a>'
+                text = text.replace(lnk, new_link)
+        md.write_text(text)
+
+
 def html_sample_end_fixup(end_text=""):
     tag = "{{SAMPLE_END}}"
     for md in config.html_build_dir.glob("*.md"):
@@ -224,6 +238,15 @@ def html_sample_end_fixup(end_text=""):
         i = lines.index(tag)
         md.write_text("\n".join(lines[:i]).strip() + "\n\n" + end_text)
         strip_review_notes(md)
+
+
+def html_copyright():
+    for md in config.html_build_dir.glob("*.md"):
+        if "000_Front" in md.name:
+            continue
+        text = md.read_text() + \
+            f'\n<p class="copy">{config.copyright_notice}</p><br><br>'
+        md.write_text(text)
 
 
 def toc_entry(name, target_url):
@@ -247,14 +270,13 @@ def create_markdown_toc_for_html():
 def convert_to_html():
     """
     Pandoc markdown to html demo book for website
-    TODO: Copyright at the bottom of each page
     """
     regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
     copy_markdown_files(config.html_build_dir, strip_notes=False)
-    html_sample_end_fixup(
-        "**End of sample. See [AtomicKotlin.com](https://atomickotlin.github.io/) for full early-access book.**")
+    html_fix_crosslinks()
+    html_sample_end_fixup(config.end_of_sample)
     create_markdown_toc_for_html()
-    # 3) Insert cross-links
+    html_copyright()
     os.chdir(str(config.html_build_dir))
     for md in sorted(list(Path().glob("*.md"))):
         strip_review_notes(md)
