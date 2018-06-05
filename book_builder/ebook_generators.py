@@ -197,6 +197,7 @@ def convert_to_docx():
 def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
     "highlighting=None uses default (pygments) for source code color syntax highlighting"
     assert input_file.exists(), f"Error: missing {input_file.name}"
+    css_file = f"{config.base_name}-{ebook_type.value}.css".lower()
     command = (
         f"pandoc {input_file.name}"
         f" -t html -o {input_file.stem}.html"
@@ -206,14 +207,14 @@ def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
         " -f markdown+smart"
         " --toc-depth=2"
         f' --metadata title="{config.title}: {(input_file.stem)[4:]}"'
-        f" --css={config.base_name}-{ebook_type.value}.css")
+        f" --css={css_file}")
     if highlighting:
         command += f" --highlight-style={highlighting} "
     print(f"{input_file.stem}.html")
     os.system(command)
 
 
-def html_sample_end_fixup(end_text = ""):
+def html_sample_end_fixup(end_text=""):
     tag = "{{SAMPLE_END}}"
     for md in config.html_build_dir.glob("*.md"):
         text = md.read_text()
@@ -225,27 +226,33 @@ def html_sample_end_fixup(end_text = ""):
         strip_review_notes(md)
 
 
+def toc_entry(name, target_url):
+    return f'<h3><a target="_blank" href="../htmlbook/{target_url}.html">{name}</a></h3>'
+
+
 def create_markdown_toc_for_html():
-    toc_tag = "# Table of Contents"
-    index_md = config.web_sample / "index.md"
-    hfm =  header_to_filename_map(config.html_build_dir)
-    toc = []
-    for h, f in hfm.items():
-        toc.append(f"+ [{h}]({f[1]}.html)\n\n")
+    toc_tag = "## Table of Contents"
+    index_md = config.web_sample_toc / "index.md"
+    toc = [toc_entry(h, f[1]) for h, f in header_to_filename_map(
+        config.html_build_dir).items()]
     old_index_md = index_md.read_text()
     assert toc_tag in old_index_md
     lines = old_index_md.splitlines()
-    new_index_md = "\n".join(lines[:lines.index(toc_tag)]) + f"\n{toc_tag}\n\n" + "".join(toc)
+    new_index_md = "\n".join(lines[:lines.index(toc_tag)]) + \
+        f"\n{toc_tag}\n\n" + \
+        "\n\n".join(toc)
     index_md.write_text(new_index_md)
 
 
 def convert_to_html():
     """
     Pandoc markdown to html demo book for website
+    TODO: Copyright at the bottom of each page
     """
     regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
     copy_markdown_files(config.html_build_dir, strip_notes=False)
-    html_sample_end_fixup("**End of sample. See [AtomicKotlin.com](https://atomickotlin.github.io/) for full early-access book.**")
+    html_sample_end_fixup(
+        "**End of sample. See [AtomicKotlin.com](https://atomickotlin.github.io/) for full early-access book.**")
     create_markdown_toc_for_html()
     # 3) Insert cross-links
     os.chdir(str(config.html_build_dir))
@@ -254,8 +261,11 @@ def convert_to_html():
         pandoc_html_command(md, BookType.HTML)
     for md in config.html_build_dir.rglob("*.md"):
         md.unlink()
+    pandoc_template = config.html_build_dir / "pandoc-template.html"
+    if pandoc_template.exists():
+        pandoc_template.unlink()
     # Inject results into hugo site:
-    copy_tree(str(config.html_build_dir), str(config.web_sample))
+    copy_tree(str(config.html_build_dir), str(config.web_html_book))
     return f"\n[{config.html_build_dir.name} Completed]"
 
 

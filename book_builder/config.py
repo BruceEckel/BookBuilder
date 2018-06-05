@@ -37,7 +37,8 @@ start_comment = ""
 extracted_examples = ""
 sample_size = ""
 exclude_atoms = ""
-web_sample = ""
+web_sample_toc = ""
+web_html_book = ""
 
 # Add elements from BookProject/configuration.py into this environment:
 sys.path.insert(0, str(Path(os.environ['BOOK_PROJECT_HOME'])))
