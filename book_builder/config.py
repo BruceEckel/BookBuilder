@@ -37,6 +37,7 @@ start_comment = ""
 extracted_examples = ""
 sample_size = ""
 exclude_atoms = ""
+web_sample = ""
 
 # Add elements from BookProject/configuration.py into this environment:
 sys.path.insert(0, str(Path(os.environ['BOOK_PROJECT_HOME'])))
@@ -68,20 +69,10 @@ test_dir = root_path / "test"
 
 
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
-
-
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
-
-
 def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
-
-
 def html_md(fileid): return html_build_dir / f"{root_name}-{fileid}.md"
-
-
 def epub_name(tag=""): return f"{base_name}{tag}.epub"
-
-
 def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
 
 
@@ -119,7 +110,7 @@ meta_inf = resource("META-INF")
 data_path = root_path / "data"
 
 if __name__ == '__main__':
-    "Check to see if identifiers are used in this project"
+    "Test: see if identifiers are used in this project"
     from pprint import pprint
     exclude_names = [
         "__",

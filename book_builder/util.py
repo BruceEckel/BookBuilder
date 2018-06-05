@@ -44,7 +44,7 @@ def header_to_filename_map(dir_to_map: Path):
         header = md.read_text().splitlines()[0].strip()
         name_base = create_markdown_filename(header)[:-3]
         assert name_base in md.name
-        result[header] = name_base
+        result[header] = (name_base, md.stem)
     return result
 
 
@@ -108,7 +108,11 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
         copy(config.html_pandoc_template)
         copy(config.banner)
         copy(config.favicon)
-    copy_tree(str(config.images), str(ebook_build_dir / "images"))
+    dest_images = ebook_build_dir / "images"
+    copy_tree(str(config.images), str(dest_images))
+    for f in dest_images.rglob("*.graffle"):
+        f.unlink()
+
     # copy(config.metadata)
 
 
@@ -120,7 +124,7 @@ def strip_chapter(chapter_text):
     return stripped.strip()  # In case the previous line adds another newline
 
 
-def strip_review_notes(target):
+def strip_review_notes(target: Path):
     lines = target.read_text().strip().splitlines()
     review = [x for x in lines if x.startswith("+ [")]
     mistakes = [

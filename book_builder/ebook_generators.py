@@ -16,6 +16,8 @@ from book_builder.util import combine_markdown_files
 from book_builder.util import combine_sample_markdown
 from book_builder.util import retain_files
 from book_builder.util import strip_review_notes
+from book_builder.util import header_to_filename_map
+from distutils.dir_util import copy_tree
 
 
 def pandoc_epub_command(
@@ -211,7 +213,7 @@ def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
     os.system(command)
 
 
-def sample_end_fixup(end_text = ""):
+def html_sample_end_fixup(end_text = ""):
     tag = "{{SAMPLE_END}}"
     for md in config.html_build_dir.glob("*.md"):
         text = md.read_text()
@@ -223,19 +225,37 @@ def sample_end_fixup(end_text = ""):
         strip_review_notes(md)
 
 
+def create_markdown_toc_for_html():
+    toc_tag = "# Table of Contents"
+    index_md = config.web_sample / "index.md"
+    hfm =  header_to_filename_map(config.html_build_dir)
+    toc = []
+    for h, f in hfm.items():
+        toc.append(f"+ [{h}]({f[1]}.html)\n\n")
+    old_index_md = index_md.read_text()
+    assert toc_tag in old_index_md
+    lines = old_index_md.splitlines()
+    new_index_md = "\n".join(lines[:lines.index(toc_tag)]) + f"\n{toc_tag}\n\n" + "".join(toc)
+    index_md.write_text(new_index_md)
+
+
 def convert_to_html():
     """
     Pandoc markdown to html demo book for website
     """
     regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
     copy_markdown_files(config.html_build_dir, strip_notes=False)
-    sample_end_fixup("**End of sample. See [AtomicKotlin.com](https://atomickotlin.github.io/) for full early-access book.**")
-    # 2) Create table of contents for website
+    html_sample_end_fixup("**End of sample. See [AtomicKotlin.com](https://atomickotlin.github.io/) for full early-access book.**")
+    create_markdown_toc_for_html()
     # 3) Insert cross-links
-    # 4) Inject results into hugo site
     os.chdir(str(config.html_build_dir))
     for md in sorted(list(Path().glob("*.md"))):
+        strip_review_notes(md)
         pandoc_html_command(md, BookType.HTML)
+    for md in config.html_build_dir.rglob("*.md"):
+        md.unlink()
+    # Inject results into hugo site:
+    copy_tree(str(config.html_build_dir), str(config.web_sample))
     return f"\n[{config.html_build_dir.name} Completed]"
 
 
