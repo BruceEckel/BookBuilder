@@ -27,7 +27,7 @@ def get_editor(id):
 code_editor = get_editor('CODE_EDITOR')
 md_editor = get_editor('MD_EDITOR')
 
-# Defaults in configuration.py, to quiet tools:
+# Defaults in configuration.py, to quiet python developer tools:
 title = ""
 base_name = ""
 language_name = ""
@@ -38,8 +38,8 @@ extracted_examples = ""
 sample_size = ""
 exclude_atoms = ""
 
-# Add elements from configuration.py into this environment:
-sys.path.append(str(Path(os.environ['BOOK_PROJECT_HOME'])))
+# Add elements from BookProject/configuration.py into this environment:
+sys.path.insert(0, str(Path(os.environ['BOOK_PROJECT_HOME'])))
 from configuration import *
 
 msgbreak = '-=' * 25
@@ -66,12 +66,24 @@ html_build_dir = root_path / "build" / "html"
 release_dir = root_path / "build" / "Release"
 test_dir = root_path / "test"
 
+
 def epub_md(fileid): return epub_build_dir / f"{root_name}-{fileid}.md"
+
+
 def mobi_md(fileid): return mobi_build_dir / f"{root_name}-{fileid}.md"
+
+
 def docx_md(fileid): return docx_build_dir / f"{root_name}-{fileid}.md"
+
+
 def html_md(fileid): return html_build_dir / f"{root_name}-{fileid}.md"
+
+
 def epub_name(tag=""): return f"{base_name}{tag}.epub"
+
+
 def mobi_name(tag=""): return f"{base_name}{tag}.mobi"
+
 
 built_ebooks = [
     epub_build_dir / epub_name(),
@@ -87,7 +99,9 @@ built_ebooks = [
 combined_markdown = epub_md("assembled")
 sample_markdown = epub_md("sample")
 
+
 def resource(path): return root_path / "resources" / path
+
 
 images = markdown_dir / "images"
 fonts = resource("fonts")
