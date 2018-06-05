@@ -55,7 +55,7 @@ class BookType(Enum):
 
 
 root_name = base_name.lower()
-root_path = Path(__file__).parent.parent.parent.resolve() / base_name
+root_path = Path(os.environ['BOOK_PROJECT_HOME'])
 markdown_dir = root_path / "Markdown"
 example_dir = extracted_examples / "Examples"
 exclude_dir = extracted_examples / "ExcludedExamples"
