@@ -250,7 +250,7 @@ def html_copyright():
 
 
 def toc_entry(name, target_url):
-    return f'<h3><a target="_blank" href="../htmlbook/{target_url}.html">{name}</a></h3>'
+    return f'<p class="toc-entry"><a target="_blank" href="../htmlbook/{target_url}.html">{name}</a></p>'
 
 
 def create_markdown_toc_for_html():
@@ -263,7 +263,7 @@ def create_markdown_toc_for_html():
     lines = old_index_md.splitlines()
     new_index_md = "\n".join(lines[:lines.index(toc_tag)]) + \
         f"\n{toc_tag}\n\n" + \
-        "\n\n".join(toc)
+        "\n".join(toc)
     index_md.write_text(new_index_md)
 
 
