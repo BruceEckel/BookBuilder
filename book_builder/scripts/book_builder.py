@@ -202,11 +202,13 @@ def release():
 
 @cli.command()
 def notes():
-    "Show all {{ Notes }} except {{SAMPLE_END}}"
+    "Show all {{ Notes }} and atoms under construction except {{SAMPLE_END}}"
     for md in config.markdown_dir.glob("*.md"):
         text = md.read_text()
         curly_notes = set(re.findall("{{.*?}}", text, flags=re.DOTALL))
         curly_notes.discard("{{SAMPLE_END}}")
+        if "Under Construction" in text:
+            curly_notes.add("Under Construction")
         if curly_notes:
             print(md.name)
             for cn in curly_notes:
