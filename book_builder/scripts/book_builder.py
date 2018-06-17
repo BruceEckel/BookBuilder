@@ -40,13 +40,27 @@ def code_clean():
     click.echo(examples.clean())
 
 
-@code.command('extract')
+@code.group('extract')
 def code_extract():
-    "Extract examples from book's Markdown files"
+    "Choose how to extract examples from book's Markdown files"
+
+
+@code_extract.command('duplicates')
+def with_duplicates():
+    "Keep duplicate filenames"
     click.echo(examples.extractExamples())
-    if config.language_name == "kotlin":
+    if config.language_name.lower() == "kotlin" or "java":
         click.echo(examples.create_test_files())
-        click.echo(examples.create_tasks_for_gradle())
+        click.echo(examples.create_tasks_for_gradle(check_for_duplicates=False))
+
+
+@code_extract.command('no_duplicates')
+def without_duplicates():
+    "Remove duplicate filenames"
+    click.echo(examples.extractExamples())
+    if config.language_name.lower() == "kotlin" or "java":
+        click.echo(examples.create_test_files())
+        click.echo(examples.create_tasks_for_gradle(check_for_duplicates=True))
 
 
 @code.command('exec_run_sh')
@@ -177,6 +191,7 @@ def docx_build():
     "Create docx from Markdown files"
     click.echo(convert_to_docx())
 
+
 ##########################################################
 
 @cli.group()
@@ -189,6 +204,7 @@ def html_build():
     "Create html from Markdown files"
     click.echo(convert_to_html())
 
+
 ##########################################################
 
 
@@ -196,6 +212,7 @@ def html_build():
 def release():
     "Create full release from scratch"
     click.echo(create_release())
+
 
 ##########################################################
 
@@ -214,6 +231,7 @@ def notes():
             for cn in curly_notes:
                 print(cn)
             print("-" * 40)
+
 
 ##########################################################
 
@@ -254,7 +272,6 @@ def test():
 def packages_unpackaged():
     "Show all examples that aren't in packages"
     click.echo(_packages.unpackaged())
-
 
 # @z.command('add')
 # def packages_add_packages():

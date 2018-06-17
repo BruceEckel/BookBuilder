@@ -28,7 +28,7 @@ language_name = "kotlin"
 code_ext = "kt"
 code_width = 47
 start_comment = "//"
-extracted_examples = Path(os.environ['GIT_HOME']) / "AtomicKotlinExamples"
+extracted_examples = Path(os.environ['BOOK_PROJECT_HOME']).parent / "AtomicKotlinExamples"
 sample_size = 35 # Number of atoms in free sample
 ```
 
