@@ -128,7 +128,6 @@ def create_tasks_for_gradle(check_for_duplicates):
     task_list += run_task.substitute(
         runtasks=",\n    ".join(sorted(runnable_list)))
     tasks_file = config.extracted_examples / "gradle" / "tasks.gradle"
-    print("Writing to gradle")
     tasks_file.write_text(task_list)
     return f"Wrote {tasks_file}"
 
