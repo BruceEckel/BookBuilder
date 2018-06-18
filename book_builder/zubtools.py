@@ -37,9 +37,9 @@ def remove_checkboxes():
 
 
 def find_pre_and_code_tags_in_html():
-    if not config.html_build_dir.exists():
-        return "run 'bb html build' before running this command"
-    for html in config.html_build_dir.glob("*.html"):
+    if not config.html_complete_dir.exists():
+        return "run 'bb html complete' before running this command"
+    for html in config.html_complete_dir.glob("*.html"):
         print(html.name)
         for line in html.read_text(errors='ignore').splitlines():
             if "<pre" in line:
