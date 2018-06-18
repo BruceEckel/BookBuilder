@@ -211,11 +211,11 @@ def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
     os.system(command)
 
 
-def html_fix_crosslinks():
-    hfm = header_to_filename_map(config.html_build_dir)
+def html_fix_crosslinks(target_dir):
+    hfm = header_to_filename_map(target_dir)
     titles = list(hfm.keys())
     cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
-    for md in config.html_build_dir.glob("*.md"):
+    for md in target_dir.glob("*.md"):
         if "000_Front" in md.name:
             continue
         text = md.read_text()
@@ -228,9 +228,9 @@ def html_fix_crosslinks():
         md.write_text(text)
 
 
-def html_sample_end_fixup(end_text=""):
+def html_sample_end_fixup(target_dir, end_text=""):
     tag = "{{SAMPLE_END}}"
-    for md in config.html_build_dir.glob("*.md"):
+    for md in target_dir.glob("*.md"):
         text = md.read_text()
         if tag not in text:
             continue
@@ -240,8 +240,8 @@ def html_sample_end_fixup(end_text=""):
         strip_review_notes(md)
 
 
-def html_copyright():
-    for md in config.html_build_dir.glob("*.md"):
+def html_copyright(target_dir):
+    for md in target_dir.glob("*.md"):
         if "000_Front" in md.name:
             continue
         text = md.read_text() + \
@@ -253,11 +253,11 @@ def toc_entry(name, target_url):
     return f'<p class="toc-entry"><a target="_blank" href="../htmlbook/{target_url}.html">{name}</a></p>'
 
 
-def create_markdown_toc_for_html():
+def create_markdown_toc_for_html(target_dir):
     toc_tag = "## Table of Contents"
     index_md = config.web_sample_toc / "index.md"
     toc = [toc_entry(h, f[1]) for h, f in header_to_filename_map(
-        config.html_build_dir).items()]
+        target_dir).items()]
     old_index_md = index_md.read_text()
     assert toc_tag in old_index_md
     lines = old_index_md.splitlines()
@@ -267,28 +267,29 @@ def create_markdown_toc_for_html():
     index_md.write_text(new_index_md)
 
 
-def convert_to_html():
+def convert_to_html(target_dir, sample:bool = True):
     """
     Pandoc markdown to html demo book for website
     """
-    regenerate_ebook_build_dir(config.html_build_dir, BookType.HTML)
-    copy_markdown_files(config.html_build_dir, strip_notes=False)
-    html_fix_crosslinks()
-    html_sample_end_fixup(config.end_of_sample)
-    create_markdown_toc_for_html()
-    html_copyright()
-    os.chdir(str(config.html_build_dir))
+    regenerate_ebook_build_dir(target_dir, BookType.HTML)
+    copy_markdown_files(target_dir, strip_notes=False)
+    html_fix_crosslinks(target_dir)
+    if sample:
+        html_sample_end_fixup(target_dir, config.end_of_sample)
+    create_markdown_toc_for_html(target_dir)
+    html_copyright(target_dir)
+    os.chdir(str(target_dir))
     for md in sorted(list(Path().glob("*.md"))):
         strip_review_notes(md)
         pandoc_html_command(md, BookType.HTML)
-    for md in config.html_build_dir.rglob("*.md"):
+    for md in target_dir.rglob("*.md"):
         md.unlink()
-    pandoc_template = config.html_build_dir / "pandoc-template.html"
+    pandoc_template = target_dir / "pandoc-template.html"
     if pandoc_template.exists():
         pandoc_template.unlink()
     # Inject results into hugo site:
-    copy_tree(str(config.html_build_dir), str(config.web_html_book))
-    return f"\n[{config.html_build_dir.name} Completed]"
+    copy_tree(str(target_dir), str(config.web_html_book))
+    return f"\n[{target_dir.name} Completed]"
 
 
 def create_release():

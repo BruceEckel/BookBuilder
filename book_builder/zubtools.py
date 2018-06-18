@@ -32,5 +32,15 @@ def remove_checkboxes():
         if check_for_notes(md, lines):
             return "Notes need changing to {{}}"
         lines[:] = filterfalse(determine, lines)
-        text = re.sub('\n{2,}','\n\n', "\n".join(lines))
+        text = re.sub('\n{2,}', '\n\n', "\n".join(lines))
         md.write_text(text + "\n")
+
+
+def find_pre_and_code_tags_in_html():
+    if not config.html_build_dir.exists():
+        return "run 'bb html build' before running this command"
+    for html in config.html_build_dir.glob("*.html"):
+        print(html.name)
+        for line in html.read_text(errors='ignore').splitlines():
+            if "<pre" in line:
+                print(f"\t{line}")
