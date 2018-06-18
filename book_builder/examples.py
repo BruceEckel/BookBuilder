@@ -96,22 +96,22 @@ task run (dependsOn: [
 """)
 
 
-def report_duplicate_file_names(*patterns):
+def report_duplicate_file_names(*patterns, check_for_duplicates):
     fnames = []
     for pattern in patterns:
         fnames += [kt.name for kt in config.example_dir.rglob(pattern)]
     # from pprint import pprint
     # pprint(fnames)
     duplicates = [x.strip() for x in fnames if fnames.count(x) >= 2]
-    if duplicates:
+    if duplicates and check_for_duplicates:
         dupstring = '\n\t'.join(duplicates)
         print(f"ERROR: Duplicate code file names: \n{dupstring}")
         sys.exit(1)
 
 
-def create_tasks_for_gradle():
+def create_tasks_for_gradle(check_for_duplicates):
     "Regenerate gradle/tasks.gradle file based on actual extracted examples"
-    report_duplicate_file_names("*.kt", "*.java")
+    report_duplicate_file_names("*.kt", "*.java", check_for_duplicates=check_for_duplicates)
     # Produces sorted tasks by name:
     task_list = tasks_base
     runnable_list = []

@@ -40,13 +40,28 @@ def code_clean():
     click.echo(examples.clean())
 
 
-@code.command('extract')
+@code.group('extract')
 def code_extract():
-    "Extract examples from book's Markdown files"
+    "Choose how to extract examples from book's Markdown files"
+
+
+@code_extract.command('duplicates')
+def with_duplicates():
+    "Keep duplicate filenames"
     click.echo(examples.extractExamples())
-    if config.language_name == "kotlin":
+    if config.language_name.lower() == "kotlin" or "java":
         click.echo(examples.create_test_files())
-        click.echo(examples.create_tasks_for_gradle())
+        click.echo(examples.create_tasks_for_gradle(
+            check_for_duplicates=False))
+
+
+@code_extract.command('no_duplicates')
+def without_duplicates():
+    "Remove duplicate filenames"
+    click.echo(examples.extractExamples())
+    if config.language_name.lower() == "kotlin" or "java":
+        click.echo(examples.create_test_files())
+        click.echo(examples.create_tasks_for_gradle(check_for_duplicates=True))
 
 
 @code.command('exec_run_sh')
@@ -177,6 +192,7 @@ def docx_build():
     "Create docx from Markdown files"
     click.echo(convert_to_docx())
 
+
 ##########################################################
 
 @cli.group()
@@ -184,10 +200,24 @@ def html():
     "Create html ebook"
 
 
-@html.command('build')
-def html_build():
-    "Create html from Markdown files"
-    click.echo(convert_to_html())
+@html.command('clean')
+def html_clean():
+    "Remove build directories containing html"
+    click.echo(util.clean(config.html_sample_dir))
+    click.echo(util.clean(config.html_complete_dir))
+
+
+@html.command('sample')
+def html_build_sample():
+    "Create sample html from Markdown files"
+    click.echo(convert_to_html(config.html_sample_dir, sample=True))
+
+
+@html.command('complete')
+def html_build_complete():
+    "Create complete html from Markdown files"
+    click.echo(convert_to_html(config.html_complete_dir, sample=False))
+
 
 ##########################################################
 
@@ -196,6 +226,7 @@ def html_build():
 def release():
     "Create full release from scratch"
     click.echo(create_release())
+
 
 ##########################################################
 
@@ -214,6 +245,7 @@ def notes():
             for cn in curly_notes:
                 print(cn)
             print("-" * 40)
+
 
 ##########################################################
 
@@ -243,6 +275,14 @@ def remove_ready_boxes():
 
 
 @z.command()
+def check_pre_tags():
+    """
+    Make sure all <pre class="sourceCode kotlin"> are followed by <code class="sourceCode kotlin">
+    """
+    click.echo(book_builder.zubtools.find_pre_and_code_tags_in_html())
+
+
+@z.command()
 def test():
     "Perform current test"
     from book_builder.ebook_generators import show_important_kindlegen_output
@@ -254,7 +294,6 @@ def test():
 def packages_unpackaged():
     "Show all examples that aren't in packages"
     click.echo(_packages.unpackaged())
-
 
 # @z.command('add')
 # def packages_add_packages():
