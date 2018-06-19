@@ -40,7 +40,21 @@ def find_pre_and_code_tags_in_html():
     if not config.html_complete_dir.exists():
         return "run 'bb html complete' before running this command"
     for html in config.html_complete_dir.glob("*.html"):
-        print(html.name)
-        for line in html.read_text(errors='ignore').splitlines():
-            if "<pre" in line:
-                print(f"\t{line}")
+        print(f"----- {html.name} -----")
+        text = html.read_text(errors='ignore')
+        # print(text)
+        for code in re.findall("<pre.*?>(.*?)</pre>", text, flags=re.DOTALL):
+            print(code + "\n\n")
+
+    # for html in config.html_complete_dir.glob("*.html"):
+    #     results = []
+    #     for line in html.read_text(errors='ignore').splitlines():
+    #         if "<pre" in line and "<code" not in line:
+    #             results.append(f"\t{line}")
+    #         if "<pre" in line and '<pre class="sourceCode' not in line:
+    #             results.append(f"\t{line}")
+    #         if '<pre class="sourceCode' in line and '<code class="sourceCode' not in line:
+    #             results.append(f"\t{line}")
+    #     if results:
+    #         print(html.name)
+    #         print("\n".join(results))
