@@ -39,7 +39,7 @@ def header_to_filename_map(dir_to_map: Path):
     "Produces mapping between header/crosslink strings and file name bases"
     result = dict()
     for md in sorted(list(dir_to_map.glob("*.md"))):
-        if "000_Front.md" or "00_Front.md" in md.name:
+        if "000_Front.md" in md.name or "00_Front.md" in md.name:
             continue
         header = md.read_text().splitlines()[0].strip()
         name_base = create_markdown_filename(header)[:-3]
