@@ -203,8 +203,11 @@ def html():
 @html.command('clean')
 def html_clean():
     "Remove build directories containing html"
-    click.echo(util.clean(config.html_sample_dir))
-    click.echo(util.clean(config.html_complete_dir))
+    def remove(path):
+        click.echo(util.clean(path))
+    remove(config.html_sample_dir)
+    remove(config.html_complete_dir)
+    remove(config.html_stripped_dir)
 
 
 @html.command('sample')

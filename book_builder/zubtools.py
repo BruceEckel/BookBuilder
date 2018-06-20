@@ -39,12 +39,15 @@ def remove_checkboxes():
 def find_pre_and_code_tags_in_html():
     if not config.html_complete_dir.exists():
         return "run 'bb html complete' before running this command"
+    if not config.html_stripped_dir.exists():
+        config.html_stripped_dir.mkdir()
     for html in config.html_complete_dir.glob("*.html"):
         print(f"----- {html.name} -----")
-        text = html.read_text(errors='ignore')
-        # print(text)
-        for code in re.findall("<pre.*?>(.*?)</pre>", text, flags=re.DOTALL):
-            print(code + "\n\n")
+        text = html.read_text(encoding='utf-8') #, errors='ignore')
+        text = re.sub("<pre.*?>(.*?)</pre>", "\g<1>", text, flags=re.DOTALL)
+        (config.html_stripped_dir / html.name).write_text(text, encoding='utf-8')
+        # for code in re.findall("<pre.*?>(.*?)</pre>", text, flags=re.DOTALL):
+        #     print(code + "\n\n")
 
     # for html in config.html_complete_dir.glob("*.html"):
     #     results = []

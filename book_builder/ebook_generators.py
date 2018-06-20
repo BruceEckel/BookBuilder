@@ -267,10 +267,15 @@ def create_markdown_toc_for_html(target_dir):
     index_md.write_text(new_index_md)
 
 
+
 def convert_to_html(target_dir, sample:bool = True):
     """
     Pandoc markdown to html demo book for website
     """
+    def strip_pre_tags(md: Path):
+        text = re.sub("<pre.*?>(.*?)</pre>", "\g<1>", md.read_text(encoding='utf-8'), flags=re.DOTALL)
+        md.write_text(text, encoding='utf-8')
+
     regenerate_ebook_build_dir(target_dir, BookType.HTML)
     copy_markdown_files(target_dir, strip_notes=False)
     html_fix_crosslinks(target_dir)
@@ -284,6 +289,8 @@ def convert_to_html(target_dir, sample:bool = True):
         pandoc_html_command(md, BookType.HTML)
     for md in target_dir.rglob("*.md"):
         md.unlink()
+    for html in target_dir.rglob("*.html"):
+        strip_pre_tags(html)
     pandoc_template = target_dir / "pandoc-template.html"
     if pandoc_template.exists():
         pandoc_template.unlink()

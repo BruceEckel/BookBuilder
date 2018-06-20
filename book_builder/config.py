@@ -68,6 +68,7 @@ mobi_build_dir = root_path / "build" / "mobi"
 docx_build_dir = root_path / "build" / "docx"
 html_sample_dir = root_path / "build" / "html_sample"
 html_complete_dir = root_path / "build" / "html_complete"
+html_stripped_dir = root_path / "build" / "html_stripped"
 release_dir = root_path / "build" / "Release"
 test_dir = root_path / "test"
 
