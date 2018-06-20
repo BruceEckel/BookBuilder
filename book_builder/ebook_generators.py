@@ -287,8 +287,9 @@ def convert_to_html(target_dir, sample:bool = True):
     pandoc_template = target_dir / "pandoc-template.html"
     if pandoc_template.exists():
         pandoc_template.unlink()
-    # Inject results into hugo site:
-    copy_tree(str(target_dir), str(config.web_html_book))
+    if sample:
+        # Inject results into hugo site:
+        copy_tree(str(target_dir), str(config.web_html_book))
     return f"\n[{target_dir.name} Completed]"
 
 
