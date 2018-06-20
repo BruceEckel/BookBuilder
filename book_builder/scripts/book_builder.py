@@ -45,7 +45,7 @@ def code_extract():
     "Choose how to extract examples from book's Markdown files"
 
 
-@code_extract.command('duplicates')
+@code_extract.command('with_duplicates')
 def with_duplicates():
     "Keep duplicate filenames"
     click.echo(examples.extractExamples())
@@ -55,7 +55,7 @@ def with_duplicates():
             check_for_duplicates=False))
 
 
-@code_extract.command('no_duplicates')
+@code_extract.command('without_duplicates')
 def without_duplicates():
     "Remove duplicate filenames"
     click.echo(examples.extractExamples())
