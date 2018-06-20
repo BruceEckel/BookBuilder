@@ -51,7 +51,8 @@ def with_duplicates():
     click.echo(examples.extractExamples())
     if config.language_name.lower() == "kotlin" or "java":
         click.echo(examples.create_test_files())
-        click.echo(examples.create_tasks_for_gradle(check_for_duplicates=False))
+        click.echo(examples.create_tasks_for_gradle(
+            check_for_duplicates=False))
 
 
 @code_extract.command('without_duplicates')
@@ -199,10 +200,23 @@ def html():
     "Create html ebook"
 
 
-@html.command('build')
-def html_build():
-    "Create html from Markdown files"
-    click.echo(convert_to_html())
+@html.command('clean')
+def html_clean():
+    "Remove build directories containing html"
+    click.echo(util.clean(config.html_sample_dir))
+    click.echo(util.clean(config.html_complete_dir))
+
+
+@html.command('sample')
+def html_build_sample():
+    "Create sample html from Markdown files"
+    click.echo(convert_to_html(config.html_sample_dir, sample=True))
+
+
+@html.command('complete')
+def html_build_complete():
+    "Create complete html from Markdown files"
+    click.echo(convert_to_html(config.html_complete_dir, sample=False))
 
 
 ##########################################################
@@ -258,6 +272,14 @@ def remove_ready_boxes():
     Remove + [ ] Ready for Review, + [ ] Tech Checked, convert + Notes: to {{}}
     """
     click.echo(book_builder.zubtools.remove_checkboxes())
+
+
+@z.command()
+def check_pre_tags():
+    """
+    Make sure all <pre class="sourceCode kotlin"> are followed by <code class="sourceCode kotlin">
+    """
+    click.echo(book_builder.zubtools.find_pre_and_code_tags_in_html())
 
 
 @z.command()
