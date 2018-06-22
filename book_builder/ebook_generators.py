@@ -221,7 +221,7 @@ def html_fix_crosslinks(target_dir):
         text = md.read_text()
         for lnk in cross_link.findall(text):
             link = lnk.replace("\n", " ")
-            if link[1:-1] in titles:
+            if link[1:-1] in titles: # Trim first and last to remove []
                 trans = hfm[link[1:-1]]
                 new_link = f'<a target="_blank" href="{trans[1]}.html">{link[1:-1]}</a>'
                 text = text.replace(lnk, new_link)
@@ -240,7 +240,7 @@ def html_sample_end_fixup(target_dir, end_text=""):
         strip_review_notes(md)
 
 
-def html_copyright(target_dir):
+def html_footer(target_dir):
     for md in target_dir.glob("*.md"):
         if "000_Front" in md.name:
             continue
@@ -264,6 +264,7 @@ def create_markdown_toc_for_html(target_dir):
     new_index_md = "\n".join(lines[:lines.index(toc_tag)]) + \
         f"\n{toc_tag}\n\n" + \
         "\n".join(toc)
+    new_index_md = re.sub("`(.*?)`", "<code>\g<1></code>", new_index_md, flags=re.DOTALL)
     index_md.write_text(new_index_md)
 
 
@@ -287,7 +288,7 @@ def convert_to_html(target_dir, sample:bool = True):
     if sample:
         html_sample_end_fixup(target_dir, config.end_of_sample)
     create_markdown_toc_for_html(target_dir)
-    html_copyright(target_dir)
+    html_footer(target_dir)
     os.chdir(str(target_dir))
     for md in sorted(list(Path().glob("*.md"))):
         strip_review_notes(md)
