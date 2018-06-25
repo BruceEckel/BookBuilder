@@ -10,7 +10,7 @@ import book_builder.validate as _validate
 from book_builder.ebook_generators import convert_to_epub
 from book_builder.ebook_generators import convert_to_mobi
 from book_builder.ebook_generators import convert_to_docx
-from book_builder.ebook_generators import convert_to_html
+from book_builder.html_generator import convert_to_html
 from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms

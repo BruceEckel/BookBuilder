@@ -4,17 +4,14 @@ Generate ebooks in different formats
 import os
 import re
 import zipfile
-from distutils.dir_util import copy_tree
 from itertools import chain
 from pathlib import Path
 
 import book_builder.config as config
 from book_builder.config import BookType, epub_name
 from book_builder.util import (clean, combine_markdown_files,
-                               combine_sample_markdown, copy_markdown_files,
-                               header_to_filename_map,
-                               regenerate_ebook_build_dir, retain_files,
-                               strip_review_notes)
+                               combine_sample_markdown,
+                               regenerate_ebook_build_dir, retain_files)
 
 
 def pandoc_epub_command(
@@ -191,121 +188,6 @@ def convert_to_docx():
     return f"{config.docx_build_dir.name} Completed"
 
 
-def pandoc_html_command(input_file, ebook_type: BookType, highlighting=None):
-    "highlighting=None uses default (pygments) for source code color syntax highlighting"
-    assert input_file.exists(), f"Error: missing {input_file.name}"
-    css_file = f"{config.base_name}-{ebook_type.value}.css".lower()
-    command = (
-        f"pandoc {input_file.name}"
-        f" -t html -o {input_file.stem}.html"
-        " --standalone"
-        " --template=pandoc-template.html"
-        " -f markdown-native_divs"
-        " -f markdown+smart"
-        " --toc-depth=2"
-        f' --metadata title="{config.title}: {(input_file.stem)[4:]}"'
-        f" --css={css_file}")
-    if highlighting:
-        command += f" --highlight-style={highlighting} "
-    print(f"{input_file.stem}.html")
-    os.system(command)
-
-
-def html_fix_crosslinks(target_dir):
-    hfm = header_to_filename_map(target_dir)
-    titles = list(hfm.keys())
-    cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
-    for md in target_dir.glob("*.md"):
-        if "000_Front" in md.name:
-            continue
-        text = md.read_text()
-        for lnk in cross_link.findall(text):
-            link = lnk.replace("\n", " ")
-            if link[1:-1] in titles: # Trim first and last to remove []
-                trans = hfm[link[1:-1]]
-                new_link = f'<a target="_blank" href="{trans[1]}.html">{link[1:-1]}</a>'
-                text = text.replace(lnk, new_link)
-        md.write_text(text)
-
-
-def html_sample_end_fixup(target_dir, end_text=""):
-    tag = "{{SAMPLE_END}}"
-    for md in target_dir.glob("*.md"):
-        text = md.read_text()
-        if tag not in text:
-            continue
-        lines = text.splitlines()
-        i = lines.index(tag)
-        md.write_text("\n".join(lines[:i]).strip() + "\n\n" + end_text)
-        strip_review_notes(md)
-
-
-def html_footer(target_dir):
-    for md in target_dir.glob("*.md"):
-        if "000_Front" in md.name:
-            continue
-        text = md.read_text() + \
-            f'\n<p class="copy">{config.copyright_notice}</p><br><br>'
-        md.write_text(text)
-
-
-def toc_entry(name, target_url):
-    return f'<p class="toc-entry"><a target="_blank" href="../htmlbook/{target_url}.html">{name}</a></p>'
-
-
-def create_markdown_toc_for_html(target_dir):
-    toc_tag = "## Table of Contents"
-    index_md = config.web_sample_toc / "index.md"
-    toc = [toc_entry(h, f[1]) for h, f in header_to_filename_map(
-        target_dir).items()]
-    old_index_md = index_md.read_text()
-    assert toc_tag in old_index_md
-    lines = old_index_md.splitlines()
-    new_index_md = "\n".join(lines[:lines.index(toc_tag)]) + \
-        f"\n{toc_tag}\n\n" + \
-        "\n".join(toc)
-    new_index_md = re.sub("`(.*?)`", "<code>\g<1></code>", new_index_md, flags=re.DOTALL)
-    index_md.write_text(new_index_md)
-
-
-
-def convert_to_html(target_dir, sample:bool = True):
-    """
-    Pandoc markdown to html demo book for website
-    """
-    def patch_tags(md: Path):
-        # According to Leonardo's directions
-        text = re.sub("<pre.*?>(.*?)</pre>", "\g<1>", 
-                    md.read_text(encoding='utf-8'), 
-                    flags=re.DOTALL)
-        text = text.replace("a.sourceLine { display: inline-block; line-height: 1.25; }", 
-                            "a.sourceLine { display: inline; line-height: 1.25; }")
-        md.write_text(text, encoding='utf-8')
-
-    regenerate_ebook_build_dir(target_dir, BookType.HTML)
-    copy_markdown_files(target_dir, strip_notes=False)
-    html_fix_crosslinks(target_dir)
-    if sample:
-        html_sample_end_fixup(target_dir, config.end_of_sample)
-    create_markdown_toc_for_html(target_dir)
-    html_footer(target_dir)
-    os.chdir(str(target_dir))
-    for md in sorted(list(Path().glob("*.md"))):
-        strip_review_notes(md)
-        pandoc_html_command(md, BookType.HTML)
-    for md in target_dir.rglob("*.md"):
-        md.unlink()
-    for html in target_dir.rglob("*.html"):
-        patch_tags(html)
-    pandoc_template = target_dir / "pandoc-template.html"
-    if pandoc_template.exists():
-        pandoc_template.unlink()
-    if sample:
-        # Inject results into hugo site:
-        copy_tree(str(target_dir), str(config.web_html_book))
-    return f"\n[{target_dir.name} Completed]"
-
-
 def create_release():
     "Create a release from scratch"
     import glob
@@ -338,7 +220,6 @@ def email_to_kindle_readers():
     from email.mime.text import MIMEText
     from email.mime.application import MIMEApplication
     from email.mime.multipart import MIMEMultipart
-    from smtplib import SMTP
     import smtplib
     import sys
 
