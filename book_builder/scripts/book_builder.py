@@ -244,7 +244,7 @@ def notes():
         if "Under Construction" in text:
             curly_notes.add("Under Construction")
         if curly_notes:
-            print(md.name)
+            print(md.name, end=': ')
             for cn in curly_notes:
                 print(cn)
             print("-" * 40)
