@@ -550,6 +550,7 @@ class CrossLinks(Validator):
 
     explicit_link = re.compile(r"\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
     cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
+    footnote = re.compile(r"\[\^[^]]+?\]", flags=re.DOTALL)
     titles = {p.read_text().splitlines()[0].strip()
               for p in config.markdown_dir.glob("*.md")}
 
@@ -558,6 +559,10 @@ class CrossLinks(Validator):
                      for e in CrossLinks.explicit_link.findall(md.prose)]
         explicits = [
             CrossLinks.cross_link.findall(e)[0][1:-1] for e in explicits]
+        footnotes = [f.replace("\n", " ")
+                     for f in CrossLinks.footnote.findall(md.prose)]
+        if footnotes:
+            print(f"footnotes: {footnotes}")
         candidates = [c.replace("\n", " ")[1:-1]
                       for c in CrossLinks.cross_link.findall(md.prose)]
         cross_links = []
