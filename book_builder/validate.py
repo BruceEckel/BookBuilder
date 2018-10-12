@@ -373,16 +373,23 @@ class HangingHyphens(Validator):
 class FunctionDescriptions(Validator):
     "Make sure functions use parentheses, not 'function'"
 
+    exclude = Exclusions("function_descriptions.txt")
+
     def validate(self, md: MarkdownFile):
         func_descriptions = \
             re.findall(r"`[^(`]+?`\s+function", md.text) + \
             re.findall(r"function\s+`[^(`]+?`", md.text)
         if func_descriptions:
-            err_msg = "Function descriptions missing '()':\n"
+            err_msg = None
             for f in func_descriptions:
-                f = f.replace("\n", " ").strip()
-                err_msg += f"\t{f}\n"
-            md.error(err_msg.strip())
+                if f not in FunctionDescriptions.exclude:
+                    if not err_msg:
+                        err_msg = "Function descriptions missing '()':\n"
+                    f = f.replace("\n", " ").strip()
+                    err_msg += f"\t{f}\n"
+                    FunctionDescriptions.exclude.error(f"{f}", md)
+            if err_msg:
+                md.error(err_msg.strip())
 
 
 class PunctuationInsideQuotes: #(Validator):
