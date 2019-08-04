@@ -545,14 +545,22 @@ class TickedWords(Validator):
             TickedWords.exclude.error(pprint.pformat(not_in_examples), md)
 
 
+def title_set():
+    result = set()
+    for p in config.markdown_dir.glob("*.md"):
+        print(p)
+        result.add(p.read_text().splitlines()[0].strip())
+    return result
+
 class CrossLinks(Validator):
     "Check for invalid cross-links"
 
     explicit_link = re.compile(r"\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
     cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
     footnote = re.compile(r"\[\^[^]]+?\]", flags=re.DOTALL)
-    titles = {p.read_text().splitlines()[0].strip()
-              for p in config.markdown_dir.glob("*.md")}
+    # titles = {p.read_text().splitlines()[0].strip()
+    #           for p in config.markdown_dir.glob("*.md")}
+    titles = title_set()
 
     def validate(self, md: MarkdownFile):
         explicits = [e.replace("\n", " ")
