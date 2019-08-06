@@ -548,7 +548,7 @@ class TickedWords(Validator):
 def title_set():
     result = set()
     for p in config.markdown_dir.glob("*.md"):
-        print(p)
+        print(p.name)
         result.add(p.read_text().splitlines()[0].strip())
     return result
 
@@ -558,8 +558,6 @@ class CrossLinks(Validator):
     explicit_link = re.compile(r"\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
     cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
     footnote = re.compile(r"\[\^[^]]+?\]", flags=re.DOTALL)
-    # titles = {p.read_text().splitlines()[0].strip()
-    #           for p in config.markdown_dir.glob("*.md")}
     titles = title_set()
 
     def validate(self, md: MarkdownFile):
