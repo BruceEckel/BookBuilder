@@ -5,3 +5,5 @@ __pycache__/
 test.sh
 *.log
 book_builder/pylint-out.txt
+build
+dist
