@@ -70,7 +70,7 @@ def code_exec_run_sh():
     click.echo(examples.make_all_run_sh_executable())
 
 
-##########################################################
+################### Validation ###########################
 
 @cli.group()
 def validate():
@@ -81,6 +81,27 @@ def validate():
 def all(trace):
     "Run all tests"
     click.echo(_validate.Validator.all_checks(trace))
+
+
+@validate.command()
+@click.option('--trace', default="")
+def tabs(trace):
+    "Check for tabs"
+    click.echo(_validate.Validator.one_check(_validate.NoTabs, trace))
+
+
+@validate.command()
+@click.option('--trace', default="")
+def bad_chars(trace):
+    "Check for inappropriate characters"
+    click.echo(_validate.Validator.one_check(_validate.Characters, trace))
+
+
+@validate.command()
+@click.option('--trace', default="")
+def listing_width(trace):
+    "Check listing widths that are too long"
+    click.echo(_validate.Validator.one_check(_validate.CodeListingLineWidths, trace))
 
 
 ##########################################################
