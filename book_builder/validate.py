@@ -170,6 +170,23 @@ class Validator(ABC):
 
         editor.open()
 
+    @staticmethod
+    def one_check(validator, trace):
+        "Run a single Validator"
+        md_dir = config.markdown_dir
+        vdtor = validator(trace)
+        print(f"Running {vdtor.name()} on {md_dir}")
+        assert md_dir.exists(), f"Cannot find {md_dir}"
+        # Create an object for each Validator:
+        for md_path in md_dir.glob("[0-9]*_*.md"):
+            markdown_file = MarkdownFile(md_path, trace)
+            vdtor.validate(markdown_file)
+            markdown_file.show()
+            markdown_file.edit()
+
+        vdtor.post_process()
+        editor.open()
+
 
 class Data:
     "Maintains a data file for a particular validate function"

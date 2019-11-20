@@ -31,7 +31,7 @@ def cli():
 
 @cli.group()
 def code():
-    """Code extraction and testing."""
+    """Code extraction and testing"""
 
 
 @code.command('clean')
@@ -72,10 +72,14 @@ def code_exec_run_sh():
 
 ##########################################################
 
-@cli.command()
+@cli.group()
+def validate():
+    """Validation testing"""
+
+@validate.command()
 @click.option('--trace', default="")
-def validate(trace):
-    "Validation tests"
+def all(trace):
+    "Run all tests"
     click.echo(_validate.Validator.all_checks(trace))
 
 
