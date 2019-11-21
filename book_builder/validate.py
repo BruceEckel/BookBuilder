@@ -235,6 +235,7 @@ class Exclusions(Data):
 
 class NoTabs(Validator):
     "Check for tabs"
+    command_name = "tabs"
 
     def validate(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
@@ -244,6 +245,7 @@ class NoTabs(Validator):
 
 class Characters(Validator):
     "Check for bad characters"
+    command_name = "bad_chars"
 
     bad_chars = ['’']
 
@@ -255,6 +257,7 @@ class Characters(Validator):
 
 class TagNoGap(Validator):
     "Ensure there's no gap between ``` and language_name"
+    command_name = "backtick_gap"
 
     def validate(self, md: MarkdownFile):
         for listing in md.listings:
@@ -266,6 +269,7 @@ class TagNoGap(Validator):
 
 class FilenamesAndTitles(Validator):
     "Ensure atom titles conform to standard and agree with file names"
+    command_name = "titles"
 
     def validate(self, md: MarkdownFile):
         if "Front.md" in md.path.name:
@@ -278,6 +282,7 @@ class FilenamesAndTitles(Validator):
 
 class PackageNames(Validator):
     "Check for package names with capital letters"
+    command_name = "package_names"
 
     def validate(self, md: MarkdownFile):
         for listing in md.listings:
@@ -290,6 +295,7 @@ class HotWords(Validator):
     "Check for words that might need rewriting"
     exclude = Exclusions("hotwords_sentences.txt")
     words = Data("hotwords_to_find.txt")
+    command_name = "hotwords"
 
     def validate(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
@@ -302,6 +308,7 @@ class HotWords(Validator):
 
 class CodeListingLineWidths(Validator):
     "Check code listing line widths"
+    command_name = "listing_width"
 
     def validate(self, md: MarkdownFile):
         for listing in md.listings:
@@ -316,6 +323,7 @@ class CodeListingLineWidths(Validator):
 class ExampleSluglines(Validator):
     "Check for sluglines that don't match the format"
     exclude = Exclusions("valid_example_sluglines.txt")
+    command_name = "sluglines"
 
     def validate(self, md: MarkdownFile):
         for listing in md.listings:
@@ -334,6 +342,7 @@ class ExampleSluglines(Validator):
 class CompleteExamples(Validator):
     "Check for code fragments that should be turned into examples"
     exclude = Exclusions("valid_complete_examples.txt")
+    command_name = "complete_examples"
 
     @staticmethod
     def examples_without_sluglines(md: MarkdownFile):
@@ -357,6 +366,7 @@ class CompleteExamples(Validator):
 
 class SpellCheck(Validator):
     "Spell-check everything"
+    command_name = "spelling"
 
     main_dictionary = Data("dictionary.txt")
     supplemental = Data("supplemental_dictionary.txt")
@@ -374,6 +384,7 @@ class SpellCheck(Validator):
 
 class HangingHyphens(Validator):
     "Ensure there are no hanging em-dashes or hyphens"
+    command_name = "hanging_hyphens"
 
     hanging_emdash = re.compile("[^-]+---$")
     hanging_hyphen = re.compile("[^-]+-$")
@@ -389,6 +400,7 @@ class HangingHyphens(Validator):
 
 class FunctionDescriptions(Validator):
     "Make sure functions use parentheses, not 'function'"
+    command_name = "function_descriptions"
 
     exclude = Exclusions("function_descriptions.txt")
 
@@ -411,6 +423,7 @@ class FunctionDescriptions(Validator):
 
 class PunctuationInsideQuotes: #(Validator):
     "Punctuation inside quotes"
+    command_name = "punctuation_in_quotes"
 
     def validate(self, md: MarkdownFile):
         text = re.sub("```(.*?)\n(.*?)\n```", "", md.text, flags=re.DOTALL)
@@ -424,6 +437,7 @@ class PunctuationInsideQuotes: #(Validator):
 
 class PrintlnOutput(Validator):
     "Test for println() without /* Output:"
+    command_name = "println_output"
 
     OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]  ######## A Data file?
     exclude = Exclusions("valid_println_output.txt")
@@ -440,6 +454,7 @@ class PrintlnOutput(Validator):
 
 class CapitalizedComments(Validator):
     "Check for un-capitalized comments"
+    command_name = "comment_capitalization"
     exclude = Exclusions("comment_capitalization.txt")
 
     @staticmethod
@@ -482,6 +497,7 @@ class CapitalizedComments(Validator):
 
 class ListingIndentation(Validator):
     "Check for inconsistent indentation"
+    command_name = "listing_indentation"
 
     @staticmethod
     def inconsistent_indentation(listing: CodeListing):
@@ -524,6 +540,7 @@ class ListingIndentation(Validator):
 
 class TickedWords(Validator):
     "Spell-check single-ticked items against compiled code"
+    command_name = "ticked_words"
 
     exclude = Exclusions("valid_ticked_words.txt")
     non_letters = re.compile("[^a-zA-Z]+")
@@ -571,6 +588,7 @@ def title_set():
 
 class CrossLinks(Validator):
     "Check for invalid cross-links"
+    command_name = "cross_links"
 
     explicit_link = re.compile(r"\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
     cross_link = re.compile(r"\[.*?\]", flags=re.DOTALL)
@@ -607,6 +625,7 @@ class CrossLinks(Validator):
 
 class MistakenBackquotes(Validator):
     "Discover when backquotes are messed up by paragraph reformatting"
+    command_name = "mistaken_backquotes"
     exclude = Exclusions("mistaken_backquotes.txt")
 
     def validate(self, md: MarkdownFile):
@@ -627,6 +646,7 @@ class JavaPackageDirectory(Validator):
     Test for Java package name and directory name.
     Directory names for atoms that contain Java examples must be lowercase.
     """
+    command_name = "java_packages"
 
     def debug(self, md: MarkdownFile, listing: CodeListing):
         if self.trace:
@@ -656,6 +676,7 @@ class CheckBlankLines(Validator):
     Make sure there isn't more than a single blank line anywhere,
     and that there's a single blank line before/after the end of a code listing.
     """
+    command_name = "blank_lines"
 
     def validate(self, md: MarkdownFile):
         for n, line in enumerate(md.lines):
@@ -676,6 +697,7 @@ class DuplicateExampleNames(Validator):
     """
     Ensure there are no duplicate example names.
     """
+    command_name = "duplicate_example_names"
     all_examples = config.data_path / "AllExampleNames.txt"
     all_examples.write_text("")  # Clear file during class construction
 
@@ -700,8 +722,9 @@ class DuplicateExampleNames(Validator):
 
 class PackageAndDirectoryNames(Validator):
     """
-    Ensure that package names are consistent with directory names.
+    Ensure package names are consistent with directory names.
     """
+    command_name = "package_and_directory_names"
     exclude = Exclusions("package_and_directory_names.txt")
 
     def validate(self, md: MarkdownFile):
@@ -716,8 +739,9 @@ class PackageAndDirectoryNames(Validator):
 
 class DirectoryNameConsistency(Validator):
     """
-    Ensure that directory names in sluglines are consistent with Atom names.
+    Ensure directory names in sluglines are consistent with Atom names.
     """
+    command_name = "directory_name_consistency"
     exclude = Exclusions("directory_name_consistency.txt")
     dirname_exclude = Exclusions("directory_names.txt")
 
