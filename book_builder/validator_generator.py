@@ -1,3 +1,4 @@
+from pathlib import Path
 from validate import Validator
 
 def create_validation_command(validator):
@@ -5,7 +6,9 @@ def create_validation_command(validator):
 @validate.command()
 @click.option('--trace', default="")
 def {validator.command_name}(trace):
-    "{validator.__doc__.strip()}"
+    \"\"\"
+    {validator.__doc__.strip()}
+    \"\"\"
     click.echo(_validate.Validator.one_check(_validate.{validator.name()}, trace))
 
 """
@@ -14,4 +17,4 @@ def {validator.command_name}(trace):
 
 if __name__ == '__main__':
     cmds = "".join([create_validation_command(v("")) for v in Validator.__subclasses__()])
-    print(cmds)
+    Path("generated_validators.py").write_text(cmds)
