@@ -2,6 +2,7 @@
 import os
 import re
 import click
+from pathlib import Path
 import book_builder.config as config
 import book_builder.util as util
 import book_builder.examples as examples
@@ -82,7 +83,8 @@ def all(trace):
     "Run all tests"
     click.echo(_validate.Validator.all_checks(trace))
 
-exec(open("./generated_validators.py").read())
+gen_validators = Path(__file__).parent.parent / "generated_validators.py"
+exec(gen_validators.read_text())
 
 
 ##########################################################
