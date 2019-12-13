@@ -8,6 +8,34 @@
 - All functionality is collected under the single `bb` command which will be
   installed automatically.
 
+## Usage
+
+Once installed (see below), type `bb` at the command prompt and you will see the various options, which will look something like this:
+
+```
+  Book Builder
+
+  Provides all book building and testing utilities under a single central
+  command.
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  code      Code extraction and testing.
+  docx      Create docx file for print version
+  edit      Edit BookBuilder files using VS Code
+  epub      Creates epub
+  html      Create html ebook
+  markdown  Markdown file manipulation
+  mobi      Creates mobi files for kindle
+  notes     Show all {{ Notes }} and atoms under construction except...
+  release   Create full release from scratch
+  validate  Validation tests
+  z         Subtools for special needs
+```
+
 ## Creating `configuration.py`
 
 To use BookBuilder you must place a `configuration.py` file in the base
