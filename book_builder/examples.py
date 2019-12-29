@@ -168,7 +168,7 @@ python_bat = """\
 """
 
 python_shell = """\
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 """
 
 run_py = """\
