@@ -1,9 +1,18 @@
 
 @validate.command()
 @click.option('--trace', default="")
+def edu_exercises(trace):
+    """
+    List files containing unincorporated EDU exercises
+    """
+    click.echo(_validate.Validator.one_check(_validate.ExerciseForEDU, trace))
+
+
+@validate.command()
+@click.option('--trace', default="")
 def tabs(trace):
     """
-    Check for tabs
+    There shouldn't be tabs
     """
     click.echo(_validate.Validator.one_check(_validate.NoTabs, trace))
 
@@ -12,7 +21,7 @@ def tabs(trace):
 @click.option('--trace', default="")
 def bad_chars(trace):
     """
-    Check for bad characters
+    Find bad characters
     """
     click.echo(_validate.Validator.one_check(_validate.Characters, trace))
 
@@ -21,7 +30,7 @@ def bad_chars(trace):
 @click.option('--trace', default="")
 def backtick_gap(trace):
     """
-    Ensure there's no gap between ``` and language_name
+    No gap between ``` and language_name
     """
     click.echo(_validate.Validator.one_check(_validate.TagNoGap, trace))
 
@@ -30,7 +39,7 @@ def backtick_gap(trace):
 @click.option('--trace', default="")
 def titles(trace):
     """
-    Ensure atom titles conform to standard and agree with file names
+    Atom titles should conform to standard and agree with file names
     """
     click.echo(_validate.Validator.one_check(_validate.FilenamesAndTitles, trace))
 

@@ -7,3 +7,4 @@ test.sh
 book_builder/pylint-out.txt
 build
 dist
+tmp.txt

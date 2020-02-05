@@ -1,6 +1,7 @@
 from pathlib import Path
 from validate import Validator
 
+
 def create_validation_command(validator):
     function_string = f"""
 @validate.command()

@@ -11,6 +11,7 @@ from pathlib import Path
 import book_builder.config as config
 from book_builder.util import create_markdown_filename
 
+
 class Editor:
     """
     Controls editing of Markdown files and validation results.
@@ -33,6 +34,7 @@ class Editor:
 
 editor = Editor()  # Global Editor for working with the results
 
+
 class MarkdownFile:
     """
     Contains everything about a Markdown file, including
@@ -43,7 +45,7 @@ class MarkdownFile:
     def __init__(self, md_path, trace=False):
         self.path = md_path
         self.trace_flag = trace
-        self.text = md_path.read_text(encoding="UTF-8")
+        self.text: str = md_path.read_text(encoding="UTF-8")
         self.lines = self.text.splitlines()
         self.title = self.lines[0]
         self.titled = False
@@ -105,6 +107,7 @@ class CodeListing:
                 return " "  # note: a space and not an empty string
             else:
                 return s
+
         return re.sub(CodeListing.strip_comments, replacer, text)
 
     def __init__(self, marker, code, md: MarkdownFile):
@@ -130,14 +133,14 @@ class CodeListing:
 
 
 class Validator(ABC):
-    "Abstract base class for all validators"
+    """Abstract base class for all validators"""
 
     def __init__(self, trace):
         self.trace = trace
 
     @abstractmethod
     def validate(self, md: MarkdownFile):
-        "Performs the actual validation."
+        """Performs the actual validation."""
         pass
 
     def post_process(self):
@@ -152,7 +155,7 @@ class Validator(ABC):
 
     @staticmethod
     def all_checks(trace):
-        "Run all tests to find problems in the book"
+        """Run all tests to find problems in the book"""
         md_dir = config.markdown_dir
         print(f"Validating {md_dir}")
         assert md_dir.exists(), f"Cannot find {md_dir}"
@@ -172,7 +175,7 @@ class Validator(ABC):
 
     @staticmethod
     def one_check(validator, trace):
-        "Run a single Validator"
+        """Run a single Validator"""
         md_dir = config.markdown_dir
         vdtor = validator(trace)
         print(f"Running {vdtor.command_name} on {md_dir}")
@@ -189,10 +192,10 @@ class Validator(ABC):
 
 
 class Data:
-    "Maintains a data file for a particular validate function"
+    """Maintains a data file for a particular validate function"""
     names = {}
 
-    def __init__(self, data_file_name, storage_dir = config.data_path):
+    def __init__(self, data_file_name, storage_dir=config.data_path):
         if data_file_name not in Data.names:
             # Not reported
             Data.names[data_file_name] = "False"
@@ -207,7 +210,7 @@ class Data:
         self.set = {line.strip() for line in self.data.splitlines()}
 
     def error(self, msg, md: MarkdownFile):
-        "Add message to exclusion file and edit that file"
+        """Add message to exclusion file and edit that file"""
         with open(self.ef_path, "a") as ef:
             ef.write(f"{md.path.name}:\n")
             ef.write(f"    {msg}\n")
@@ -226,6 +229,7 @@ class Exclusions(Data):
     Maintains an exclusion file for a particular validate function.
     Places files in the "exclusions" subdirectory.
     """
+
     def __init__(self, exclusion_file_name):
         super().__init__(exclusion_file_name, config.data_path / "exclusions")
 
@@ -233,8 +237,43 @@ class Exclusions(Data):
 ### Validators ###
 
 
+class ExerciseForEDU(Validator):
+    """List files containing unincorporated EDU exercises"""
+    command_name = "edu_exercises"
+    exclude = [
+        "---",
+        "Section",
+        "Appendix",
+    ]
+
+    def validate(self, md: MarkdownFile):
+        for exc in ExerciseForEDU.exclude:
+            if md.title.startswith(exc):
+                return
+        if md.title == "Introduction":
+            return
+        if "\n## Exercises" not in md.text:
+            print(f"No exercise block in {md.title}")
+            return
+        exercise_block = md.text.split("\n## Exercises")[1]
+        solutions = re.findall("```kotlin\n(.*?)\n```", exercise_block, flags=re.DOTALL)
+        if solutions:
+            for solution in solutions:
+                first_line = solution.splitlines()[0]
+                if first_line.startswith("//") and first_line.endswith(".kt"):
+                    print(f"{md.title}: contains solutions to move to EDU")
+                    return
+        # exercises = exercise_block.split("\n##### ")
+        # for e in exercises[1:]:
+        #     # print(f"{e}")
+        #     # print('-' * 45)
+        #     if "```kotlin" in e:
+        #         print(f"{md.title} contains solutions to move to EDU")
+        #         return
+
+
 class NoTabs(Validator):
-    "There shouldn't be tabs"
+    """There shouldn't be tabs"""
     command_name = "tabs"
 
     def validate(self, md: MarkdownFile):
@@ -244,7 +283,7 @@ class NoTabs(Validator):
 
 
 class Characters(Validator):
-    "Find bad characters"
+    """Find bad characters"""
     command_name = "bad_chars"
 
     bad_chars = ['’']
@@ -256,7 +295,7 @@ class Characters(Validator):
 
 
 class TagNoGap(Validator):
-    "No gap between ``` and language_name"
+    """No gap between ``` and language_name"""
     command_name = "backtick_gap"
 
     def validate(self, md: MarkdownFile):
@@ -268,7 +307,7 @@ class TagNoGap(Validator):
 
 
 class FilenamesAndTitles(Validator):
-    "Atom titles should conform to standard and agree with file names"
+    """Atom titles should conform to standard and agree with file names"""
     command_name = "titles"
 
     def validate(self, md: MarkdownFile):
@@ -281,7 +320,7 @@ class FilenamesAndTitles(Validator):
 
 
 class PackageNames(Validator):
-    "Package names shouldn't have capital letters"
+    """Package names shouldn't have capital letters"""
     command_name = "package_names"
 
     def validate(self, md: MarkdownFile):
@@ -292,7 +331,7 @@ class PackageNames(Validator):
 
 
 class HotWords(Validator):
-    "Words that might need rewriting"
+    """Words that might need rewriting"""
     exclude = Exclusions("hotwords_sentences.txt")
     words = Data("hotwords_to_find.txt")
     command_name = "hotwords"
@@ -307,7 +346,7 @@ class HotWords(Validator):
 
 
 class CodeListingLineWidths(Validator):
-    "Code listings shouldn't exceed line widths"
+    """Code listings shouldn't exceed line widths"""
     command_name = "listing_width"
 
     def validate(self, md: MarkdownFile):
@@ -321,7 +360,7 @@ class CodeListingLineWidths(Validator):
 
 
 class ExampleSluglines(Validator):
-    "Sluglines should match the format"
+    """Sluglines should match the format"""
     exclude = Exclusions("valid_example_sluglines.txt")
     command_name = "sluglines"
 
@@ -340,7 +379,7 @@ class ExampleSluglines(Validator):
 
 
 class CompleteExamples(Validator):
-    "Find code fragments that should be turned into examples"
+    """Find code fragments that should be turned into examples"""
     exclude = Exclusions("valid_complete_examples.txt")
     command_name = "complete_examples"
 
@@ -365,7 +404,7 @@ class CompleteExamples(Validator):
 
 
 class SpellCheck(Validator):
-    "Spell-check everything"
+    """Spell-check everything"""
     command_name = "spelling"
 
     main_dictionary = Data("dictionary.txt")
@@ -383,7 +422,7 @@ class SpellCheck(Validator):
 
 
 class HangingHyphens(Validator):
-    "No hanging em-dashes or hyphens"
+    """No hanging em-dashes or hyphens"""
     command_name = "hanging_hyphens"
 
     hanging_emdash = re.compile("[^-]+---$")
@@ -399,7 +438,7 @@ class HangingHyphens(Validator):
 
 
 class FunctionDescriptions(Validator):
-    "Functions in prose should use parentheses"
+    """Functions in prose should use parentheses"""
     command_name = "function_descriptions"
 
     exclude = Exclusions("function_descriptions.txt")
@@ -421,8 +460,8 @@ class FunctionDescriptions(Validator):
                 md.error(err_msg.strip())
 
 
-class PunctuationInsideQuotes: #(Validator):
-    "Punctuation inside quotes"
+class PunctuationInsideQuotes:  # (Validator):
+    """Punctuation inside quotes"""
     command_name = "punctuation_in_quotes"
 
     def validate(self, md: MarkdownFile):
@@ -436,7 +475,7 @@ class PunctuationInsideQuotes: #(Validator):
 
 
 class PrintlnOutput(Validator):
-    "println() should have /* Output:"
+    """println() should have /* Output:"""
     command_name = "println_output"
 
     OK = ["/* Output:", "/* Sample output:", "/* Input/Output:"]  ######## A Data file?
@@ -453,7 +492,7 @@ class PrintlnOutput(Validator):
 
 
 class CapitalizedComments(Validator):
-    "Comments should be capitalized"
+    """Comments should be capitalized"""
     command_name = "comment_capitalization"
     exclude = Exclusions("comment_capitalization.txt")
 
@@ -480,7 +519,7 @@ class CapitalizedComments(Validator):
 
     @staticmethod
     def find_uncapitalized_comment(md: MarkdownFile):
-        "Need to add checks for '.' and following cap"
+        """Need to add checks for '.' and following cap"""
         for listing in md.listings:
             for comment_block in CapitalizedComments.parse_blocks_of_comments(listing):
                 first_char = comment_block.strip()[0]
@@ -496,7 +535,7 @@ class CapitalizedComments(Validator):
 
 
 class ListingIndentation(Validator):
-    "Indentation should be consistent"
+    """Indentation should be consistent"""
     command_name = "listing_indentation"
 
     @staticmethod
@@ -511,14 +550,16 @@ class ListingIndentation(Validator):
             if indent % 2 != 0 and not line.startswith(" *"):
                 return f"{listing.slug}: Non-even indent in line: {line}"
         # For a desired indent of 2
-        indent_counts = [ind//2 for ind, ln in indents]
+        indent_counts = [ind // 2 for ind, ln in indents]
         indent_pairs = list(zip(indent_counts, indent_counts[1:]))
 
-        def test(x, y): return (
-            y == x + 1
-            or y == x
-            or y < x  # No apparent consistency with dedenting
-        )
+        def test(x, y):
+            return (
+                    y == x + 1
+                    or y == x
+                    or y < x  # No apparent consistency with dedenting
+            )
+
         ok = [test(x, y) for x, y in indent_pairs]
         if not all(ok):
             return f"{listing.slug} lines {[n + 2 for n, x in enumerate(ok) if not x]}"
@@ -539,7 +580,7 @@ class ListingIndentation(Validator):
 
 
 class TickedWords(Validator):
-    "Spell-check single-ticked items against compiled code"
+    """Spell-check single-ticked items against compiled code"""
     command_name = "ticked_words"
 
     exclude = Exclusions("valid_ticked_words.txt")
@@ -586,8 +627,9 @@ def title_set():
         result.add(p.read_text().splitlines()[0].strip())
     return result
 
+
 class CrossLinks(Validator):
-    "Find invalid cross-links"
+    """Find invalid cross-links"""
     command_name = "cross_links"
 
     explicit_link = re.compile(r"\[[^]]+?\]\([^)]+?\)", flags=re.DOTALL)
@@ -624,20 +666,20 @@ class CrossLinks(Validator):
 
 
 class MistakenBackquotes(Validator):
-    "Discover when backquotes are messed up by paragraph reformatting"
+    """Discover when backquotes are messed up by paragraph reformatting"""
     command_name = "mistaken_backquotes"
     exclude = Exclusions("mistaken_backquotes.txt")
 
     def validate(self, md: MarkdownFile):
         lines = md.prose.splitlines()
         for n, line in enumerate(lines):
-            if n+1 >= len(lines):
+            if n + 1 >= len(lines):
                 break
-            if line.startswith("`") and lines[n+1].startswith("`"):
-                if line in MistakenBackquotes.exclude and lines[n+1] in MistakenBackquotes.exclude:
+            if line.startswith("`") and lines[n + 1].startswith("`"):
+                if line in MistakenBackquotes.exclude and lines[n + 1] in MistakenBackquotes.exclude:
                     continue
                 md.error(
-                    f"{config.msgbreak}\nPotential backquote error on line {n}:\n{line}\n{lines[n+1]}\n")
+                    f"{config.msgbreak}\nPotential backquote error on line {n}:\n{line}\n{lines[n + 1]}\n")
                 MistakenBackquotes.exclude.error(md.err_msg, md)
 
 
@@ -681,14 +723,14 @@ class CheckBlankLines(Validator):
         for n, line in enumerate(md.lines):
             if line.strip():
                 continue
-            if n+1 < len(md.lines) and md.lines[n+1].strip():
+            if n + 1 < len(md.lines) and md.lines[n + 1].strip():
                 continue
             md.error("More than one blank line", n)
         for n, line in enumerate(md.lines):
             if line.startswith("```"):
                 if n == 0 or n + 1 >= len(md.lines):
                     continue
-                if not (md.lines[n-1].strip() == "" or md.lines[n+1].strip() == ""):
+                if not (md.lines[n - 1].strip() == "" or md.lines[n + 1].strip() == ""):
                     md.error("Missing blank line before/after listing", n)
 
 
@@ -733,7 +775,7 @@ class PackageAndDirectoryNames(Validator):
                     PackageAndDirectoryNames.exclude.error(lst.package, md)
                     md.error(textwrap.dedent(f"""\
                         Inconsistent package/directory name:
-                            {lst.package} != {lst.directory.lower()}"""),  lst.md_starting_line)
+                            {lst.package} != {lst.directory.lower()}"""), lst.md_starting_line)
 
 
 class DirectoryNameConsistency(Validator):
