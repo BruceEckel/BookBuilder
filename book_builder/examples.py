@@ -47,6 +47,8 @@ def extractExamples():
 
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
 
+    listings = []
+
     for sourceText in config.markdown_dir.glob("*.md"):
         debug(f"--- {sourceText.name} ---")
         with sourceText.open("rb") as chapter:
@@ -65,6 +67,17 @@ def extractExamples():
                         write_listing(config.exclude_dir / fpath, group[1])
                     else:
                         write_listing(config.example_dir / fpath, group[1])
+                        # print((fpath,))
+                        listings.append((fpath, group[1]))  ################
+                elif title.strip() == "// ... continuing":
+                    # print(f">>>>>>>>>> {title}")
+                    fpath, body = listings[-1]
+                    lines = body.splitlines()
+                    # print(f">>>>>>>>>> {fpath}")
+                    # print(f">>>>>>>>>> {body[0]}")
+                    # print(f">>>>>>>>>> {body[-1]}")
+                    assert(lines[-1] == "// To be continued ...")
+                    write_listing(config.example_dir / fpath, body + group[1])
 
     return f"Code extracted into {config.example_dir}"
 
@@ -78,7 +91,7 @@ configurations {
 }
 
 dependencies {
-    kotlinRuntime "org.jetbrains.kotlin:kotlin-stdlib:1.3.50"
+    kotlinRuntime "org.jetbrains.kotlin:kotlin-stdlib:1.3.61"
 }
 
 def kotlinClassPath = configurations.kotlinRuntime + sourceSets.main.runtimeClasspath
