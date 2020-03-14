@@ -7,7 +7,7 @@ import string
 import subprocess
 import sys
 from collections import defaultdict
-import colorama
+# import colorama
 
 import book_builder.config as config
 import book_builder.util as util
