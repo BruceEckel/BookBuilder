@@ -68,10 +68,12 @@ def extractExamples():
                     else:
                         write_listing(config.example_dir / fpath, group[1])
                         listings.append((fpath, group[1]))
-                elif title.strip() == "// ... continuing":
+                elif title.strip() == "// ... Continuing":
                     fpath, body = listings[-1]
-                    assert body.splitlines()[-1] == "// To be continued ...", f"!!! {body}\n\n>>>{title}"
-                    write_listing(config.example_dir / fpath, body.strip() + "\n" + group[1].strip())
+                    assert body.splitlines()[-1] == "// Continued ...", f"!!! {body}\n\n>>>{title}"
+                    combined = body.strip() + "\n" + group[1].strip()
+                    listings[-1] = (fpath, combined)
+                    write_listing(config.example_dir / fpath, combined)
 
     return f"Code extracted into {config.example_dir}"
 
