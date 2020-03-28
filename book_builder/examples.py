@@ -87,7 +87,7 @@ configurations {
 }
 
 dependencies {
-    kotlinRuntime "org.jetbrains.kotlin:kotlin-stdlib:1.3.70"
+    kotlinRuntime "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
 def kotlinClassPath = configurations.kotlinRuntime + sourceSets.main.runtimeClasspath
