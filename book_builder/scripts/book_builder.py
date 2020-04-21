@@ -16,6 +16,7 @@ from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import find_missing_function_parens
+from book_builder.leanpub import create_book_txt
 import book_builder.zubtools
 
 
@@ -141,6 +142,20 @@ def style():
 def function_parens(mdfile):
     """Check for missing function parens"""
     click.echo(find_missing_function_parens(mdfile))
+
+
+
+###################### leanpub ###########################
+
+@cli.group()
+def leanpub():
+    """Leanpub creation tools"""
+
+
+@leanpub.command('book')
+def create_book_chapter_order():
+    """Create Book.txt for Leanpub"""
+    click.echo(create_book_txt())
 
 
 
