@@ -139,9 +139,10 @@ def style():
 
 @style.command('function_parens')
 @click.argument('mdfile')
-def function_parens(mdfile):
+@click.option('--fix', is_flag=True)
+def function_parens(mdfile, fix):
     """Check for missing function parens"""
-    click.echo(find_missing_function_parens(mdfile))
+    click.echo(find_missing_function_parens(mdfile, fix))
 
 
 
