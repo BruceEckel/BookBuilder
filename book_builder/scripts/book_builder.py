@@ -15,8 +15,8 @@ from book_builder.html_generator import convert_to_html
 from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
-from book_builder.style import find_missing_function_parens
-from book_builder.leanpub import create_book_txt
+from book_builder.style import fix_missing_function_parens
+from book_builder.leanpub import update_leanpub_repo
 import book_builder.zubtools
 
 
@@ -141,8 +141,8 @@ def style():
 @click.argument('mdfile')
 @click.option('--fix', is_flag=True)
 def function_parens(mdfile, fix):
-    """Check for missing function parens"""
-    click.echo(find_missing_function_parens(mdfile, fix))
+    """Fix missing function parens"""
+    click.echo(fix_missing_function_parens(mdfile, fix))
 
 
 
@@ -153,10 +153,10 @@ def leanpub():
     """Leanpub creation tools"""
 
 
-@leanpub.command('book')
-def create_book_chapter_order():
-    """Create Book.txt for Leanpub"""
-    click.echo(create_book_txt())
+@leanpub.command('update')
+def update_leanpub():
+    """Update Leanpub Github repository"""
+    click.echo(update_leanpub_repo())
 
 
 

@@ -5,7 +5,7 @@ leanpub_repo = config.root_path.parent / "AtomicKotlinLeanpub"
 manuscript_dir = leanpub_repo / "manuscript"
 
 
-def create_book_txt():
+def update_leanpub_repo():
     """
     Make the Book.txt file which determines the chapters and their order for the Leanpub book.
     """
@@ -14,7 +14,7 @@ def create_book_txt():
     if not leanpub_repo.exists():
         return f"Cannot find {leanpub_repo}"
     if manuscript_dir.exists():
-        manuscript_dir.rmdir()
+        shutil.rmtree(manuscript_dir)
     shutil.copytree(config.markdown_dir, manuscript_dir)
     (manuscript_dir / "Book.txt").write_text(
         "\n".join([md.name for md in config.markdown_dir.glob("*.md")]).strip())
