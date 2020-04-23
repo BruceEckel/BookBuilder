@@ -17,6 +17,7 @@ from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
 from book_builder.leanpub import update_leanpub_repo
+from book_builder.leanpub import modify_exercise_numbers
 import book_builder.zubtools
 
 
@@ -146,6 +147,7 @@ def function_parens(mdfile, fix):
 
 
 
+
 ###################### leanpub ###########################
 
 @cli.group()
@@ -157,6 +159,12 @@ def leanpub():
 def update_leanpub():
     """Update Leanpub Github repository"""
     click.echo(update_leanpub_repo())
+
+
+# @leanpub.command('test')
+# def leanpub_test():
+#     """Test modify_exercise_numbers()"""
+#     click.echo(modify_exercise_numbers())
 
 
 
