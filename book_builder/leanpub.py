@@ -15,7 +15,9 @@ def modify_exercise_numbers():
         text = md.read_text()
         # exercises = re.findall(r"##### (\d+)\.\s+", text)
         # pprint.pprint(exercises)
-        modified = re.sub(r"##### (\d+)\.\s+", r"\1. ", text)
+        # modified = re.sub(r"##### (\d+)\.\s+", r"\1. ", text)
+        modified = re.sub(r"##### (\d+)\.", r"##### Exercise \1", text)
+        # modified = text.replace("#####", "##### Exercise")
         md.write_text(modified)
 
 
