@@ -1,13 +1,41 @@
 """
 Random automation subtools
 """
-from pathlib import Path
 import os
 import re
-import sys
 from itertools import filterfalse
-from pprint import pprint
+
 import book_builder.config as config
+
+
+def generate_crosslink_tag(atom_title):
+    title = re.sub('`|:|!|,|\(|\)', '', atom_title)
+    title = title.replace('&', 'and')
+    title = title.replace(' ', '-')
+    return title.lower()
+
+
+def change_to_new_heading1():
+    for md in config.markdown_dir.glob("*.md"):
+        print(f"\n{md.name}")
+        text = md.read_text().splitlines()
+        del text[1]
+        text[0] = f"# {text[0]} {{#{generate_crosslink_tag(text[0])}}}"
+        print(text[0])
+        md.write_text("\n".join(text) + "\n")
+        # for n, line in enumerate(text):
+        #     print(line)
+        #     if n > 5:
+        #         break
+
+
+def change_to_new_heading2():
+    for md in config.markdown_dir.glob("*.md"):
+        print(f"\n{md.name}")
+        text = md.read_text()
+        heading2_list = re.findall(r"\n[a-zA-Z0-9_ `,&]+\n-+\n", text)
+        for h2 in heading2_list:
+            print(h2)
 
 
 def check_for_notes(md, lines):
@@ -23,10 +51,11 @@ def check_for_notes(md, lines):
 def remove_checkboxes():
     def determine(line):
         return (
-            line.strip().endswith("] Ready for Review") or
-            line.strip().endswith("] Tech Checked") or
-            line.startswith("+ Notes:")
+                line.strip().endswith("] Ready for Review") or
+                line.strip().endswith("] Tech Checked") or
+                line.startswith("+ Notes:")
         )
+
     for md in config.markdown_dir.glob("*.md"):
         lines = md.read_text().splitlines()
         if check_for_notes(md, lines):
@@ -43,7 +72,7 @@ def find_pre_and_code_tags_in_html():
         config.html_stripped_dir.mkdir()
     for html in config.html_complete_dir.glob("*.html"):
         print(f"----- {html.name} -----")
-        text = html.read_text(encoding='utf-8') #, errors='ignore')
+        text = html.read_text(encoding='utf-8')  # , errors='ignore')
         text = re.sub("<pre.*?>(.*?)</pre>", "\g<1>", text, flags=re.DOTALL)
         (config.html_stripped_dir / html.name).write_text(text, encoding='utf-8')
         # for code in re.findall("<pre.*?>(.*?)</pre>", text, flags=re.DOTALL):

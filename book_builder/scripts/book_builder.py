@@ -1,24 +1,25 @@
 # The driver script for the main program
 import os
 import re
-import click
 from pathlib import Path
+
+import click
+
 import book_builder.config as config
-import book_builder.util as util
 import book_builder.examples as examples
 import book_builder.packages as _packages
+import book_builder.util as util
 import book_builder.validate as _validate
+import book_builder.zubtools
+from book_builder.ebook_generators import convert_to_docx
 from book_builder.ebook_generators import convert_to_epub
 from book_builder.ebook_generators import convert_to_mobi
-from book_builder.ebook_generators import convert_to_docx
-from book_builder.html_generator import convert_to_html
 from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
+from book_builder.html_generator import convert_to_html
+from book_builder.leanpub import update_leanpub_repo
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
-from book_builder.leanpub import update_leanpub_repo
-from book_builder.leanpub import modify_exercise_numbers
-import book_builder.zubtools
 
 
 @click.group()
@@ -80,11 +81,13 @@ def code_exec_run_sh():
 def validate():
     """Validation testing"""
 
+
 @validate.command()
 @click.option('--trace', default="")
 def all(trace):
     """Run all tests"""
     click.echo(_validate.Validator.all_checks(trace))
+
 
 gen_validators = Path(__file__).parent.parent / "generated_validators.py"
 exec(gen_validators.read_text())
@@ -146,8 +149,6 @@ def function_parens(mdfile, fix):
     click.echo(fix_missing_function_parens(mdfile, fix))
 
 
-
-
 ###################### leanpub ###########################
 
 @cli.group()
@@ -165,7 +166,6 @@ def update_leanpub():
 # def leanpub_test():
 #     """Test modify_exercise_numbers()"""
 #     click.echo(modify_exercise_numbers())
-
 
 
 ##########################################################
@@ -251,8 +251,10 @@ def html():
 @html.command('clean')
 def html_clean():
     """Remove build directories containing html"""
+
     def remove(path):
         click.echo(util.clean(path))
+
     remove(config.html_sample_dir)
     remove(config.html_complete_dir)
     remove(config.html_stripped_dir)
@@ -315,6 +317,22 @@ def notes():
 @cli.group()
 def z():
     """Subtools for special needs"""
+
+
+@z.command()
+def new_heading1():
+    """
+    Change to new heading 1
+    """
+    click.echo(book_builder.zubtools.change_to_new_heading1())
+
+
+@z.command()
+def new_heading2():
+    """
+    Change to new heading 2
+    """
+    click.echo(book_builder.zubtools.change_to_new_heading2())
 
 
 @z.command()

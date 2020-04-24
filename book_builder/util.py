@@ -209,7 +209,8 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     "Turn markdown file into a collection of chapter-based files"
     with Path(config.combined_markdown).open(encoding="utf8") as akmd:
         book = akmd.read()
-    chapters = re.compile(r"\n([A-Za-z0-9\,\!\:\&\?\+\-\/\(\)\` ]*)\n=+\n")
+    # chapters = re.compile(r"\n([A-Za-z0-9\,\!\:\&\?\+\-\/\(\)\` ]*)\n=+\n")
+    chapters = re.compile(r"\n# (.+?)\n")
     parts = chapters.split(book)
     names = parts[1::2]
     bodies = parts[0::2]
@@ -243,13 +244,12 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     if not target_dir.exists():
         target_dir.mkdir()
     for i, p in enumerate(chaps):
-        disassembled_file_name = create_numbered_markdown_filename(p, i)
-        print(disassembled_file_name)
+        name = p.split("{#")[0].strip()
+        disassembled_file_name = create_numbered_markdown_filename(name, i)
         dest = target_dir / disassembled_file_name
         with dest.open('w', encoding="utf8") as chp:
             if p != "Front":
-                chp.write(p + "\n")
-                chp.write("=" * len(p) + "\n\n")
+                chp.write("# " + p + "\n\n")
             chp.write(strip_chapter(chaps[p]) + "\n")
     if target_dir != config.markdown_dir:
         print("now run 'diff -r Markdown test'")
