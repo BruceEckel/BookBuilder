@@ -15,6 +15,12 @@ def generate_crosslink_tag(atom_title):
     return title.lower()
 
 
+def fix_crosslink_references():
+    crosslinks = re.findall(r"\s\[[A-Z`][^,]+?\][^(:]")
+    # Exclude
+    #   [Error]
+
+
 def change_to_new_heading1():
     for md in config.markdown_dir.glob("*.md"):
         print(f"\n{md.name}")
@@ -89,4 +95,4 @@ def find_pre_and_code_tags_in_html():
     #             results.append(f"\t{line}")
     #     if results:
     #         print(html.name)
-    #         print("\n".join(results))
+    #         print(
