@@ -4,11 +4,13 @@ Random automation subtools
 import os
 import re
 from itertools import filterfalse
+from typing import Iterable
 
 import book_builder.config as config
 
 
 def generate_crosslink_tag(atom_title):
+    atom_title = re.sub(r"\s+", " ", atom_title)
     title = re.sub('`|:|!|,|\(|\)', '', atom_title)
     title = title.replace('&', 'and')
     title = title.replace(' ', '-')
@@ -16,9 +18,44 @@ def generate_crosslink_tag(atom_title):
 
 
 def fix_crosslink_references():
-    crosslinks = re.findall(r"\s\[[A-Z`][^,]+?\][^(:]")
-    # Exclude
-    #   [Error]
+    for md in config.markdown_dir.glob("*.md"):
+        if md.name == "098_Appendix_B_Java_Interoperability.md":
+            continue
+        text = md.read_text()
+        crosslinks = set(re.findall(r"\s(\[[A-Z`][^,]+?\])[^(:]", text)) - set(["[Error]"])
+        if crosslinks:
+            print(f"\n{md.name}")
+            for cl in crosslinks:
+                fixed_tag = f"{cl}(#{generate_crosslink_tag(cl[1:-1])})"
+                print(fixed_tag)
+            md.write_text(text.replace(cl, fixed_tag))
+
+
+def check_crosslink_references():
+    def filter_items(items: Iterable[str]):
+        result = []
+        for x in items:
+            if "**" in x: continue
+            if x.endswith(":"): continue
+            if x.endswith('"'): continue
+            if "](#" in x: continue
+            if '["' in x: continue
+            if ']`' in x: continue
+            contents = re.search(r"\[(.+?)\]", x).group(1)
+            if re.fullmatch(r"\d+", contents): continue
+            if re.fullmatch(r"[0-9(), ]+", contents): continue
+            if len(contents) <= 4: continue
+            if '](' in x: continue
+            result.append(x)
+        return result
+
+    for md in config.markdown_dir.glob("*.md"):
+        text = md.read_text()
+        candidates = filter_items(set(re.findall(r"\[.+?\]\S+", text)))
+        if candidates:
+            print(f"\n{md.name}")
+            for c in candidates:
+                print(c)
 
 
 def change_to_new_heading1():

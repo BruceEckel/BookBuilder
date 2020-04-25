@@ -17,9 +17,10 @@ from book_builder.ebook_generators import convert_to_mobi
 from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.html_generator import convert_to_html
-from book_builder.leanpub import update_leanpub_repo
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
+from book_builder.leanpub import update_leanpub_repo
+from book_builder.leanpub import modify_for_print_ready
 
 
 @click.group()
@@ -160,6 +161,13 @@ def leanpub():
 def update_leanpub():
     """Update Leanpub Github repository"""
     click.echo(update_leanpub_repo())
+
+
+@leanpub.command()
+def print_ready():
+    """Operations for print-ready version"""
+    click.echo(update_leanpub_repo())
+    click.echo(modify_for_print_ready())
 
 
 # @leanpub.command('test')
@@ -317,6 +325,22 @@ def notes():
 @cli.group()
 def z():
     """Subtools for special needs"""
+
+
+@z.command()
+def check_crosslinks():
+    """
+    Display potential links
+    """
+    click.echo(book_builder.zubtools.check_crosslink_references())
+
+
+@z.command()
+def fix_crosslinks():
+    """
+    Create Leanpub-style crosslinks
+    """
+    click.echo(book_builder.zubtools.fix_crosslink_references())
 
 
 @z.command()

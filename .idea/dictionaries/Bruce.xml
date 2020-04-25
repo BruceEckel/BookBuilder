@@ -2,6 +2,8 @@
   <dictionary name="Bruce">
     <words>
       <w>bugdemo</w>
+      <w>crosslink</w>
+      <w>crosslinks</w>
       <w>docx</w>
       <w>ebook</w>
       <w>epub</w>
@@ -10,6 +12,7 @@
       <w>mdfile</w>
       <w>mobi</w>
       <w>parens</w>
+      <w>subtools</w>
     </words>
   </dictionary>
 </component>
