@@ -1,8 +1,34 @@
+import re
 import shutil
+
 import book_builder.config as config
 
 leanpub_repo = config.root_path.parent / "AtomicKotlinLeanpub"
 manuscript_dir = leanpub_repo / "manuscript"
+
+
+def create_sample_txt():
+    """Use first 35 atoms, Leanpub can only put in entire files at a time"""
+    if not manuscript_dir.exists():
+        return f"Cannot find {manuscript_dir}"
+    sample_names = sorted([md.name for md in manuscript_dir.glob("*.md")])[:36]
+    sample_txt = manuscript_dir / "Sample.txt"
+    sample_txt.write_text("\n".join(sample_names) + "\n")
+
+
+def strip_double_curly_tags():
+    """Remove entirely"""
+    if not manuscript_dir.exists():
+        return f"Cannot find {manuscript_dir}"
+    for md in manuscript_dir.glob("*.md"):
+        text = md.read_text()
+        # tags = re.findall(r"{{.+?}}", text)
+        # if tags:
+        #     print(f"-{{}} {md.name}")
+        #     for tag in tags:
+        #         print(tag)
+        de_tagged = re.sub(r"{{.+?}}", "", text)
+        md.write_text(de_tagged)
 
 
 def update_leanpub_repo():
@@ -18,11 +44,15 @@ def update_leanpub_repo():
     shutil.copytree(config.markdown_dir, manuscript_dir)
     (manuscript_dir / "Book.txt").write_text(
         "\n".join([md.name for md in config.markdown_dir.glob("*.md")]).strip())
+    strip_double_curly_tags()
+    create_sample_txt()
 
 
 def modify_for_print_ready():
     """
+    So that everything is monochrome in resulting PDF
     Change ```kotlin to ```text
+    Change ```java to ```text
     """
     if not manuscript_dir.exists():
         return f"Cannot find {manuscript_dir}"
@@ -36,8 +66,6 @@ def modify_for_print_ready():
         #     if line.startswith("```"):
         #         print(line)
         md.write_text(text)
-
-
 
 #
 # def modify_exercise_numbers():
