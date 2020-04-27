@@ -21,6 +21,7 @@ from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
 from book_builder.leanpub import update_leanpub_repo
 from book_builder.leanpub import modify_for_print_ready
+from book_builder.leanpub import git_commit_leanpub
 
 
 @click.group()
@@ -161,6 +162,7 @@ def leanpub():
 def update_leanpub():
     """Update Leanpub Github repository"""
     click.echo(update_leanpub_repo())
+    click.echo(git_commit_leanpub("ebook"))
 
 
 @leanpub.command()
@@ -168,6 +170,7 @@ def print_ready():
     """Operations for print-ready version"""
     click.echo(update_leanpub_repo())
     click.echo(modify_for_print_ready())
+    click.echo(git_commit_leanpub("print-ready"))
 
 
 # @leanpub.command('test')

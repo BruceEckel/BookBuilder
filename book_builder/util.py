@@ -13,6 +13,18 @@ from collections import OrderedDict
 import textwrap
 import book_builder.config as config
 from book_builder.config import BookType
+import contextlib
+import os
+
+
+@contextlib.contextmanager
+def pushd(new_dir):
+    previous_dir = os.getcwd()
+    os.chdir(new_dir)
+    try:
+        yield
+    finally:
+        os.chdir(previous_dir)
 
 
 def create_markdown_filename(h1):
