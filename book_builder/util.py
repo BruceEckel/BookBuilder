@@ -218,50 +218,35 @@ def combine_sample_markdown(target):
 
 
 def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
-    "Turn markdown file into a collection of chapter-based files"
+    """Turn assembled markdown file into a collection of chapter-based files"""
     with Path(config.combined_markdown).open(encoding="utf8") as akmd:
         book = akmd.read()
-    # chapters = re.compile(r"\n([A-Za-z0-9\,\!\:\&\?\+\-\/\(\)\` ]*)\n=+\n")
-    chapters = re.compile(r"\n# (.+?)\n")
+    chapters = re.compile(r"\n(-?# .+?)\n")
     parts = chapters.split(book)
     names = parts[1::2]
     bodies = parts[0::2]
     chaps = OrderedDict()
     chaps["Front"] = bodies[0]
+    # for i, nm in enumerate(names):
+    #     print(f"{i}: {nm}")
+    #     print(f"{nm.split(maxsplit=1)}")
+    # return
     for i, nm in enumerate(names):
         chaps[nm] = bodies[i + 1].strip() + "\n"
-
-    # Ensure new names match old names:
-    # import book_builder.recent_atom_names
-    # old_names = set(book_builder.recent_atom_names.anames)
-    # new_names = {create_markdown_filename(nm)[:-3] for nm in names}
-    # new_names.add("Front")
-    # diff = old_names.difference(new_names)
-    # if diff:
-    #     print("Old names not in new names:")
-    #     for d in diff:
-    #         print(f"   {d}")
-    #     print("---- Near matches: ----")
-    #     for d in diff:
-    #         print(f"{d}: {difflib.get_close_matches(d, new_names)}")
-    #     return "Disassembly failed"
-
-    # Notify if the number of chapters are different
-    # len_old_names = len(book_builder.recent_atom_names.anames)
-    # len_new_names = len(names) + 1  # for Front
-    # if len_old_names != len_new_names:
-    #     print(f"Number of old names: {len_old_names}")
-    #     print(f"Number of new names: {len_new_names}")
-
     if not target_dir.exists():
         target_dir.mkdir()
     for i, p in enumerate(chaps):
-        name = p.split("{#")[0].strip()
+        name = p
+        if "{#" in name:
+            name = name.split("{#")[0].strip()
+        if "#" in name:
+            name = name.split(maxsplit=1)[1]
         disassembled_file_name = create_numbered_markdown_filename(name, i)
+        print(f"{disassembled_file_name}")
         dest = target_dir / disassembled_file_name
         with dest.open('w', encoding="utf8") as chp:
             if p != "Front":
-                chp.write("# " + p + "\n\n")
+                chp.write(f"{p}\n\n")
             chp.write(strip_chapter(chaps[p]) + "\n")
     if target_dir != config.markdown_dir:
         print("now run 'diff -r Markdown test'")
