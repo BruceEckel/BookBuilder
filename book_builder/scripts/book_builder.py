@@ -22,6 +22,9 @@ from book_builder.style import fix_missing_function_parens
 from book_builder.leanpub import update_leanpub_repo
 from book_builder.leanpub import modify_for_print_ready
 from book_builder.leanpub import git_commit_leanpub
+from book_builder.website import update_website_repo
+from book_builder.website import git_commit_website
+from book_builder.website import create_website_toc
 
 
 @click.group()
@@ -177,6 +180,25 @@ def print_ready():
 # def leanpub_test():
 #     """Test modify_exercise_numbers()"""
 #     click.echo(modify_exercise_numbers())
+
+
+###################### Website ###########################
+
+@cli.group()
+def website():
+    """Leanpub creation tools"""
+
+
+# @website.command('test')
+# def website_test():
+#     create_website_toc()
+
+
+@website.command('update')
+def update_website():
+    """Update Website repository"""
+    click.echo(update_website_repo())
+    click.echo(git_commit_website())
 
 
 ##########################################################
