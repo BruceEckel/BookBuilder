@@ -30,28 +30,32 @@ def fix_crosslink_references():
                 print(fixed_tag)
             md.write_text(text.replace(cl, fixed_tag))
 
-
 def check_crosslink_references():
+    exclusions = ["[Error]", "[South]", "[North]"]
     def filter_items(items: Iterable[str]):
         result = []
         for x in items:
-            if "**" in x: continue
+            if "," in x: continue
+            if x.islower(): continue
+            if any([exclude in x for exclude in exclusions]): continue
+            if '"' in x: continue
+            # if "**" in x: continue
             if x.endswith(":"): continue
             if x.endswith('"'): continue
-            if "](#" in x: continue
-            if '["' in x: continue
-            if ']`' in x: continue
+            # if "](#" in x: continue
+            # if '["' in x: continue
+            # if ']`' in x: continue
             contents = re.search(r"\[(.+?)\]", x).group(1)
-            if re.fullmatch(r"\d+", contents): continue
-            if re.fullmatch(r"[0-9(), ]+", contents): continue
+            # if re.fullmatch(r"\d+", contents): continue
+            # if re.fullmatch(r"[0-9(), ]+", contents): continue
             if len(contents) <= 4: continue
-            if '](' in x: continue
+            # if '](' in x: continue
             result.append(x)
         return result
 
     for md in config.markdown_dir.glob("*.md"):
         text = md.read_text()
-        candidates = filter_items(set(re.findall(r"\[.+?\]\S+", text)))
+        candidates = filter_items(set(re.findall(r"\[.+?\][^(]", text)))
         if candidates:
             print(f"\n{md.name}")
             for c in candidates:

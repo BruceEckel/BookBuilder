@@ -5,8 +5,8 @@ import book_builder.config as config
 from book_builder.util import pushd
 
 website_repo = config.root_path.parent / "AtomicKotlin-hugo"
-content_dir = website_repo / "content"
-toc_file = content_dir / "contents" / "index.md"
+sample_dir = website_repo / "content"
+toc_file = sample_dir / "sample" / "index.md"
 
 
 def create_website_toc():
@@ -45,8 +45,8 @@ def update_website_repo():
     """
     if not website_repo.exists():
         return f"Cannot find {website_repo}"
-    if not content_dir.exists():
-        return f"Cannot find {content_dir}"
+    if not sample_dir.exists():
+        return f"Cannot find {sample_dir}"
     if not toc_file.exists():
         return f" Cannot find {toc_file}"
     toc = create_website_toc()
