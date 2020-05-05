@@ -2,29 +2,19 @@
 import os
 import re
 from pathlib import Path
-
 import click
-
 import book_builder.config as config
 import book_builder.examples as examples
-import book_builder.packages as _packages
 import book_builder.util as util
 import book_builder.validate as _validate
 import book_builder.zubtools
-from book_builder.ebook_generators import convert_to_docx
-from book_builder.ebook_generators import convert_to_epub
-from book_builder.ebook_generators import convert_to_mobi
-from book_builder.ebook_generators import create_release
-from book_builder.ebook_generators import generate_epub_bug_demo_file
-from book_builder.html_generator import convert_to_html
+from book_builder.leanpub import git_commit_leanpub
+from book_builder.leanpub import create_print_ready_manuscript
+from book_builder.leanpub import update_leanpub_manuscript
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
-from book_builder.leanpub import update_leanpub_repo
-from book_builder.leanpub import modify_for_print_ready
-from book_builder.leanpub import git_commit_leanpub
-from book_builder.website import update_website_repo
 from book_builder.website import git_commit_website
-from book_builder.website import create_website_toc
+from book_builder.website import update_website_repo
 
 
 @click.group()
@@ -98,47 +88,6 @@ gen_validators = Path(__file__).parent.parent / "generated_validators.py"
 exec(gen_validators.read_text())
 
 
-##########################################################
-
-
-# @cli.command()
-# def fix():
-#     "Batch fixes"
-#     click.echo(_fix.all_fixes())
-
-
-##########################################################
-
-@cli.group()
-def epub():
-    """Creates epub"""
-
-
-@epub.command('clean')
-def epub_clean():
-    """Remove directory containing epub"""
-    click.echo(util.clean(config.epub_build_dir))
-
-
-@epub.command('regen')
-def epub_regen():
-    """Create and populate epub build dir"""
-    click.echo(util.regenerate_epub_build_dir())
-
-
-@epub.command('build')
-def epub_build():
-    """Create epub from Markdown files"""
-    click.echo(convert_to_epub())
-
-
-@epub.command('bugdemo')
-@click.option('--mdfile', prompt='Markdown File Name')
-def epub_bugdemo(mdfile):
-    """Create EPUB file from single Markdown file, to demonstrate epub reader bugs"""
-    click.echo(generate_epub_bug_demo_file(mdfile))
-
-
 ###################### Style #############################
 
 @cli.group()
@@ -164,22 +113,15 @@ def leanpub():
 @leanpub.command('update')
 def update_leanpub():
     """Update Leanpub Github repository"""
-    click.echo(update_leanpub_repo())
+    click.echo(update_leanpub_manuscript())
     click.echo(git_commit_leanpub("ebook"))
 
 
 @leanpub.command()
 def print_ready():
     """Operations for print-ready version"""
-    click.echo(update_leanpub_repo())
-    click.echo(modify_for_print_ready())
+    click.echo(create_print_ready_manuscript())
     click.echo(git_commit_leanpub("print-ready"))
-
-
-# @leanpub.command('test')
-# def leanpub_test():
-#     """Test modify_exercise_numbers()"""
-#     click.echo(modify_exercise_numbers())
 
 
 ###################### Website ###########################
@@ -187,11 +129,6 @@ def print_ready():
 @cli.group()
 def website():
     """Leanpub creation tools"""
-
-
-# @website.command('test')
-# def website_test():
-#     create_website_toc()
 
 
 @website.command('update')
@@ -235,115 +172,6 @@ def markdown_renumber():
     click.echo(fix_names_and_renumber_atoms())
 
 
-# @epub.command('sample_markdown')
-# def epub_sample_markdown():
-#     "Combine sample Markdown files into a single Markdown file"
-#     click.echo(util.combine_sample_markdown(config.sample_markdown))
-#     os.system(f"{config.md_editor}  {config.sample_markdown}")
-
-
-# @epub.command('newStatus')
-# def epub_create_new_status_file():
-#     "Create fresh STATUS.md if one doesn't exist"
-#     click.echo(util.create_new_status_file())
-
-
-##########################################################
-
-@cli.group()
-def mobi():
-    """Creates mobi files for kindle"""
-
-
-@mobi.command('build')
-def mobi_build():
-    """Create epub from Markdown files"""
-    click.echo(convert_to_mobi())
-
-
-##########################################################
-
-@cli.group()
-def docx():
-    """Create docx file for print version"""
-
-
-@docx.command('build')
-def docx_build():
-    """Create docx from Markdown files"""
-    click.echo(convert_to_docx())
-
-
-##########################################################
-
-@cli.group()
-def html():
-    """Create html ebook"""
-
-
-@html.command('clean')
-def html_clean():
-    """Remove build directories containing html"""
-
-    def remove(path):
-        click.echo(util.clean(path))
-
-    remove(config.html_sample_dir)
-    remove(config.html_complete_dir)
-    remove(config.html_stripped_dir)
-
-
-@html.command('sample')
-def html_build_sample():
-    """Create sample html from Markdown files"""
-    click.echo(convert_to_html(config.html_sample_dir, sample=True))
-
-
-@html.command('complete')
-def html_build_complete():
-    """Create complete html from Markdown files"""
-    click.echo(convert_to_html(config.html_complete_dir, sample=False))
-
-
-##########################################################
-
-
-@cli.command()
-def release():
-    """Create full release from scratch"""
-    click.echo(create_release())
-
-
-##########################################################
-
-
-@cli.command()
-def notes():
-    """Show all {{ Notes }} and atoms under construction except {{SAMPLE_END}}"""
-    for md in config.markdown_dir.glob("*.md"):
-        text = md.read_text()
-        curly_notes = set(re.findall("{{.*?}}", text, flags=re.DOTALL))
-        curly_notes.discard("{{SAMPLE_END}}")
-        if "Under Construction" in text:
-            curly_notes.add("Under Construction")
-        if curly_notes:
-            print(md.name, end=': ')
-            for cn in curly_notes:
-                print(cn)
-            print("-" * 40)
-
-
-##########################################################
-
-
-# @cli.command()
-# def edit():
-#     """Edit BookBuilder files using VS Code"""
-#     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-#     os.chdir("..")
-#     os.system(f"{config.code_editor} .")
-
-
 ##########################################################
 
 
@@ -369,35 +197,19 @@ def fix_crosslinks():
 
 
 @z.command()
-def new_heading1():
-    """
-    Change to new heading 1
-    """
-    click.echo(book_builder.zubtools.change_to_new_heading1())
-
-
-@z.command()
-def new_heading2():
-    """
-    Change to new heading 2
-    """
-    click.echo(book_builder.zubtools.change_to_new_heading2())
-
-
-@z.command()
-def remove_ready_boxes():
-    """
-    Remove + [ ] Ready for Review, + [ ] Tech Checked, convert + Notes: to {{}}
-    """
-    click.echo(book_builder.zubtools.remove_checkboxes())
-
-
-@z.command()
-def check_pre_tags():
-    """
-    Make sure all <pre class="sourceCode kotlin"> are followed by <code class="sourceCode kotlin">
-    """
-    click.echo(book_builder.zubtools.find_pre_and_code_tags_in_html())
+def notes():
+    """Show all {{ Notes }} and atoms under construction except {{SAMPLE_END}}"""
+    for md in config.markdown_dir.glob("*.md"):
+        text = md.read_text()
+        curly_notes = set(re.findall("{{.*?}}", text, flags=re.DOTALL))
+        curly_notes.discard("{{SAMPLE_END}}")
+        if "Under Construction" in text:
+            curly_notes.add("Under Construction")
+        if curly_notes:
+            print(md.name, end=': ')
+            for cn in curly_notes:
+                print(cn)
+            print("-" * 40)
 
 
 @z.command()
@@ -406,17 +218,5 @@ def test():
     from book_builder.ebook_generators import show_important_kindlegen_output
     click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
     # click.echo(_validate.test_markdown_individually())
-
-
-@z.command('unpackaged')
-def packages_unpackaged():
-    """Show all examples that aren't in packages"""
-    click.echo(_packages.unpackaged())
-
-# @z.command('add')
-# def packages_add_packages():
-#     "Add package statements to all examples that don't have them"
-#     click.echo(_packages.add_packages())
-
 
 ##########################################################

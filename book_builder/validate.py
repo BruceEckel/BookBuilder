@@ -417,8 +417,9 @@ class SpellCheck(Validator):
         misspelled = words - SpellCheck.dictionary
         misspelled.discard('')
         if len(misspelled):
-            SpellCheck.supplemental.error(f"{pprint.pformat(misspelled)}", md)
-            md.error(f"Spelling Errors: {pprint.pformat(misspelled)}")
+            misspellings = "\n".join([ms for ms in misspelled])
+            SpellCheck.supplemental.error(f"{misspellings}", md)
+            # md.error(f"Spelling Errors: {pprint.pformat(misspelled)}")
 
 
 class HangingHyphens(Validator):
@@ -622,9 +623,8 @@ class TickedWords(Validator):
 
 def title_set():
     result = set()
-    for p in config.markdown_dir.glob("*.md"):
-        print(p.name)
-        result.add(p.read_text().splitlines()[0].strip())
+    for md in config.markdown_dir.glob("*.md"):
+        result.add(md.read_text().splitlines()[0].strip())
     return result
 
 
