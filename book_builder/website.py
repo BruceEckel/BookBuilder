@@ -6,7 +6,7 @@ from book_builder.util import pushd
 
 website_repo = config.root_path.parent / "AtomicKotlin-hugo"
 sample_dir = website_repo / "content"
-toc_file = sample_dir / "sample" / "index.md"
+toc_file = sample_dir / "contents" / "index.md"
 
 
 def create_website_toc():
