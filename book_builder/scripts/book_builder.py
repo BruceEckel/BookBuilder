@@ -2,15 +2,19 @@
 import os
 import re
 from pathlib import Path
+
 import click
+
 import book_builder.config as config
 import book_builder.examples as examples
 import book_builder.util as util
 import book_builder.validate as _validate
 import book_builder.zubtools
-from book_builder.leanpub import git_commit_leanpub
+from book_builder.leanpub import create_leanpub_html_website
 from book_builder.leanpub import create_print_ready_manuscript
+from book_builder.leanpub import git_commit_leanpub
 from book_builder.leanpub import update_leanpub_manuscript
+from book_builder.leanpub import check_for_sample_end
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
 from book_builder.website import git_commit_website
@@ -122,6 +126,17 @@ def print_ready():
     """Operations for print-ready version"""
     click.echo(create_print_ready_manuscript())
     click.echo(git_commit_leanpub("print-ready"))
+
+
+@leanpub.command()
+def website():
+    """Prepare for leanpub-generated web version of book"""
+    click.echo(create_leanpub_html_website())
+
+@leanpub.command()
+def sample_end():
+    """Look for missing {{SAMPLE_END}} in md files"""
+    click.echo(check_for_sample_end())
 
 
 ###################### Website ###########################

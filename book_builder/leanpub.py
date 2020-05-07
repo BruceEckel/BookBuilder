@@ -1,8 +1,6 @@
 import os
 import re
 import shutil
-import sys
-
 import book_builder.config as config
 from book_builder.util import pushd
 
@@ -88,11 +86,34 @@ def create_print_ready_manuscript():
     if not success:
         return fail_msg
     for md in manuscript_dir.glob("*.md"):
-        print(f"-> {md.name}")
         text = md.read_text()
         text = text.replace("```kotlin", "```text")
         text = text.replace("```java", "```text")
         md.write_text(text)
+
+
+def create_leanpub_html_website():
+    """
+    Set up to get leanpub to generate HTML output.
+    Use {{SAMPLE_END}} tags to create some portion of every chapter, so
+    The table of contents contains the entire book.
+    """
+    success, fail_msg = recreate_leanpub_manuscript()
+    if not success:
+        return fail_msg
+    for md in manuscript_dir.glob("*.md"):
+        sample = md.read_text()
+        if "{{SAMPLE_END}}" in sample:
+            sample = sample.split("{{SAMPLE_END}}")[0] + "\n***End of Sample***"
+            md.write_text(sample)
+
+    # Also add ABOUT.TXT
+    atom_list = "ABOUT.TXT\n" + "\n".join([md.name for md in manuscript_dir.glob("*.md")]).strip()
+    (manuscript_dir / "Book.txt").write_text(atom_list)
+    shutil.copy(config.resource("About.txt"), manuscript_dir)
+    about_txt = manuscript_dir / "About.txt"
+    about = about_txt.read_text().split("## Complete Table of Contents")[0]
+    about_txt.write_text(about)
 
 
 def git_commit_leanpub(msg):
@@ -103,12 +124,17 @@ def git_commit_leanpub(msg):
         os.system(f"""git commit -a -m "{msg}" """)
         os.system("git push")
 
-#
-# def modify_exercise_numbers():
-#     for md in config.markdown_dir.glob("*.md"):
-#         print(md.name)
-#         text = md.read_text()
-#         # exercises = re.findall(r"##### (\d+)\.\s+", text)
-#         # pprint.pprint(exercises)
-#         modified = re.sub(r"##### (\d+)\.", r"##### Exercise \1", text)
-#         md.write_text(modified)
+
+def check_for_sample_end():
+    """
+    Look for missing {{SAMPLE_END}} in md files
+    """
+    for md in config.markdown_dir.glob("*.md"):
+        text = md.read_text()
+        if "_Section_" in md.name or "Appendices.md" in md.name:
+            print(f"{md.name}")
+            continue
+        if "AtomicTest.md" in md.name: continue
+        if int(md.name[0:3]) < 31: continue
+        if "{{SAMPLE_END}}" not in text:
+            print(f"-> {md.name}\tNO {{SAMPLE_END}}")
