@@ -9,6 +9,23 @@ from typing import Iterable
 import book_builder.config as config
 
 
+def check_exercise_count():
+    exclusions = [
+        "_Front.md",
+        "_Introduction.md",
+        "_Section_",
+        "_Appendices.md",
+        "_Appendix_",
+    ]
+    for md in config.markdown_dir.glob("*.md"):
+        if any([ex in md.name for ex in exclusions]):
+            continue
+        text = md.read_text()
+        for n in [1, 2, 3]:
+            if f"##### Exercise {n}" not in text:
+                print(f"{md.name} Missing Exercise {n}")
+
+
 def generate_crosslink_tag(atom_title):
     atom_title = re.sub(r"\s+", " ", atom_title)
     title = re.sub('`|:|!|,|\(|\)', '', atom_title)
@@ -30,8 +47,10 @@ def fix_crosslink_references():
                 print(fixed_tag)
             md.write_text(text.replace(cl, fixed_tag))
 
+
 def check_crosslink_references():
     exclusions = ["[Error]", "[South]", "[North]"]
+
     def filter_items(items: Iterable[str]):
         result = []
         for x in items:

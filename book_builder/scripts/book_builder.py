@@ -196,6 +196,22 @@ def z():
 
 
 @z.command()
+def check_packages():
+    """
+    Packages not in their named directory
+    """
+    click.echo("Not implemented")
+
+
+@z.command()
+def check_exercises():
+    """
+    Find any atoms without 3 exercises
+    """
+    click.echo(book_builder.zubtools.check_exercise_count())
+
+
+@z.command()
 def check_crosslinks():
     """
     Display potential links
@@ -213,13 +229,13 @@ def fix_crosslinks():
 
 @z.command()
 def notes():
-    """Show all {{ Notes }} and atoms under construction except {{SAMPLE_END}}"""
+    """Show all {{ Notes }} and incomplete atoms"""
     for md in config.markdown_dir.glob("*.md"):
         text = md.read_text()
         curly_notes = set(re.findall("{{.*?}}", text, flags=re.DOTALL))
         curly_notes.discard("{{SAMPLE_END}}")
-        if "Under Construction" in text:
-            curly_notes.add("Under Construction")
+        if "This Atom is Incomplete" in text:
+            curly_notes.add("This Atom is Incomplete")
         if curly_notes:
             print(md.name, end=': ')
             for cn in curly_notes:
@@ -227,11 +243,11 @@ def notes():
             print("-" * 40)
 
 
-@z.command()
-def test():
-    """Perform current test"""
-    from book_builder.ebook_generators import show_important_kindlegen_output
-    click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
-    # click.echo(_validate.test_markdown_individually())
+# @z.command()
+# def test():
+#     """Perform current test"""
+#     from book_builder.ebook_generators import show_important_kindlegen_output
+#     click.echo(show_important_kindlegen_output("AtomicKotlin-monochrome"))
+#     # click.echo(_validate.test_markdown_individually())
 
 ##########################################################
