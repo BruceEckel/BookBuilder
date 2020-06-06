@@ -21,10 +21,7 @@ def create_website_toc():
         first = lines[0]
         if "Copyright" in first:
             continue
-        if first.startswith("-#"):
-            tag = "##"
-        else:
-            tag = "- "
+        tag = '##' if first.startswith('-#') else '- '
         title = ((first.split("{")[0]).split(maxsplit=1)[1]).strip()
         if "**This Atom is Incomplete**" in text:
             toc.append(f"{tag}  {title} (In Progress)")

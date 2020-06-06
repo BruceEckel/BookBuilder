@@ -18,7 +18,7 @@ def check_exercise_count():
         "_Appendix_",
     ]
     for md in config.markdown_dir.glob("*.md"):
-        if any([ex in md.name for ex in exclusions]):
+        if any(ex in md.name for ex in exclusions):
             continue
         text = md.read_text()
         for n in [1, 2, 3]:

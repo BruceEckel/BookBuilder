@@ -135,7 +135,7 @@ def show_important_kindlegen_output(fname_stem):
     messages = re.split("\n\n", path.read_text())
     cleaned = []
     for n, msg in enumerate(messages):
-        if any([s in msg for s in skip]):
+        if any(s in msg for s in skip):
             continue
         cleaned.append(msg)
     if cleaned:
