@@ -10,7 +10,9 @@ import book_builder.config as config
 
 def generate_name(n, markdown_atom):
     atom_title = markdown_atom.read_text().splitlines()[0]
-    title = re.sub('`|:|!|,|\(|\)', '', atom_title)
+    title = re.sub('[`:!,()]', '', atom_title)
+    title = title.split(" ", 1)[1]
+    title = title.split("{")[0].strip()
     title = title.replace('&', 'and')
     title = title.replace('-', '_')
     title = title.replace(' ', '_')
