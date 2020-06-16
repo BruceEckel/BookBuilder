@@ -2,6 +2,7 @@
 Random automation subtools
 """
 import os
+import pprint
 import re
 from itertools import filterfalse
 from typing import Iterable
@@ -49,36 +50,29 @@ def fix_crosslink_references():
 
 
 def check_crosslink_references():
-    exclusions = ["[Error]", "[South]", "[North]"]
 
-    def filter_items(items: Iterable[str]):
-        result = []
-        for x in items:
-            if "," in x: continue
-            if x.islower(): continue
-            if any([exclude in x for exclude in exclusions]): continue
-            if '"' in x: continue
-            # if "**" in x: continue
-            if x.endswith(":"): continue
-            if x.endswith('"'): continue
-            # if "](#" in x: continue
-            # if '["' in x: continue
-            # if ']`' in x: continue
-            contents = re.search(r"\[(.+?)\]", x).group(1)
-            # if re.fullmatch(r"\d+", contents): continue
-            # if re.fullmatch(r"[0-9(), ]+", contents): continue
-            if len(contents) <= 4: continue
-            # if '](' in x: continue
-            result.append(x)
-        return result
-
+    targets = set()
+    all: str = ""
     for md in config.markdown_dir.glob("*.md"):
         text = md.read_text()
-        candidates = filter_items(set(re.findall(r"\[.+?\][^(]", text)))
-        if candidates:
-            print(f"\n{md.name}")
-            for c in candidates:
-                print(c)
+        all += text
+        target: str = re.findall(r"#\s+.+?{(#.+?)}", text)[0]
+        targets.add(target)
+    pprint.pprint(targets)
+
+    references = re.findall(r"\[.+?\]\((#.+?)\)", all)
+    pprint.pprint(references)
+    for ref in references:
+        if ref not in targets:
+            print(f"-> {ref}")
+
+
+
+    # candidates = filter_items(set(re.findall(r"\[.+?\][^(]", text)))
+    # if candidates:
+    #     print(f"\n{md.name}")
+    #     for c in candidates:
+    #         print(c)
 
 
 def change_to_new_heading1():
