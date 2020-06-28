@@ -65,6 +65,9 @@ def extractExamples():
                     if atom_directory in config.exclude_atoms:
                         # Put it in the separate exclude tree:
                         write_listing(config.exclude_dir / fpath, group[1])
+                    elif atom_directory == "Tests":
+                        print(fpath)
+                        write_listing(config.example_dir/ ".." / fpath, group[1])
                     else:
                         write_listing(config.example_dir / fpath, group[1])
                         listings.append((fpath, group[1]))

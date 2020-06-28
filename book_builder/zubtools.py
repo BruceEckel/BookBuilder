@@ -5,8 +5,6 @@ import os
 import pprint
 import re
 from itertools import filterfalse
-from typing import Iterable
-
 import book_builder.config as config
 
 
@@ -29,7 +27,7 @@ def check_exercise_count():
 
 def generate_crosslink_tag(atom_title):
     atom_title = re.sub(r"\s+", " ", atom_title)
-    title = re.sub('`|:|!|,|\(|\)', '', atom_title)
+    title = re.sub('[`:!,()]', '', atom_title)
     title = title.replace('&', 'and')
     title = title.replace(' ', '-')
     return title.lower()
@@ -40,7 +38,7 @@ def fix_crosslink_references():
         if md.name == "098_Appendix_B_Java_Interoperability.md":
             continue
         text = md.read_text()
-        crosslinks = set(re.findall(r"\s(\[[A-Z`][^,]+?\])[^(:]", text)) - set(["[Error]"])
+        crosslinks = set(re.findall(r"\s(\[[A-Z`][^,]+?\])[^(:]", text)) - {"[Error]"}
         if crosslinks:
             print(f"\n{md.name}")
             for cl in crosslinks:
