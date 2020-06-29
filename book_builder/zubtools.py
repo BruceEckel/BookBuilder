@@ -5,7 +5,21 @@ import os
 import pprint
 import re
 from itertools import filterfalse
+
 import book_builder.config as config
+
+
+def find_imports_and_packages():
+    all_imports = set()
+    all_packages = set()
+    for md in config.markdown_dir.glob("*.md"):
+        for line in md.read_text().splitlines():
+            if line.startswith("import "):
+                all_imports.add(line)
+            if line.startswith("package "):
+                all_packages.add(line)
+    pprint.pprint(all_imports)
+    pprint.pprint(all_packages)
 
 
 def check_exercise_count():
@@ -48,7 +62,6 @@ def fix_crosslink_references():
 
 
 def check_crosslink_references():
-
     targets = set()
     all: str = ""
     for md in config.markdown_dir.glob("*.md"):
@@ -63,8 +76,6 @@ def check_crosslink_references():
     for ref in references:
         if ref not in targets:
             print(f"-> {ref}")
-
-
 
     # candidates = filter_items(set(re.findall(r"\[.+?\][^(]", text)))
     # if candidates:

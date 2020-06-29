@@ -243,6 +243,14 @@ def notes():
             print("-" * 40)
 
 
+@z.command()
+def imports_and_packages():
+    """
+    One of each import/package statement in the book
+    """
+    click.echo(book_builder.zubtools.find_imports_and_packages())
+
+
 # @z.command()
 # def test():
 #     """Perform current test"""
