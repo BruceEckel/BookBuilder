@@ -22,6 +22,25 @@ def find_imports_and_packages():
     pprint.pprint(all_packages)
 
 
+def find_classes():
+    slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
+    inside = False
+    for md in config.markdown_dir.glob("*.md"):
+        for group in re.findall("```(.*?)\n(.*?)\n```", md.read_text(), re.DOTALL):
+            listing = group[1].splitlines()
+            title = listing[0]
+            if slugline.match(title):
+                for line in listing:
+                    if inside:
+                        print(line)
+                        if line.startswith("}"):
+                            inside = False
+                    if line.startswith("class") and line.endswith("{"):
+                        print(title)
+                        print(line)
+                        inside = True
+
+
 def check_exercise_count():
     exclusions = [
         "_Front.md",

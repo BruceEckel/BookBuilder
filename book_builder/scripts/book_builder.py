@@ -250,6 +250,13 @@ def imports_and_packages():
     """
     click.echo(book_builder.zubtools.find_imports_and_packages())
 
+@z.command()
+def classes():
+    """
+    One of each import/package statement in the book
+    """
+    click.echo(book_builder.zubtools.find_classes())
+
 
 # @z.command()
 # def test():
