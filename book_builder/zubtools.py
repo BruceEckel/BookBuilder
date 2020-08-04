@@ -5,8 +5,17 @@ import os
 import pprint
 import re
 from itertools import filterfalse
-
 import book_builder.config as config
+
+
+def check_kotlin_usage():
+    kt = re.compile("\s+kotlin[^.]")
+    for md in config.markdown_dir.glob("*.md"):
+        for line in md.read_text().splitlines():
+            if kt.search(line):
+                # if line.startswith("import "):
+                #     continue
+                print(line)
 
 
 def find_imports_and_packages():

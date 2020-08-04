@@ -196,6 +196,13 @@ def z():
 
 
 @z.command()
+def check_kotlin():
+    """
+    Check for improper usage of "Kotlin"
+    """
+    click.echo(book_builder.zubtools.check_kotlin_usage())
+
+@z.command()
 def check_packages():
     """
     Packages not in their named directory
