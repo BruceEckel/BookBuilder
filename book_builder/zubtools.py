@@ -8,6 +8,13 @@ from itertools import filterfalse
 import book_builder.config as config
 
 
+def find_missing_listing_header():
+    """
+    Look for missing ```kotlin
+    """
+    print("Not implemented!")
+
+
 def check_kotlin_usage():
     kt = re.compile("\s+kotlin[^.]")
     for md in config.markdown_dir.glob("*.md"):

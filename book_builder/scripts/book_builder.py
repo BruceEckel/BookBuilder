@@ -196,6 +196,14 @@ def z():
 
 
 @z.command()
+def missing_code_markers():
+    """
+    Check for missing ```kotlin
+    """
+    click.echo(book_builder.zubtools.find_missing_listing_header())
+
+
+@z.command()
 def check_kotlin():
     """
     Check for improper usage of "Kotlin"
