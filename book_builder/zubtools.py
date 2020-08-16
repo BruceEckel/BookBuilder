@@ -5,6 +5,7 @@ import os
 import pprint
 import re
 from itertools import filterfalse
+
 import book_builder.config as config
 
 
@@ -12,7 +13,15 @@ def find_missing_listing_header():
     """
     Look for missing ```kotlin
     """
-    print("Not implemented!")
+    for md in config.markdown_dir.glob("*.md"):
+        lines = md.read_text().splitlines()
+        for n, line in enumerate(lines):
+            if (
+                line.startswith("//")
+                and line.endswith(".kt")
+                and not lines[n - 1].startswith("```kotlin")
+            ):
+                print(f"{md.name}: {line}")
 
 
 def check_kotlin_usage():

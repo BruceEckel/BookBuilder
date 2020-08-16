@@ -771,7 +771,7 @@ class PackageAndDirectoryNames(Validator):
     def validate(self, md: MarkdownFile):
         for lst in md.listings:
             if lst.directory and lst.package and lst.package != lst.directory.lower():
-                if lst.package not in PackageAndDirectoryNames.exclude:
+                if "soln" not in lst.package and lst.package not in PackageAndDirectoryNames.exclude:
                     PackageAndDirectoryNames.exclude.error(lst.package, md)
                     md.error(textwrap.dedent(f"""\
                         Inconsistent package/directory name:

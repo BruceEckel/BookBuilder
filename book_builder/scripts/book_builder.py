@@ -14,6 +14,7 @@ from book_builder.leanpub import create_leanpub_html_website
 from book_builder.leanpub import create_print_ready_manuscript
 from book_builder.leanpub import git_commit_leanpub
 from book_builder.leanpub import update_leanpub_manuscript
+from book_builder.leanpub import recreate_leanpub_manuscript
 from book_builder.leanpub import check_for_sample_end
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
@@ -114,6 +115,11 @@ def leanpub():
     """Leanpub creation tools"""
 
 
+@leanpub.command('test')
+def test_leanpub():
+    """Test recreate_leanpub_manuscript()"""
+    click.echo(recreate_leanpub_manuscript())
+
 @leanpub.command('update')
 def update_leanpub():
     """Update Leanpub Github repository"""
@@ -143,7 +149,7 @@ def sample_end():
 
 @cli.group()
 def website():
-    """Leanpub creation tools"""
+    """Maintenance"""
 
 
 @website.command('update')

@@ -4,6 +4,8 @@ import shutil
 import book_builder.config as config
 from book_builder.util import pushd
 
+exercise_message = "- Exercises and solutions for this atom can be found at [AtomicKotlin.com](https://www.atomickotlin.com/exercises/)."
+
 leanpub_repo = config.root_path.parent / "AtomicKotlinLeanpub"
 manuscript_dir = leanpub_repo / "manuscript"
 manuscript_images = manuscript_dir / "images"
@@ -21,13 +23,14 @@ def recreate_leanpub_manuscript():
         shutil.rmtree(id, ignore_errors=True)
     for md in manuscript_dir.glob("*.md"):
         text = re.sub(r"!\[(.*?)\]\(images/.+?/(.+?)\)", r"![\1](images/\2)", md.read_text())
-        md.write_text(text)
-    #     test = re.findall(r"!\[.*?\]\(.+?\)", text)
-    #     if test:
-    #         print(f"{md.name}")
-    #         for t in test:
-    #             print(f"{t}")
-    # sys.exit()
+        result = []
+        for line in text.splitlines():
+            if line == "## Exercises":
+                result.append(exercise_message)
+                break
+            else:
+                result.append(line)
+        md.write_text("\n".join(result) + "\n")
     return True, "Succeeded"
 
 
