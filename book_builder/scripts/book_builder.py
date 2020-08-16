@@ -10,12 +10,12 @@ import book_builder.examples as examples
 import book_builder.util as util
 import book_builder.validate as _validate
 import book_builder.zubtools
-from book_builder.leanpub import create_leanpub_html_website
-from book_builder.leanpub import create_print_ready_manuscript
-from book_builder.leanpub import git_commit_leanpub
-from book_builder.leanpub import update_leanpub_manuscript
-from book_builder.leanpub import recreate_leanpub_manuscript
 from book_builder.leanpub import check_for_sample_end
+from book_builder.leanpub import create_leanpub_html_website
+from book_builder.leanpub import generate_leanpub_manuscript
+from book_builder.leanpub import generate_print_ready_manuscript
+from book_builder.leanpub import git_commit_leanpub
+from book_builder.leanpub import recreate_leanpub_manuscript
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
 from book_builder.website import git_commit_website
@@ -120,17 +120,18 @@ def test_leanpub():
     """Test recreate_leanpub_manuscript()"""
     click.echo(recreate_leanpub_manuscript())
 
-@leanpub.command('update')
-def update_leanpub():
-    """Update Leanpub Github repository"""
-    click.echo(update_leanpub_manuscript())
+
+@leanpub.command("generate")
+def generate_leanpub_ebook():
+    """Build book & update Leanpub github repository"""
+    click.echo(generate_leanpub_manuscript())
     click.echo(git_commit_leanpub("ebook"))
 
 
 @leanpub.command()
 def print_ready():
     """Operations for print-ready version"""
-    click.echo(create_print_ready_manuscript())
+    click.echo(generate_print_ready_manuscript())
     click.echo(git_commit_leanpub("print-ready"))
 
 
@@ -138,6 +139,7 @@ def print_ready():
 def website():
     """Prepare for leanpub-generated web version of book"""
     click.echo(create_leanpub_html_website())
+
 
 @leanpub.command()
 def sample_end():
@@ -216,6 +218,7 @@ def check_kotlin():
     """
     click.echo(book_builder.zubtools.check_kotlin_usage())
 
+
 @z.command()
 def check_packages():
     """
@@ -271,13 +274,13 @@ def imports_and_packages():
     """
     click.echo(book_builder.zubtools.find_imports_and_packages())
 
+
 @z.command()
 def classes():
     """
     One of each import/package statement in the book
     """
     click.echo(book_builder.zubtools.find_classes())
-
 
 # @z.command()
 # def test():

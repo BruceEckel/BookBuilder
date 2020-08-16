@@ -66,8 +66,9 @@ def strip_double_curly_tags():
         md.write_text(de_tagged)
 
 
-def update_leanpub_manuscript():
+def generate_leanpub_manuscript():
     """
+    Create a new version of the Leanpub book
     Make the Book.txt file which determines the chapters and their order for the Leanpub book.
     """
     success, fail_msg = recreate_leanpub_manuscript()
@@ -79,7 +80,7 @@ def update_leanpub_manuscript():
     strip_double_curly_tags()
 
 
-def create_print_ready_manuscript():
+def generate_print_ready_manuscript():
     """
     So that everything is monochrome in resulting PDF
     Change ```kotlin to ```text
