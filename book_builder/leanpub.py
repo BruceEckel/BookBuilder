@@ -4,7 +4,7 @@ import shutil
 import book_builder.config as config
 from book_builder.util import pushd
 
-exercise_message = "- Exercises and solutions for this atom can be found at [AtomicKotlin.com](https://www.atomickotlin.com/exercises/)."
+exercise_message = "***Exercises and solutions for this atom can be found at [AtomicKotlin.com](https://www.atomickotlin.com/exercises/).***"
 
 leanpub_repo = config.root_path.parent / "AtomicKotlinLeanpub"
 manuscript_dir = leanpub_repo / "manuscript"
@@ -62,6 +62,7 @@ def strip_double_curly_tags():
     if not manuscript_dir.exists():
         return f"Cannot find {manuscript_dir}"
     for md in manuscript_dir.glob("*.md"):
+        # print(f"{md.name}: Removing double curlies")
         de_tagged = re.sub(r"{{.+?}}", "", md.read_text())
         md.write_text(de_tagged)
 

@@ -117,8 +117,8 @@ def leanpub():
 
 @leanpub.command('test')
 def test_leanpub():
-    """Test recreate_leanpub_manuscript()"""
-    click.echo(recreate_leanpub_manuscript())
+    """Test generate_leanpub_manuscript()"""
+    click.echo(generate_leanpub_manuscript())
 
 
 @leanpub.command("generate")
