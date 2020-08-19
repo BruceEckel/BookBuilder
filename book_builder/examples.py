@@ -7,17 +7,23 @@ import string
 import subprocess
 import sys
 from collections import defaultdict
-# import colorama
+from datetime import date
 
 import book_builder.config as config
 import book_builder.util as util
+
+# import colorama
 
 # from logging import debug
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 
+copyright_link = f"// ©{date.today().year} Mindview LLC. See Copyright.txt for permissions."
+
 
 def debug(msg): pass
+
+
 # def debug(msg): print(msg)
 
 
@@ -34,6 +40,16 @@ def write_listing(file_path, listing):
     with file_path.open("w", newline='') as listing_file:
         debug(listing)
         listing_file.write(listing.strip() + "\n")
+
+
+def add_copyright_reference(file_extension="kt"):
+    """Insert reference to copyright notice after slugline"""
+    if not config.example_dir.exists():
+        return f"Cannot find {config.extracted_examples}"
+    for code_file in config.example_dir.rglob(f"*.{file_extension}"):
+        lines = code_file.read_text().strip().splitlines()
+        lines.insert(1, copyright_link)
+        code_file.write_text("\n".join(lines) + "\n")
 
 
 def extractExamples():
@@ -67,7 +83,7 @@ def extractExamples():
                         write_listing(config.exclude_dir / fpath, group[1])
                     elif atom_directory == "Tests":
                         # print(fpath)
-                        write_listing(config.example_dir/ ".." / fpath, group[1])
+                        write_listing(config.example_dir / ".." / fpath, group[1])
                     else:
                         write_listing(config.example_dir / fpath, group[1])
                         listings.append((fpath, group[1]))
@@ -77,7 +93,8 @@ def extractExamples():
                     combined = body.strip() + "\n" + group[1].strip()
                     listings[-1] = (fpath, combined)
                     write_listing(config.example_dir / fpath, combined)
-
+    add_copyright_reference(file_extension="kt")
+    add_copyright_reference(file_extension="java")
     return f"Code extracted into {config.example_dir}"
 
 
