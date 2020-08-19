@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+
 import book_builder.config as config
 from book_builder.util import pushd
 
@@ -9,6 +10,36 @@ exercise_message = "***Exercises and solutions for this atom can be found at [At
 leanpub_repo = config.root_path.parent / "AtomicKotlinLeanpub"
 manuscript_dir = leanpub_repo / "manuscript"
 manuscript_images = manuscript_dir / "images"
+
+
+def generate_leanpub_manuscript(with_sample=True):
+    """
+    Create a new version of the Leanpub book
+    Make the Book.txt file which determines the chapters and their order for the Leanpub book.
+    """
+    success, fail_msg = recreate_leanpub_manuscript()
+    if not success:
+        return False, fail_msg
+    (manuscript_dir / "Book.txt").write_text(
+        "\n".join([md.name for md in config.markdown_dir.glob("*.md")]).strip())
+    if with_sample:
+        create_sample_txt()
+    strip_double_curly_tags()
+    return True, "Succeeded"
+
+
+def generate_print_ready_manuscript():
+    """
+    So everything is monochrome in resulting PDF
+    """
+    success, fail_msg = generate_leanpub_manuscript(with_sample=False)
+    if not success:
+        return fail_msg
+    for md in manuscript_dir.glob("*.md"):
+        text = md.read_text()
+        text = text.replace("```kotlin", "```text")
+        text = text.replace("```java", "```text")
+        md.write_text(text)
 
 
 def recreate_leanpub_manuscript():
@@ -67,36 +98,6 @@ def strip_double_curly_tags():
         md.write_text(de_tagged)
 
 
-def generate_leanpub_manuscript():
-    """
-    Create a new version of the Leanpub book
-    Make the Book.txt file which determines the chapters and their order for the Leanpub book.
-    """
-    success, fail_msg = recreate_leanpub_manuscript()
-    if not success:
-        return fail_msg
-    (manuscript_dir / "Book.txt").write_text(
-        "\n".join([md.name for md in config.markdown_dir.glob("*.md")]).strip())
-    create_sample_txt()
-    strip_double_curly_tags()
-
-
-def generate_print_ready_manuscript():
-    """
-    So that everything is monochrome in resulting PDF
-    Change ```kotlin to ```text
-    Change ```java to ```text
-    """
-    success, fail_msg = recreate_leanpub_manuscript()
-    if not success:
-        return fail_msg
-    for md in manuscript_dir.glob("*.md"):
-        text = md.read_text()
-        text = text.replace("```kotlin", "```text")
-        text = text.replace("```java", "```text")
-        md.write_text(text)
-
-
 def create_leanpub_html_website():
     """
     Set up to get leanpub to generate HTML output.
@@ -109,6 +110,7 @@ def create_leanpub_html_website():
     for md in manuscript_dir.glob("*.md"):
         sample = md.read_text()
         if "{{SAMPLE_END}}" in sample:
+            # NOTE: Won't work if {{SAMPLE_END}} has already been removed:
             sample = sample.split("{{SAMPLE_END}}")[0] + "\n***End of Sample***"
             md.write_text(sample)
 

@@ -130,7 +130,7 @@ def generate_leanpub_ebook():
 
 @leanpub.command()
 def print_ready():
-    """Operations for print-ready version"""
+    """Generate print-ready version"""
     click.echo(generate_print_ready_manuscript())
     click.echo(git_commit_leanpub("print-ready"))
 

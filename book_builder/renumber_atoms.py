@@ -10,7 +10,7 @@ import book_builder.config as config
 
 def generate_name(n, markdown_atom):
     atom_title = markdown_atom.read_text().splitlines()[0]
-    title = re.sub('[`:!,()]', '', atom_title)
+    title = re.sub('[`:!,()?]', '', atom_title)
     title = title.split(" ", 1)[1]
     title = title.split("{")[0].strip()
     title = title.replace('&', 'and')
@@ -22,7 +22,7 @@ def generate_name(n, markdown_atom):
 def title_list():
     return [[md.name, generate_name(n, md)]
             for n, md in enumerate(config.markdown_dir.glob("*.md"))
-            ][1:]  # Remove zeroeth element
+            ][1:]  # Remove zeroth element
 
 
 def rename_atoms(titles):
