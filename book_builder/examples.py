@@ -18,7 +18,7 @@ import book_builder.util as util
 # logging.basicConfig(filename=__file__.split(
 #     '.')[0] + ".log", filemode='w', level=logging.DEBUG)
 
-copyright_link = f"// ©{date.today().year} Mindview LLC. See Copyright.txt for permissions."
+copyright_link = f"// (c){date.today().year} Mindview LLC. See Copyright.txt for permissions."
 
 
 def debug(msg): pass
