@@ -142,6 +142,6 @@ def check_for_sample_end():
             print(f"{md.name}")
             continue
         if "AtomicTest.md" in md.name: continue
-        if int(md.name[0:3]) < 31: continue
+        if int(md.name[0:3]) < 32: continue
         if "{{SAMPLE_END}}" not in text:
             print(f"-> {md.name}\tNO {{SAMPLE_END}}")
