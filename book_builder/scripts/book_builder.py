@@ -203,11 +203,11 @@ def z():
 
 
 @z.command()
-def import_consistency():
+def package_consistency():
     """
-    Check for import consistency
+    Check for package consistency
     """
-    click.echo(book_builder.zubtools.check_import_consistency())
+    click.echo(book_builder.zubtools.check_package_consistency())
 
 
 @z.command()

@@ -6,15 +6,56 @@ import pprint
 import re
 from itertools import filterfalse
 from pathlib import Path
+from typing import List
 
 import book_builder.config as config
 
 
-def check_import_consistency():
-    def strip_code(listing):
+def check_package_consistency():
+    def listing(code_block: str):
+        de_commented = re.sub(r'/\*.*?\*/', '', code_block, flags=re.DOTALL)
+        de_triple_quoted = re.sub(r'""".*?"""', '', de_commented, flags=re.DOTALL)
+        return de_triple_quoted.splitlines()
+
+    def filter_code(code_block: str):
+        code_listing = listing(code_block)
+        if any([line.startswith("package") for line in code_listing]):
+            return None
         result = []
         blank = False
-        for line in listing:
+        for line in code_listing:
+            if not blank and line.strip():
+                continue
+            if not line.strip():
+                blank = True
+                continue
+            if line.startswith('}'):
+                continue
+            if line.startswith(' '):
+                continue
+            if line.startswith("fun main("):
+                continue
+            result.append(line)
+        return "\n".join(result).strip()
+
+    def trim_after_main(code_listing):
+        result: List[str] = []
+        for line in code_listing:
+            if line.startswith("fun main("):
+                return result
+            result.append(line)
+        return result
+
+    def package_and_solo_main(code_block: str):
+        code_listing = listing(code_block)
+        if not any([line.startswith("package") for line in code_listing]):
+            return None
+        if not any([line.startswith("fun main(") for line in code_listing]):
+            return None
+        code_listing = trim_after_main(code_listing)
+        result = []
+        blank = False
+        for line in code_listing:
             if not blank and line.strip():
                 continue
             if not line.strip():
@@ -25,18 +66,26 @@ def check_import_consistency():
             if line.startswith(' '):
                 continue
             result.append(line)
-        return result
+        return "\n".join(result).strip()
 
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
+
     def check_packages(md: Path):
-        atom = md.read_text()
-        for group in re.findall("```(.*?)\n(.*?)\n```", atom, re.DOTALL):
-            listing = group[1].splitlines()
-            title = listing[0]
+        # print(f"<><><> {md.name}")
+        for group in re.findall("```(.*?)\n(.*?)\n```", md.read_text(), flags=re.DOTALL):
+            title = group[1].splitlines()[0]
             if slugline.match(title):
-                if not any([line.startswith("package") for line in listing]):
-                    stripped = strip_code(listing)
-                    print("\n".join(stripped))
+                filtered = filter_code(group[1])
+                if filtered:
+                    print(md.name)
+                    print(title)
+                    print(filtered)
+                    print('=' * 80)
+                solo_main = package_and_solo_main(group[1])
+                if solo_main:
+                    print(md.name)
+                    print(title)
+                    print(solo_main)
                     print('=' * 80)
 
     found_packages = False
