@@ -15,7 +15,6 @@ from book_builder.leanpub import create_leanpub_html_website
 from book_builder.leanpub import generate_leanpub_manuscript
 from book_builder.leanpub import generate_print_ready_manuscript
 from book_builder.leanpub import git_commit_leanpub
-from book_builder.leanpub import recreate_leanpub_manuscript
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.style import fix_missing_function_parens
 from book_builder.website import git_commit_website
@@ -201,6 +200,14 @@ def markdown_renumber():
 @cli.group()
 def z():
     """Subtools for special needs"""
+
+
+@z.command()
+def import_consistency():
+    """
+    Check for import consistency
+    """
+    click.echo(book_builder.zubtools.check_import_consistency())
 
 
 @z.command()

@@ -5,8 +5,48 @@ import os
 import pprint
 import re
 from itertools import filterfalse
+from pathlib import Path
 
 import book_builder.config as config
+
+
+def check_import_consistency():
+    def strip_code(listing):
+        result = []
+        blank = False
+        for line in listing:
+            if not blank and line.strip():
+                continue
+            if not line.strip():
+                blank = True
+                continue
+            if line.startswith('}'):
+                continue
+            if line.startswith(' '):
+                continue
+            result.append(line)
+        return result
+
+    slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
+    def check_packages(md: Path):
+        atom = md.read_text()
+        for group in re.findall("```(.*?)\n(.*?)\n```", atom, re.DOTALL):
+            listing = group[1].splitlines()
+            title = listing[0]
+            if slugline.match(title):
+                if not any([line.startswith("package") for line in listing]):
+                    stripped = strip_code(listing)
+                    print("\n".join(stripped))
+                    print('=' * 80)
+
+    found_packages = False
+    for md in config.markdown_dir.glob("*.md"):
+        if not found_packages and "Packages" not in md.name:
+            continue
+        if "Packages" in md.name:
+            found_packages = True
+            continue
+        check_packages(md)
 
 
 def find_missing_listing_header():
@@ -17,9 +57,9 @@ def find_missing_listing_header():
         lines = md.read_text().splitlines()
         for n, line in enumerate(lines):
             if (
-                line.startswith("//")
-                and line.endswith(".kt")
-                and not lines[n - 1].startswith("```kotlin")
+                    line.startswith("//")
+                    and line.endswith(".kt")
+                    and not lines[n - 1].startswith("```kotlin")
             ):
                 print(f"{md.name}: {line}")
 
