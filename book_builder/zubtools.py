@@ -5,89 +5,57 @@ import os
 import pprint
 import re
 from itertools import filterfalse
-from pathlib import Path
-from typing import List
 
 import book_builder.config as config
 
 
-def check_package_consistency():
-    def listing(code_block: str):
-        de_commented = re.sub(r'/\*.*?\*/', '', code_block, flags=re.DOTALL)
-        de_triple_quoted = re.sub(r'""".*?"""', '', de_commented, flags=re.DOTALL)
-        return de_triple_quoted.splitlines()
-
-    def filter_code(code_block: str):
-        code_listing = listing(code_block)
-        if any([line.startswith("package") for line in code_listing]):
-            return None
-        result = []
-        blank = False
-        for line in code_listing:
-            if not blank and line.strip():
-                continue
-            if not line.strip():
-                blank = True
-                continue
-            if line.startswith('}'):
-                continue
-            if line.startswith(' '):
-                continue
-            if line.startswith("fun main("):
-                continue
-            result.append(line)
-        return "\n".join(result).strip()
-
-    def trim_after_main(code_listing):
-        result: List[str] = []
-        for line in code_listing:
-            if line.startswith("fun main("):
-                return result
-            result.append(line)
-        return result
-
-    def package_and_solo_main(code_block: str):
-        code_listing = listing(code_block)
-        if not any([line.startswith("package") for line in code_listing]):
-            return None
-        if not any([line.startswith("fun main(") for line in code_listing]):
-            return None
-        code_listing = trim_after_main(code_listing)
-        result = []
-        blank = False
-        for line in code_listing:
-            if not blank and line.strip():
-                continue
-            if not line.strip():
-                blank = True
-                continue
-            if line.startswith('}'):
-                continue
-            if line.startswith(' '):
-                continue
-            result.append(line)
-        return "\n".join(result).strip()
-
+class CodeCheckListing:
     slugline = re.compile("^(//|#) .+?\.[a-z]+$", re.MULTILINE)
 
-    def check_packages(md: Path):
-        # print(f"<><><> {md.name}")
-        for group in re.findall("```(.*?)\n(.*?)\n```", md.read_text(), flags=re.DOTALL):
-            title = group[1].splitlines()[0]
-            if slugline.match(title):
-                filtered = filter_code(group[1])
-                if filtered:
-                    print(md.name)
-                    print(title)
-                    print(filtered)
-                    print('=' * 80)
-                solo_main = package_and_solo_main(group[1])
-                if solo_main:
-                    print(md.name)
-                    print(title)
-                    print(solo_main)
-                    print('=' * 80)
+    def __init__(self, code_block: str):
+        def remove(block: str, pattern: str) -> str:
+            return re.sub(pattern, '', block, flags=re.DOTALL)
 
+        self.code_block = code_block
+        self.code = remove(code_block, r'/\*.*?\*/')
+        self.code = remove(self.code, r'""".*?"""')
+        self.lines = self.code.splitlines()
+        self.title = self.lines[0]
+        self.is_listing = CodeCheckListing.slugline.match(self.title)
+        if not self.is_listing:
+            return
+        first_blank = self.lines.index("")
+        self.header = self.lines[0:first_blank]
+        self.body = self.lines[first_blank:]
+        self.package = any([line.startswith("package") for line in self.lines])
+        self.cleaned = [line.split('//')[0] for line in self.body]
+        self.main = any([line.startswith("fun main(") for line in self.cleaned])
+        self.definitions = [line for line in self.cleaned
+                            if not line.startswith(' ')
+                            and not line.startswith('}')
+                            and not line.startswith(')')
+                            and not line.startswith("fun main(")
+                            and line.strip()
+                            ]
+        self.joined_definitions = "\n".join(self.definitions)
+
+    def __str__(self):
+        if not self.is_listing:
+            return f"is_listing: {self.is_listing}\n{self.code_block}\n{'=' * 80}"
+        return f"{self.title}\npackage: {self.package}\nmain: {self.main}\n" + \
+               f"{self.code_block}\n{'-' * 20}\n" + \
+               f"{self.joined_definitions}\n" + \
+               f"{'=' * 80}"
+
+    def display(self, msg: str):
+        s = ' ' + msg + ' '
+        print(s.center(78, '='))
+        print(self.code_block)
+
+
+def check_package_consistency():
+    results = []
+    files = set()
     found_packages = False
     for md in config.markdown_dir.glob("*.md"):
         if not found_packages and "Packages" not in md.name:
@@ -95,8 +63,21 @@ def check_package_consistency():
         if "Packages" in md.name:
             found_packages = True
             continue
-        check_packages(md)
-
+        for group in re.findall("```(.*?)\n(.*?)\n```", md.read_text(), flags=re.DOTALL):
+            ccl = CodeCheckListing(group[1])
+            if not ccl.is_listing:
+                continue
+            if ccl.definitions and not ccl.package:
+                ccl.display("No Package")
+                results.append([md.name, ccl.title])
+                files.add(md)
+            if ccl.main and ccl.package and not ccl.definitions:
+                ccl.display("Package but only main")
+                results.append([md.name, ccl.title])
+                files.add(md)
+    pprint.pprint(results)
+    for file in files:
+        print(f"subl {file}")
 
 def find_missing_listing_header():
     """
