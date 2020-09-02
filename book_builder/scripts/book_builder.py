@@ -17,6 +17,7 @@ from book_builder.leanpub import generate_print_ready_manuscript
 from book_builder.leanpub import git_commit_leanpub
 from book_builder.renumber_atoms import fix_names_and_renumber_atoms
 from book_builder.solution_extractor import display_unconverted_solutions
+from book_builder.solution_extractor import extract_unconverted_solutions
 from book_builder.style import fix_missing_function_parens
 from book_builder.website import git_commit_website
 from book_builder.website import update_website_repo
@@ -42,6 +43,11 @@ def solutions():
 def unconverted():
     """Show unconverted solutions"""
     click.echo(display_unconverted_solutions())
+
+@solutions.command()
+def extract():
+    """Extract unconverted solutions"""
+    click.echo(extract_unconverted_solutions())
 
 
 ##########################################################

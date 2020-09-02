@@ -1,5 +1,6 @@
 from collections import deque
 from pathlib import Path
+import book_builder.util as util
 from pprint import pprint
 
 import book_builder.config as config
@@ -10,29 +11,22 @@ exercise_start = "##### Exercise "
 solution_start = "> Solution "
 
 
-def extract_description(lines: deque) -> (str, str):
-    exercise_number = lines.popleft().split(exercise_start)[1]
-    description = ""
-    while lines and solution_start not in lines[0]:
-        description += lines.popleft() + "\n"
-    return exercise_number, description.strip()
-
-
-def extract_solution(lines: deque) -> (str, str):
-    solution_number = lines.popleft().split(solution_start)[1]
-    solution = ""
-    while lines and exercise_start not in lines[0]:
+def extract(lines: deque, start: str, end: str) -> (str, str):
+    exercise_number = lines.popleft().split(start)[1]
+    content = ""
+    while lines and end not in lines[0]:
         line = lines.popleft()
         if line.startswith("```"):
             continue
-        solution += line + "\n"
-    return solution_number, solution.strip()
+        content += line + "\n"
+    return exercise_number, content.strip()
 
 
 class ExercisesAndSolutions:
     def __init__(self, md: Path):
         self.contains_exercises_and_solutions = False
         self.atom = md.read_text()
+        self.directory_name = self.atom.splitlines()[0][2:].split("{#")[0].replace(' ', '').replace('`', '')
         self.contains_exercises = exercise_header in self.atom
         if not self.contains_exercises:
             return
@@ -47,34 +41,48 @@ class ExercisesAndSolutions:
         lines = deque(self.lines)
         while lines:
             if exercise_start in lines[0]:
-                number, description = extract_description(lines)
+                number, description = extract(lines, exercise_start, solution_start)
                 self.exercise_descriptions[number] = description
             elif solution_start in lines[0]:
-                number, solution = extract_solution(lines)
+                number, solution = extract(lines, solution_start, exercise_start)
                 self.exercise_solutions[number] = solution
             else:
                 lines.popleft()
 
     def __str__(self):
         result = ""
+
+        def display(n, ex, name):
+            nonlocal result
+            result += "\n\n" + f"{name} {n}".center(78, '-') + "\n"
+            result += f"\n{ex}"
+
         if self.contains_exercises_and_solutions:
-            for n, ex in self.exercise_descriptions.items():
-                result += f"\n{'-'*20}\nExercise {n}: \n{ex}"
-            for n, ex in self.exercise_solutions.items():
-                result += f"{n}: \n{ex}"
+            [display(n, ex, "Exercise") for n, ex in self.exercise_descriptions.items()]
+            [display(n, ex, "Solution") for n, ex in self.exercise_solutions.items()]
         return result
 
 
 def display_unconverted_solutions():
     for md in config.markdown_dir.glob("*.md"):
-        solutions = ExercisesAndSolutions(md)
-        if solutions.contains_exercises_and_solutions:
+        e_and_s = ExercisesAndSolutions(md)
+        if e_and_s.contains_exercises_and_solutions:
             print(md.name.center(78, '='))
-            print(solutions)
+            print(e_and_s)
 
-# def extract_unconverted_solutions():
-#     for md in config.markdown_dir.glob("*.md"):
-#         solutions = ExercisesAndSolutions(md)
-#         if solutions.contains_exercises:
-#             print(md.name.center(78, '='))
-#             print(solutions.exercises)
+def extract_unconverted_solutions():
+    def write_exercise(efile, number, description):
+        efile.write(f"Exercise {number}".center(78, '-'))
+        efile.write("\n\n" + description + "\n\n")
+    for md in config.markdown_dir.glob("*.md"):
+        e_and_s = ExercisesAndSolutions(md)
+        if e_and_s.contains_exercises_and_solutions:
+            directory = exercises_repo / e_and_s.directory_name
+            if directory.exists():
+                util.clean(directory)
+            directory.mkdir()
+            exercise_file = directory / "Exercises.txt"
+            with exercise_file.open(mode='w') as efile:
+                [write_exercise(efile, n, ex) for n, ex in e_and_s.exercise_descriptions.items()]
+
+
