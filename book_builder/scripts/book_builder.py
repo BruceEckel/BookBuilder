@@ -202,7 +202,7 @@ def markdown_disassemble(test):
     """Split combined into atom-numbered files"""
     if test:
         if config.test_dir.exists():
-            click.echo(util.clean(config.test_dir))
+            click.echo(util.erase(config.test_dir))
         click.echo(util.disassemble_combined_markdown_file(config.test_dir))
     else:
         click.echo(util.disassemble_combined_markdown_file())

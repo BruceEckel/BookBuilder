@@ -60,7 +60,7 @@ def header_to_filename_map(dir_to_map: Path):
     return result
 
 
-def clean(dir_to_remove):
+def erase(dir_to_remove):
     "Remove directory"
     try:
         if dir_to_remove.exists():
@@ -85,7 +85,7 @@ def retain_files(target_dir: Path, extensions: List[str]):
     #     print(k.name)
     for r in remove:
         if r.is_dir():
-            clean(r)
+            erase(r)
         if r.is_file():
             r.unlink()
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
 
 def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.EPUB):
-    clean(ebook_build_dir)
+    erase(ebook_build_dir)
     time.sleep(1)
     os.makedirs(ebook_build_dir)
 

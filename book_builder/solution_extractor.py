@@ -11,10 +11,10 @@ exercise_start = "##### Exercise "
 solution_start = "> Solution "
 
 
-def extract(lines: deque, start: str, end: str) -> (str, str):
+def extract(lines: deque, start: str) -> (str, str):
     exercise_number = lines.popleft().split(start)[1]
     content = ""
-    while lines and end not in lines[0]:
+    while lines and solution_start not in lines[0] and exercise_start not in lines[0]:
         line = lines.popleft()
         if line.startswith("```"):
             continue
@@ -41,10 +41,10 @@ class ExercisesAndSolutions:
         lines = deque(self.lines)
         while lines:
             if exercise_start in lines[0]:
-                number, description = extract(lines, exercise_start, solution_start)
+                number, description = extract(lines, exercise_start)
                 self.exercise_descriptions[number] = description
             elif solution_start in lines[0]:
-                number, solution = extract(lines, solution_start, exercise_start)
+                number, solution = extract(lines, solution_start)
                 self.exercise_solutions[number] = solution
             else:
                 lines.popleft()
@@ -70,19 +70,22 @@ def display_unconverted_solutions():
             print(md.name.center(78, '='))
             print(e_and_s)
 
+
 def extract_unconverted_solutions():
     def write_exercise(efile, number, description):
         efile.write(f"Exercise {number}".center(78, '-'))
         efile.write("\n\n" + description + "\n\n")
+
     for md in config.markdown_dir.glob("*.md"):
         e_and_s = ExercisesAndSolutions(md)
         if e_and_s.contains_exercises_and_solutions:
             directory = exercises_repo / e_and_s.directory_name
             if directory.exists():
-                util.clean(directory)
+                util.erase(directory)
             directory.mkdir()
             exercise_file = directory / "Exercises.txt"
             with exercise_file.open(mode='w') as efile:
                 [write_exercise(efile, n, ex) for n, ex in e_and_s.exercise_descriptions.items()]
-
-
+            for n, solution in e_and_s.exercise_solutions.items():
+                solution_file = directory / solution.splitlines()[0].split('/')[-1]
+                solution_file.write_text(solution + "\n")

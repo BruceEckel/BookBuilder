@@ -117,7 +117,7 @@ def epub():
 @epub.command('clean')
 def epub_clean():
     """Remove directory containing epub"""
-    click.echo(util.clean(config.epub_build_dir))
+    click.echo(util.erase(config.epub_build_dir))
 
 
 @epub.command('regen')
@@ -177,7 +177,7 @@ def html_clean():
     """Remove build directories containing html"""
 
     def remove(path):
-        click.echo(util.clean(path))
+        click.echo(util.erase(path))
 
     remove(config.html_sample_dir)
     remove(config.html_complete_dir)

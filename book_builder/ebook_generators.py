@@ -9,7 +9,7 @@ from pathlib import Path
 
 import book_builder.config as config
 from book_builder.config import BookType, epub_name
-from book_builder.util import (clean, combine_markdown_files,
+from book_builder.util import (erase, combine_markdown_files,
                                combine_sample_markdown,
                                regenerate_ebook_build_dir, retain_files)
 
@@ -192,7 +192,7 @@ def create_release():
     "Create a release from scratch"
     import glob
     if config.release_dir.exists():
-        clean(config.release_dir)
+        erase(config.release_dir)
     os.makedirs(config.release_dir)
     convert_to_epub()
     convert_to_mobi()

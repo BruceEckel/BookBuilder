@@ -29,7 +29,7 @@ def debug(msg): pass
 
 def clean():
     "Remove directory containing extracted example code"
-    util.clean(config.example_dir)
+    util.erase(config.example_dir)
     return f"{config.example_dir} removed"
 
 
