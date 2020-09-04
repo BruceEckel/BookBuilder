@@ -1,6 +1,4 @@
 # The driver script for the main program
-import os
-import re
 from pathlib import Path
 
 import click
@@ -17,14 +15,6 @@ from book_builder.ebook_generators import convert_to_mobi
 from book_builder.ebook_generators import create_release
 from book_builder.ebook_generators import generate_epub_bug_demo_file
 from book_builder.html_generator import convert_to_html
-from book_builder.renumber_atoms import fix_names_and_renumber_atoms
-from book_builder.style import fix_missing_function_parens
-from book_builder.leanpub import generate_leanpub_manuscript
-from book_builder.leanpub import generate_print_ready_manuscript
-from book_builder.leanpub import git_commit_leanpub
-from book_builder.website import update_website_repo
-from book_builder.website import git_commit_website
-from book_builder.website import create_website_toc
 
 
 @click.group()

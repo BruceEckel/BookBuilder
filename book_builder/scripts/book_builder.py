@@ -175,7 +175,7 @@ def website():
 
 @website.command('update')
 def update_website():
-    """Update Website repository"""
+    """Update AtomicKotlin-hugo"""
     click.echo(update_website_repo())
     click.echo(git_commit_website())
 

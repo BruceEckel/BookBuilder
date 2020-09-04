@@ -48,7 +48,7 @@ def create_numbered_markdown_filename(h1, n):
 
 
 def header_to_filename_map(dir_to_map: Path):
-    "Produces mapping between header/crosslink strings and file name bases"
+    """Produces mapping between header/crosslink strings and file name bases"""
     result = dict()
     for md in sorted(list(dir_to_map.glob("*.md"))):
         if "000_Front.md" in md.name or "00_Front.md" in md.name:
@@ -61,7 +61,7 @@ def header_to_filename_map(dir_to_map: Path):
 
 
 def erase(dir_to_remove):
-    "Remove directory"
+    """Remove directory"""
     try:
         if dir_to_remove.exists():
             shutil.rmtree(str(dir_to_remove))
@@ -129,7 +129,7 @@ def regenerate_ebook_build_dir(ebook_build_dir, ebook_type: BookType = BookType.
 
 
 def strip_chapter(chapter_text):
-    "Remove blank newlines at beginning and end, right-hand spaces on lines"
+    """Remove blank newlines at beginning and end, right-hand spaces on lines"""
     chapter_text = chapter_text.strip()
     lines = [line.rstrip() for line in chapter_text.splitlines()]
     stripped = "\n".join(lines)
@@ -301,7 +301,7 @@ def replace_code_in_text(generated, text):
 
 
 def create_new_status_file():
-    "Create STATUS.md"
+    """Create STATUS.md"""
     status_file = config.root_path / "STATUS.md"
     if status_file.exists():
         return "STATUS.md already exists; new one not created"
