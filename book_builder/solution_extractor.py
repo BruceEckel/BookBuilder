@@ -24,25 +24,18 @@ def extract(lines: deque, start: str) -> (str, str):
 class ExercisesAndSolutions:
     def __init__(self, md: Path):
         self.md = md
-        self.contains_exercises_and_solutions = False
         self.atom = md.read_text()
-        self.lines = self.atom.splitlines()
-        # self.directory_name = self.atom.splitlines()[0][2:].split("{#")[0].replace(' ', '').replace('`', '')
+        self.atom_lines = self.atom.splitlines()
         self.directory_name = md.stem
         self.directory = exercises_repo / self.directory_name
-        # self.contains_exercises = exercise_header in self.atom
-        self.contains_exercises = self.lines.count(exercise_header) > 0
+        self.contains_exercises = exercise_header in self.atom_lines
         if not self.contains_exercises:
             return
         self.exercises = self.atom.split(exercise_header)[1]
-        self.contains_solutions = solution_start in self.exercises
-        if not self.contains_solutions:
-            return
-        self.contains_exercises_and_solutions = True
-        self.lines = self.exercises.splitlines()
+        self.exercise_lines = self.exercises.splitlines()
         self.exercise_descriptions = {}
         self.exercise_solutions = {}
-        lines = deque(self.lines)
+        lines = deque(self.exercise_lines)
         while lines:
             if exercise_start in lines[0]:
                 number, description = extract(lines, exercise_start)
@@ -61,14 +54,16 @@ class ExercisesAndSolutions:
             result += "\n\n" + f"{name} {n}".center(78, '-') + "\n"
             result += f"\n{ex}"
 
-        if self.contains_exercises_and_solutions:
+        if self.contains_exercises:
             [display(n, ex, "Exercise") for n, ex in self.exercise_descriptions.items()]
+        # if self.contains_solutions:
+        if self.exercise_solutions:
             [display(n, ex, "Solution") for n, ex in self.exercise_solutions.items()]
         return result
 
     def write_no_exercises(self):
         recreate_directory(self.directory)
-        note_file = self.directory / "No_Exercise_In_This_Atom.txt"
+        note_file = self.directory / "No_Exercises_Here.txt"
         note_file.touch()
         return f"{self.md.name}: No Exercises"
 
@@ -88,7 +83,8 @@ class ExercisesAndSolutions:
 def display_unconverted_solutions():
     for md in config.markdown_dir.glob("*.md"):
         e_and_s = ExercisesAndSolutions(md)
-        if e_and_s.contains_exercises_and_solutions:
+        # if e_and_s.contains_exercises and e_and_s.contains_solutions:
+        if e_and_s.contains_exercises and e_and_s.exercise_solutions:
             print(md.name.center(78, '='))
             print(e_and_s)
 
@@ -108,7 +104,8 @@ def write_exercise(efile, number, description):
 def extract_unconverted_solutions():
     for md in config.markdown_dir.glob("*.md"):
         e_and_s = ExercisesAndSolutions(md)
-        if e_and_s.contains_exercises_and_solutions:
+        # if e_and_s.contains_exercises and e_and_s.contains_solutions:
+        if e_and_s.contains_exercises and e_and_s.exercise_solutions:
             e_and_s.write_exercises()
             e_and_s.write_solutions()
 
@@ -124,5 +121,5 @@ def extract_all_exercises():
             continue
         if e_and_s.contains_exercises:
             e_and_s.write_exercises()
-        if e_and_s.contains_solutions:
+        if e_and_s.exercise_solutions:
             e_and_s.write_solutions()
