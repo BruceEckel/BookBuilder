@@ -1,9 +1,8 @@
 from collections import deque
 from pathlib import Path
-import book_builder.util as util
-from pprint import pprint
 
 import book_builder.config as config
+import book_builder.util as util
 
 exercises_repo = Path("C:/Git/AtomicKotlinExercises")
 exercise_header = "## Exercises"
@@ -24,10 +23,15 @@ def extract(lines: deque, start: str) -> (str, str):
 
 class ExercisesAndSolutions:
     def __init__(self, md: Path):
+        self.md = md
         self.contains_exercises_and_solutions = False
         self.atom = md.read_text()
-        self.directory_name = self.atom.splitlines()[0][2:].split("{#")[0].replace(' ', '').replace('`', '')
-        self.contains_exercises = exercise_header in self.atom
+        self.lines = self.atom.splitlines()
+        # self.directory_name = self.atom.splitlines()[0][2:].split("{#")[0].replace(' ', '').replace('`', '')
+        self.directory_name = md.stem
+        self.directory = exercises_repo / self.directory_name
+        # self.contains_exercises = exercise_header in self.atom
+        self.contains_exercises = self.lines.count(exercise_header) > 0
         if not self.contains_exercises:
             return
         self.exercises = self.atom.split(exercise_header)[1]
@@ -62,6 +66,24 @@ class ExercisesAndSolutions:
             [display(n, ex, "Solution") for n, ex in self.exercise_solutions.items()]
         return result
 
+    def write_no_exercises(self):
+        recreate_directory(self.directory)
+        note_file = self.directory / "No_Exercise_In_This_Atom.txt"
+        note_file.touch()
+        return f"{self.md.name}: No Exercises"
+
+    def write_exercises(self):
+        recreate_directory(self.directory)
+        exercise_file = self.directory / "Exercises.txt"
+        with exercise_file.open(mode='w') as efile:
+            [write_exercise(efile, n, ex) for n, ex in self.exercise_descriptions.items()]
+
+    def write_solutions(self):
+        assert self.directory and self.directory.is_dir()
+        for n, solution in self.exercise_solutions.items():
+            solution_file = self.directory / solution.splitlines()[0].split('/')[-1]
+            solution_file.write_text(solution + "\n")
+
 
 def display_unconverted_solutions():
     for md in config.markdown_dir.glob("*.md"):
@@ -71,21 +93,36 @@ def display_unconverted_solutions():
             print(e_and_s)
 
 
-def extract_unconverted_solutions():
-    def write_exercise(efile, number, description):
-        efile.write(f"Exercise {number}".center(78, '-'))
-        efile.write("\n\n" + description + "\n\n")
+def recreate_directory(directory: Path):
+    if directory.exists():
+        assert directory.is_dir()
+        util.erase(directory)
+    directory.mkdir()
 
+
+def write_exercise(efile, number, description):
+    efile.write(f"Exercise {number}".center(78, '-'))
+    efile.write("\n\n" + description + "\n\n")
+
+
+def extract_unconverted_solutions():
     for md in config.markdown_dir.glob("*.md"):
         e_and_s = ExercisesAndSolutions(md)
         if e_and_s.contains_exercises_and_solutions:
-            directory = exercises_repo / e_and_s.directory_name
-            if directory.exists():
-                util.erase(directory)
-            directory.mkdir()
-            exercise_file = directory / "Exercises.txt"
-            with exercise_file.open(mode='w') as efile:
-                [write_exercise(efile, n, ex) for n, ex in e_and_s.exercise_descriptions.items()]
-            for n, solution in e_and_s.exercise_solutions.items():
-                solution_file = directory / solution.splitlines()[0].split('/')[-1]
-                solution_file.write_text(solution + "\n")
+            e_and_s.write_exercises()
+            e_and_s.write_solutions()
+
+
+def extract_all_exercises():
+    print("Test")
+    print(f"{config.markdown_dir}")
+    for md in config.markdown_dir.glob("*.md"):
+        print(f"{md.name}")
+        e_and_s = ExercisesAndSolutions(md)
+        if not e_and_s.contains_exercises:
+            e_and_s.write_no_exercises()
+            continue
+        if e_and_s.contains_exercises:
+            e_and_s.write_exercises()
+        if e_and_s.contains_solutions:
+            e_and_s.write_solutions()
