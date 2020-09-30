@@ -5,7 +5,7 @@ import shutil
 import book_builder.config as config
 from book_builder.util import pushd
 
-exercise_message = "***Exercises and solutions for this atom can be found at [AtomicKotlin.com](https://www.atomickotlin.com/exercises/).***"
+exercise_message = "***Exercises and solutions for this atom can be found at AtomicKotlin.com/exercises.***"
 
 leanpub_repo = config.root_path.parent / "AtomicKotlinLeanpub"
 manuscript_dir = leanpub_repo / "manuscript"
