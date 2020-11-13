@@ -5,7 +5,6 @@ import book_builder.config as config
 import book_builder.util as util
 
 exercises_repo = Path("C:/Git/AtomicKotlinExercises")
-exercise_header = "## Exercises"
 exercise_start = "##### Exercise "
 solution_start = "> Solution "
 
@@ -28,10 +27,10 @@ class ExercisesAndSolutions:
         self.atom_lines = self.atom.splitlines()
         self.directory_name = md.stem
         self.directory = exercises_repo / self.directory_name
-        self.contains_exercises = exercise_header in self.atom_lines
+        self.contains_exercises = config.exercise_header in self.atom_lines
         if not self.contains_exercises:
             return
-        self.exercises = self.atom.split(exercise_header)[1]
+        self.exercises = self.atom.split(config.exercise_header)[1]
         self.exercise_lines = self.exercises.splitlines()
         self.exercise_descriptions = {}
         self.exercise_solutions = {}

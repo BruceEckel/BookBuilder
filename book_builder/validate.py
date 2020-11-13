@@ -252,10 +252,10 @@ class ExerciseForEDU(Validator):
                 return
         if md.title == "Introduction":
             return
-        if "\n## Exercises" not in md.text:
+        if "\n" + config.exercise_header not in md.text:
             print(f"No exercise block in {md.title}")
             return
-        exercise_block = md.text.split("\n## Exercises")[1]
+        exercise_block = md.text.split("\n" + config.exercise_header)[1]
         solutions = re.findall("```kotlin\n(.*?)\n```", exercise_block, flags=re.DOTALL)
         if solutions:
             for solution in solutions:

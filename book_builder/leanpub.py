@@ -56,7 +56,7 @@ def recreate_leanpub_manuscript():
         text = re.sub(r"!\[(.*?)\]\(images/.+?/(.+?)\)", r"![\1](images/\2)", md.read_text())
         result = []
         for line in text.splitlines():
-            if line == "## Exercises":
+            if line == config.exercise_header:
                 result.append(exercise_message)
                 break
             else:

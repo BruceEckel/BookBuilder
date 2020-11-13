@@ -10,6 +10,7 @@ from enum import Enum, unique
 
 
 def get_editor(id):
+    """Here and not in util.py because of a circular import"""
     if id not in os.environ:
         print(
             f"To use a different editor, set the {id} environment variable to your favorite editor.")
@@ -20,7 +21,7 @@ def get_editor(id):
             print(f"Using Sublime by default for {id}")
             return "subl"
         else:
-            assert false, f"Don't recognize {id}"
+            assert False, f"Don't recognize {id}"
     return os.environ[id]
 
 
@@ -40,7 +41,7 @@ exclude_atoms = ""
 web_sample_toc = ""
 web_html_book = ""
 end_of_sample = ""
-copyright_notice = '&copy;2018 <a href="http://mindviewllc.com/">Mindview LLC</a>. All Rights Reserved.'
+copyright_notice = '&copy;2020 <a href="http://mindviewllc.com/">Mindview LLC</a>. All Rights Reserved.'
 
 # Add elements from BookProject/configuration.py into this environment:
 sys.path.insert(0, str(Path(os.environ['BOOK_PROJECT_HOME'])))
@@ -57,6 +58,7 @@ class BookType(Enum):
     DOCX = "docx"
     HTML = "html"
 
+exercise_header = "***Exercises and solutions can be found at www.AtomicKotlin.com.***"
 
 root_name = base_name.lower()
 root_path = Path(os.environ['BOOK_PROJECT_HOME'])
