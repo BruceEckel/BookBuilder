@@ -1,9 +1,11 @@
 import os
 import re
 import shutil
+import sys
 
 import book_builder.config as config
 from book_builder.util import pushd
+from distutils.dir_util import copy_tree
 
 exercise_message = "***Exercises and solutions for this atom can be found at AtomicKotlin.com/exercises.***"
 
@@ -49,18 +51,18 @@ def recreate_leanpub_manuscript():
         return False, f"Cannot find {leanpub_repo}"
     if manuscript_dir.exists():
         shutil.rmtree(manuscript_dir, ignore_errors=True)
-    shutil.copytree(config.markdown_dir, manuscript_dir)
-    for id in [id for id in manuscript_images.iterdir() if id.is_dir()]:
-        shutil.rmtree(id, ignore_errors=True)
+    copy_tree(str(config.markdown_dir), str(manuscript_dir))
+    # Not sure why I was removing the image subirectories
+    # for id in [id for id in manuscript_images.iterdir() if id.is_dir()]:
+    #     shutil.rmtree(id, ignore_errors=True)
     for md in manuscript_dir.glob("*.md"):
-        text = re.sub(r"!\[(.*?)\]\(images/.+?/(.+?)\)", r"![\1](images/\2)", md.read_text())
+        # text = re.sub(r"!\[(.*?)\]\(images/.+?/(.+?)\)", r"![\1](images/\2)", md.read_text())
+        text = md.read_text()
         result = []
         for line in text.splitlines():
+            result.append(line)
             if line == config.exercise_header:
-                result.append(exercise_message)
                 break
-            else:
-                result.append(line)
         md.write_text("\n".join(result) + "\n")
     return True, "Succeeded"
 
