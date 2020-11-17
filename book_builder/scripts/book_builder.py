@@ -81,9 +81,8 @@ def with_duplicates():
     """Keep duplicate filenames"""
     click.echo(examples.extractExamples())
     if config.language_name.lower() == "kotlin" or "java":
-        click.echo(examples.create_test_files())
-        click.echo(examples.create_tasks_for_gradle(
-            check_for_duplicates=False))
+        # click.echo(examples.create_test_files())
+        click.echo(examples.create_tasks_for_gradle(check_for_duplicates=False))
 
 
 @code_extract.command('without_duplicates')
@@ -91,7 +90,7 @@ def without_duplicates():
     """Remove duplicate filenames"""
     click.echo(examples.extractExamples())
     if config.language_name.lower() == "kotlin" or "java":
-        click.echo(examples.create_test_files())
+        # click.echo(examples.create_test_files())
         click.echo(examples.create_tasks_for_gradle(check_for_duplicates=True))
 
 
