@@ -609,16 +609,16 @@ class TickedWords(Validator):
         # Flatten list
         single_ticks = {item for sublist in single_ticks for item in sublist}
         trace('d', "single_ticks", single_ticks)
-        not_in_examples = single_ticks.difference(
-            pieces).difference(TickedWords.exclude.set)
+        not_in_examples = single_ticks.difference(pieces).difference(TickedWords.exclude.set)
         if not_in_examples:
             e = next(iter(not_in_examples))  # Select any element from the set
             for n, line in enumerate(md.lines):
                 if '`' in line and e in line:
                     break
+            formatted_result = "\n".join([s.strip() for s in not_in_examples])
             md.error(
-                f"Backticked word(s) not in examples: {pprint.pformat(not_in_examples)}", n)
-            TickedWords.exclude.error(pprint.pformat(not_in_examples), md)
+                f"Backticked word(s) not in examples: {formatted_result}", n)
+            TickedWords.exclude.error(formatted_result, md)
 
 
 def title_set():
