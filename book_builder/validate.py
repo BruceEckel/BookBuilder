@@ -313,10 +313,14 @@ class FilenamesAndTitles(Validator):
     def validate(self, md: MarkdownFile):
         if "Front.md" in md.path.name:
             return
-        if create_markdown_filename(md.title) != md.path.name[4:]:
-            md.error(f"Atom Title: {md.title}")
-        if " and " in md.title:
-            md.error(f"'and' in title should be '&': {md.title}")
+        atom_title = md.title[2:].split("{")[0].strip()
+        if create_markdown_filename(atom_title) != md.path.name[4:]:
+            md.error(f"Atom Title Line: {md.title}")
+            md.error(f"atom_title: {atom_title}")
+            md.error(f"create_markdown_filename: {create_markdown_filename(atom_title)}")
+            md.error(f"md.path.name: {md.path.name[4:]}")
+        if " and " in atom_title:
+            md.error(f"'and' in title should be '&': {atom_title}")
 
 
 class PackageNames(Validator):
