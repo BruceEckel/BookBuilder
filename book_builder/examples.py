@@ -131,7 +131,7 @@ def report_duplicate_file_names(*patterns, check_for_duplicates):
         fnames += [kt.name for kt in config.example_dir.rglob(pattern)]
     # from pprint import pprint
     # pprint(fnames)
-    duplicates = [x.strip() for x in fnames if fnames.count(x) >= 2]
+    duplicates = [x.strip() for x in fnames if fnames.count(x) >= 2 and not x.startswith("Task")]
     if duplicates and check_for_duplicates:
         dupstring = '\n\t'.join(duplicates)
         print(f"ERROR: Duplicate code file names: \n{dupstring}")
