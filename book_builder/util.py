@@ -227,10 +227,6 @@ def disassemble_combined_markdown_file(target_dir=config.markdown_dir):
     bodies = parts[0::2]
     chaps = OrderedDict()
     chaps["Front"] = bodies[0]
-    # for i, nm in enumerate(names):
-    #     print(f"{i}: {nm}")
-    #     print(f"{nm.split(maxsplit=1)}")
-    # return
     for i, nm in enumerate(names):
         chaps[nm] = bodies[i + 1].strip() + "\n"
     if not target_dir.exists():

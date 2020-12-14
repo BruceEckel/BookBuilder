@@ -5,8 +5,19 @@ import os
 import pprint
 import re
 from itertools import filterfalse
+from PIL import Image
 
 import book_builder.config as config
+
+
+def display_image_resolutions():
+    images = config.markdown_dir / "images"
+    print(images)
+    for md in images.rglob("*"):
+        if md.is_file():
+            print(md.name)
+            with Image.open(md) as img:
+                print(img.info.get("dpi"))
 
 
 class CodeCheckListing:

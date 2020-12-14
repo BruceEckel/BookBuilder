@@ -37,6 +37,12 @@ def generate_print_ready_manuscript():
     success, fail_msg = generate_leanpub_manuscript(with_sample=False)
     if not success:
         return fail_msg
+    # Convert image to Monochrome version:
+    code_completion_color = manuscript_images / "objectsEverywhere" / "codeCompletion.png"
+    code_completion_mono = manuscript_images / "objectsEverywhere" / "codeCompletion-Grayscale.png"
+    code_completion_color.unlink()
+    code_completion_mono.replace(code_completion_color)
+    # Convert code listings to monochrome:
     for md in manuscript_dir.glob("*.md"):
         text = md.read_text()
         text = text.replace("```kotlin", "```text")
@@ -52,9 +58,6 @@ def recreate_leanpub_manuscript():
     if manuscript_dir.exists():
         shutil.rmtree(manuscript_dir, ignore_errors=True)
     copy_tree(str(config.markdown_dir), str(manuscript_dir))
-    # Not sure why I was removing the image subirectories
-    # for id in [id for id in manuscript_images.iterdir() if id.is_dir()]:
-    #     shutil.rmtree(id, ignore_errors=True)
     for md in manuscript_dir.glob("*.md"):
         # text = re.sub(r"!\[(.*?)\]\(images/.+?/(.+?)\)", r"![\1](images/\2)", md.read_text())
         text = md.read_text()

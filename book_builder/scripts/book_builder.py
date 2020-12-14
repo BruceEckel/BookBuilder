@@ -227,6 +227,10 @@ def markdown_renumber():
 def z():
     """Subtools for special needs"""
 
+@z.command()
+def show_image_resolutions():
+    click.echo(book_builder.zubtools.display_image_resolutions())
+
 
 @z.command()
 def package_consistency():
