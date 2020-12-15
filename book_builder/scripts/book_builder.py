@@ -140,10 +140,10 @@ def leanpub():
     """Leanpub creation tools"""
 
 
-@leanpub.command('test')
-def test_leanpub():
-    """Test generate_leanpub_manuscript()"""
-    click.echo(generate_leanpub_manuscript())
+# @leanpub.command('test')
+# def test_leanpub():
+#     """Test generate_leanpub_manuscript()"""
+#     click.echo(generate_leanpub_manuscript())
 
 
 @leanpub.command("generate")

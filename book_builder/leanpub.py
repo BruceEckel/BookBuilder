@@ -1,11 +1,10 @@
 import os
 import re
 import shutil
-import sys
+from distutils.dir_util import copy_tree
 
 import book_builder.config as config
 from book_builder.util import pushd
-from distutils.dir_util import copy_tree
 
 exercise_message = "***Exercises and solutions for this atom can be found at AtomicKotlin.com/exercises.***"
 
@@ -48,6 +47,19 @@ def generate_print_ready_manuscript():
         text = text.replace("```kotlin", "```text")
         text = text.replace("```java", "```text")
         md.write_text(text)
+
+    # Convert cross-links to italicized bold:
+    def convert_cross_link(matchobj):
+        original = matchobj.group(0)
+        name = original.split("(#")[0]
+        name = name.replace("*", "")
+        name = name.replace("[", "***")
+        name = name.replace("]", "***")
+        return name
+
+    cross_links = re.compile(r"\[[^]]+?\]\(\#.+?\)", re.DOTALL)
+    for md in manuscript_dir.glob("*.md"):
+        md.write_text(cross_links.sub(convert_cross_link, md.read_text()))
 
 
 def recreate_leanpub_manuscript():
