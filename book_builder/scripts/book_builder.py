@@ -198,7 +198,8 @@ def markdown_combine():
     """Combine Markdown files into a single file"""
     click.echo(util.combine_markdown_files(
         config.combined_markdown, strip_notes=False))
-    os.system(f"{config.md_editor}  {config.combined_markdown}")
+    os.system(f"subl  {config.combined_markdown}")
+    # os.system(f"code  {config.combined_markdown}")
 
 
 @markdown.command('disassemble')
