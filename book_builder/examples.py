@@ -102,15 +102,7 @@ def extractExamples():
 
 
 tasks_base = """\
-configurations {
-    kotlinRuntime
-}
-
-dependencies {
-    kotlinRuntime "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-}
-
-def kotlinClassPath = configurations.kotlinRuntime + sourceSets.main.runtimeClasspath
+def kotlinClassPath = sourceSets.main.runtimeClasspath
 
 """
 
